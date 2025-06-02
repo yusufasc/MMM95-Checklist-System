@@ -1,0 +1,79 @@
+{
+  "version": "1.0",
+  "name": "MMM Checklist System",
+  "description": "Üretim Takip ve Checklist Yönetim Sistemi",
+  "remote": {
+    "type": "Custom",
+    "name": "MMM Local Repository",
+    "custom": {
+      "urls": {
+        "repository": "file:///${workspaceFolder}",
+        "branches": "file:///${workspaceFolder}",
+        "branch": "file:///${workspaceFolder}",
+        "commit": "file:///${workspaceFolder}",
+        "file": "file:///${workspaceFolder}",
+        "fileInBranch": "file:///${workspaceFolder}",
+        "fileInCommit": "file:///${workspaceFolder}",
+        "fileLine": "file:///${workspaceFolder}",
+        "fileRange": "file:///${workspaceFolder}"
+      }
+    }
+  },
+  "workspaces": [
+    {
+      "name": "Backend",
+      "path": "./backend",
+      "description": "Node.js Express API Server",
+      "excludes": ["**/node_modules/**", "**/uploads/**", "**/logs/**", "**/temp/**"]
+    },
+    {
+      "name": "Frontend",
+      "path": "./frontend",
+      "description": "React.js User Interface",
+      "excludes": ["**/node_modules/**", "**/build/**", "**/dist/**", "**/coverage/**"]
+    }
+  ],
+  "fileAnnotations": {
+    "gutter": {
+      "heatmap": {
+        "enabled": true,
+        "locations": ["gutter", "line", "overview"]
+      }
+    },
+    "hovers": {
+      "enabled": true,
+      "detailsMarkdownFormat": "${author} • ${agoOrDate}\n\n${message}"
+    }
+  },
+  "statusBar": {
+    "format": "${author} • ${agoOrDate}",
+    "dateFormat": "DD/MM/YYYY HH:mm"
+  },
+  "views": {
+    "repositories": {
+      "showBranchComparison": "working",
+      "showCommits": true,
+      "showContributors": true,
+      "showStashes": true,
+      "showTags": true,
+      "showWorktrees": false
+    },
+    "fileHistory": {
+      "avatars": true
+    },
+    "lineHistory": {
+      "avatars": true
+    }
+  },
+  "blame": {
+    "toggleMode": "window",
+    "ignoreWhitespace": true,
+    "separateLines": true,
+    "format": "${author|20} ${agoOrDate|14-} ${message}"
+  },
+  "advanced": {
+    "abbreviatedShaLength": 7,
+    "abbreviateShaOnCopy": true,
+    "useSymmetricDifferenceNotation": true
+  }
+}

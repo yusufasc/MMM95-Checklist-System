@@ -1,0 +1,72 @@
+{
+  "name": "mmm-checklist-system",
+  "version": "1.0.0",
+  "description": "Endüstriyel checklist ve görev yönetim sistemi",
+  "main": "index.js",
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "cd backend && npm run start:dev",
+    "start:frontend": "cd frontend && npm start",
+    "start:dev": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "build:frontend": "cd frontend && npm run build",
+    "build:frontend:no-lint": "cd frontend && set DISABLE_ESLINT_PLUGIN=true && npm run build",
+    "test:frontend": "cd frontend && npm test",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:all": "npm run lint:frontend && npm run lint:backend",
+    "lint:fix:all": "cd frontend && npm run lint:fix && cd ../backend && npm run lint:fix",
+    "format:frontend": "cd frontend && npm run format",
+    "format:backend": "cd backend && npm run format",
+    "format:all": "npm run format:frontend && npm run format:backend",
+    "code-quality": "npm run lint:all && npm run format:all",
+    "clean": "rm -rf node_modules backend/node_modules frontend/node_modules",
+    "clean:build": "rm -rf frontend/build",
+    "setup": "npm run install:all && npm run build:frontend:no-lint"
+  },
+  "keywords": [
+    "checklist",
+    "task-management",
+    "industrial",
+    "react",
+    "nodejs",
+    "mongodb"
+  ],
+  "author": "MMM Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.0"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "frontend/src/**/*.{js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "backend/**/*.js": [
+      "eslint --fix", 
+      "prettier --write"
+    ],
+    "**/*.{json,md}": [
+      "prettier --write"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/mmm-checklist-system.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/mmm-checklist-system/issues"
+  },
+  "homepage": "https://github.com/your-username/mmm-checklist-system#readme"
+}

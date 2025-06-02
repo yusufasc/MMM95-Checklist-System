@@ -1,0 +1,73 @@
+{
+  "eslint.workingDirectories": ["frontend", "backend"],
+  "eslint.format.enable": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  // GitLens Konfigürasyonları - MMM Projesi Optimize
+  "gitlens.defaultGravatarsStyle": "identicon",
+  "gitlens.codeLens.enabled": true,
+  "gitlens.codeLens.authors.enabled": true,
+  "gitlens.codeLens.recentChange.enabled": true,
+  "gitlens.currentLine.enabled": true,
+  "gitlens.currentLine.pullRequests.enabled": false,
+  "gitlens.hovers.enabled": true,
+  "gitlens.hovers.currentLine.over": "line",
+  "gitlens.blame.format": "${author}, ${agoOrDate}",
+  "gitlens.blame.heatmap.enabled": true,
+  "gitlens.blame.avatars": true,
+  "gitlens.blame.compact": false,
+  "gitlens.statusBar.enabled": true,
+  "gitlens.statusBar.reduceFlicker": true,
+  "gitlens.views.repositories.files.layout": "tree",
+  "gitlens.views.fileHistory.enabled": true,
+  "gitlens.views.lineHistory.enabled": true,
+  "gitlens.advanced.messages": {
+    "suppressCommitHasNoPreviousCommitWarning": false,
+    "suppressCommitNotFoundWarning": false,
+    "suppressFileNotUnderSourceControlWarning": false,
+    "suppressGitVersionWarning": false,
+    "suppressLineUncommittedWarning": false,
+    "suppressNoRepositoryWarning": false
+  },
+  // MMM Projesi Özel Ayarları
+  "gitlens.blame.ignoreWhitespace": true,
+  "gitlens.defaultDateFormat": "DD/MM/YYYY",
+  "gitlens.defaultDateShortFormat": "DD/MM/YY",
+  "gitlens.defaultTimeFormat": "HH:mm",
+  "gitlens.gitCommands.skipConfirmations": ["fetch:command", "stash-push:command"],
+  "gitlens.integrations.enabled": true,
+  // Debug ve Performans İyileştirmeleri
+  "gitlens.outputLevel": "silent",
+  "gitlens.advanced.caching.enabled": true,
+  "gitlens.advanced.repositorySearchDepth": 2,
+  // MMM Backend/Frontend Klasör Yapısı Optimize
+  "gitlens.views.repositories.files.threshold": 25,
+  "gitlens.views.repositories.includeWorkingTree": true,
+  "gitlens.views.repositories.showTrackingBranch": true,
+  // Commit Graph ve Timeline
+  "gitlens.graph.layout": "editor",
+  "gitlens.graph.minimap.enabled": true,
+  "gitlens.graph.scrollRowPadding": 2,
+  "gitlens.graph.showGhostRefsOnRowHover": true,
+  // Code Lens Filtreleme - MMM için optimize
+  "gitlens.codeLens.includeSingleLineSymbols": false,
+  "gitlens.codeLens.symbolScopes": [
+    "!Module"
+  ],
+  // Sidebar Views - MMM Development Workflow
+  "gitlens.views.branches.files.layout": "tree",
+  "gitlens.views.commits.files.layout": "tree",
+  "gitlens.views.contributors.enabled": true,
+  "gitlens.views.repositories.enabled": true,
+  "gitlens.views.searchAndCompare.enabled": true,
+  "gitlens.views.timeline.enabled": true
+} 
