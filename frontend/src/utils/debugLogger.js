@@ -1,32 +1,36 @@
 // Frontend Debug Logger Utility
 // Development modunda detaylı logging sağlar
 
-const isDevelopment = process.env.NODE_ENV === 'development';
-const isDebugEnabled = process.env.REACT_APP_DEBUG === 'true' || isDevelopment;
+const isDevelopment =
+  (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') ||
+  false;
+const isDebugEnabled =
+  (typeof process !== 'undefined' && process.env?.REACT_APP_DEBUG === 'true') ||
+  isDevelopment;
 
 // Console renkli logging (reserved for future use)
-const _colors = {
-  reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  dim: '\x1b[2m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  magenta: '\x1b[35m',
-  cyan: '\x1b[36m',
-  white: '\x1b[37m',
-};
+// const _colors = {
+//   reset: "\x1b[0m",
+//   bright: "\x1b[1m",
+//   dim: "\x1b[2m",
+//   red: "\x1b[31m",
+//   green: "\x1b[32m",
+//   yellow: "\x1b[33m",
+//   blue: "\x1b[34m",
+//   magenta: "\x1b[35m",
+//   cyan: "\x1b[36m",
+//   white: "\x1b[37m",
+// };
 
 // Performance timing
 const performance = {
   timers: new Map(),
 
-  start: (label) => {
+  start: label => {
     performance.timers.set(label, Date.now());
   },
 
-  end: (label) => {
+  end: label => {
     const startTime = performance.timers.get(label);
     if (startTime) {
       const duration = Date.now() - startTime;
@@ -54,19 +58,34 @@ class DebugLogger {
     // Console'da renkli log
     switch (level) {
       case 'INFO':
-        console.log(`%c${prefix} ${message}`, 'color: #2196F3; font-weight: bold');
+        console.log(
+          `%c${prefix} ${message}`,
+          'color: #2196F3; font-weight: bold',
+        );
         break;
       case 'SUCCESS':
-        console.log(`%c${prefix} ✅ ${message}`, 'color: #4CAF50; font-weight: bold');
+        console.log(
+          `%c${prefix} ✅ ${message}`,
+          'color: #4CAF50; font-weight: bold',
+        );
         break;
       case 'WARN':
-        console.warn(`%c${prefix} ⚠️ ${message}`, 'color: #FF9800; font-weight: bold');
+        console.warn(
+          `%c${prefix} ⚠️ ${message}`,
+          'color: #FF9800; font-weight: bold',
+        );
         break;
       case 'ERROR':
-        console.error(`%c${prefix} ❌ ${message}`, 'color: #F44336; font-weight: bold');
+        console.error(
+          `%c${prefix} ❌ ${message}`,
+          'color: #F44336; font-weight: bold',
+        );
         break;
       case 'DEBUG':
-        console.log(`%c${prefix} 🐛 ${message}`, 'color: #9C27B0; font-weight: bold');
+        console.log(
+          `%c${prefix} 🐛 ${message}`,
+          'color: #9C27B0; font-weight: bold',
+        );
         break;
       default:
         console.log(`${prefix} ${message}`);
@@ -95,7 +114,11 @@ class DebugLogger {
 
     // Error stack trace'i de göster
     if (error && error.stack) {
-      console.error('%cStack Trace:', 'color: #F44336; font-size: 0.8em', error.stack);
+      console.error(
+        '%cStack Trace:',
+        'color: #F44336; font-size: 0.8em',
+        error.stack,
+      );
     }
   }
 
@@ -104,7 +127,9 @@ class DebugLogger {
   }
 
   performance(label, startTime) {
-    const duration = startTime ? Date.now() - startTime : performance.end(label);
+    const duration = startTime
+      ? Date.now() - startTime
+      : performance.end(label);
     this.log('INFO', `⏱️ ${label} completed in ${duration}ms`);
     return duration;
   }
@@ -143,7 +168,7 @@ class DebugLogger {
 }
 
 // Logger factory
-const createLogger = (namespace) => {
+const createLogger = namespace => {
   return new DebugLogger(namespace);
 };
 
@@ -162,11 +187,11 @@ const loggers = {
 
 // Global error handler
 const setupGlobalErrorHandler = () => {
-  window.addEventListener('error', (event) => {
+  window.addEventListener('error', event => {
     loggers.error.error('Uncaught Error', event.error);
   });
 
-  window.addEventListener('unhandledrejection', (event) => {
+  window.addEventListener('unhandledrejection', event => {
     loggers.error.error('Unhandled Promise Rejection', event.reason);
   });
 };
@@ -183,8 +208,14 @@ const logReactError = (error, errorInfo) => {
 // Development modunda global handler'ı kur
 if (isDebugEnabled) {
   setupGlobalErrorHandler();
-  console.log('%c🐛 Frontend Debug Mode Aktif!', 'color: #4CAF50; font-size: 1.2em; font-weight: bold');
-  console.log('%cDebug bilgileri console\'da görünecek.', 'color: #2196F3; font-size: 1em');
+  console.log(
+    '%c🐛 Frontend Debug Mode Aktif!',
+    'color: #4CAF50; font-size: 1.2em; font-weight: bold',
+  );
+  console.log(
+    "%cDebug bilgileri console'da görünecek.",
+    'color: #2196F3; font-size: 1em',
+  );
 }
 
 export {

@@ -16,7 +16,9 @@ async function directFixOrtaci() {
     }
 
     // Paketlemeci rolünü bul
-    const paketlemeciRole = await db.collection('roles').findOne({ ad: 'Paketlemeci' });
+    const paketlemeciRole = await db
+      .collection('roles')
+      .findOne({ ad: 'Paketlemeci' });
     if (!paketlemeciRole) {
       console.log('❌ Paketlemeci rolü bulunamadı');
       return;
@@ -69,7 +71,9 @@ async function directFixOrtaci() {
     console.log('\n✅ Güncelleme sonucu:', updateResult);
 
     // Kontrol et
-    const updatedRole = await db.collection('roles').findOne({ _id: ortaciRole._id });
+    const updatedRole = await db
+      .collection('roles')
+      .findOne({ _id: ortaciRole._id });
     const paketlemeciYetkisi = updatedRole.checklistYetkileri.find(
       yetki => yetki.hedefRol.toString() === paketlemeciRole._id.toString(),
     );

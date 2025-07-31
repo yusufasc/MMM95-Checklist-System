@@ -26,7 +26,9 @@ mongoose
 
     for (const role of roles) {
       // Modül zaten ekli mi kontrol et
-      const hasModule = role.moduller.some(m => m.modul.toString() === module._id.toString());
+      const hasModule = role.moduller.some(
+        m => m.modul.toString() === module._id.toString(),
+      );
 
       if (!hasModule) {
         // Admin ve Kalite Kontrol rollerine tam yetki ver

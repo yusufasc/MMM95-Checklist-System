@@ -221,11 +221,8 @@ const InventoryItemSchema = new mongoose.Schema({
   },
 });
 
-// Index'ler
+// Index'ler (unique: true zaten index oluşturur, tekrar tanımlamaya gerek yok)
 InventoryItemSchema.index({ kategoriId: 1, durum: 1 });
-InventoryItemSchema.index({ envanterKodu: 1 });
-InventoryItemSchema.index({ qrKodu: 1 }, { sparse: true });
-InventoryItemSchema.index({ barkod: 1 }, { sparse: true });
 InventoryItemSchema.index({ etiketler: 1 });
 InventoryItemSchema.index({ lokasyon: 1 });
 InventoryItemSchema.index({ sonrakiBakimTarihi: 1 });
@@ -272,7 +269,8 @@ InventoryItemSchema.methods.hesaplaDataKalitesiSkoru = function () {
     }
   });
 
-  this.dataKalitesi.eksiksizlikSkoru = toplamAlan > 0 ? Math.round((skor / toplamAlan) * 100) : 0;
+  this.dataKalitesi.eksiksizlikSkoru =
+    toplamAlan > 0 ? Math.round((skor / toplamAlan) * 100) : 0;
   this.dataKalitesi.sonKontrolTarihi = new Date();
 };
 

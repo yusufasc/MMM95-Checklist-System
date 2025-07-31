@@ -10,10 +10,13 @@ const createMoreUsers = async () => {
     console.log('👥 Daha fazla test kullanıcısı oluşturuluyor...');
 
     // MongoDB'ye bağlan
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/mmm-checklist', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(
+      process.env.MONGO_URI || 'mongodb://localhost:27017/mmm-checklist',
+      {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      },
+    );
 
     console.log('✅ MongoDB bağlantısı başarılı!');
 
@@ -87,7 +90,9 @@ const createMoreUsers = async () => {
 
     for (const userData of allUsers) {
       // Kullanıcı zaten var mı kontrol et
-      const existingUser = await User.findOne({ kullaniciAdi: userData.kullaniciAdi });
+      const existingUser = await User.findOne({
+        kullaniciAdi: userData.kullaniciAdi,
+      });
       if (existingUser) {
         console.log(`⚠️  ${userData.kullaniciAdi} zaten mevcut, atlanıyor`);
         continue;
@@ -95,11 +100,15 @@ const createMoreUsers = async () => {
 
       const user = new User(userData);
       await user.save();
-      console.log(`✅ ${userData.kullaniciAdi} oluşturuldu (${userData.ad} ${userData.soyad})`);
+      console.log(
+        `✅ ${userData.kullaniciAdi} oluşturuldu (${userData.ad} ${userData.soyad})`,
+      );
     }
 
     // Toplam kullanıcı sayılarını göster
-    const totalPaketlemeci = await User.countDocuments({ roller: paketlemeciRole._id });
+    const totalPaketlemeci = await User.countDocuments({
+      roller: paketlemeciRole._id,
+    });
     const totalOrtaci = await User.countDocuments({ roller: ortaciRole._id });
 
     console.log(`📊 Toplam Paketlemeci: ${totalPaketlemeci}`);

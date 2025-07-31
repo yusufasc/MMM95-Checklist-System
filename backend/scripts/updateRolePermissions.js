@@ -7,10 +7,13 @@ const updateRolePermissions = async () => {
     console.log('🔧 Rol yetkileri güncelleme scripti başlatılıyor...');
 
     // MongoDB'ye bağlan
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/mmm-checklist', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(
+      process.env.MONGO_URI || 'mongodb://localhost:27017/mmm-checklist',
+      {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      },
+    );
 
     console.log('✅ MongoDB bağlantısı başarılı!');
 
@@ -77,7 +80,9 @@ const updateRolePermissions = async () => {
     console.log('✅ Rol yetkileri başarıyla güncellendi!');
 
     // Güncellenmiş rolleri kontrol et
-    const updatedUsta = await Role.findById(ustaRole._id).populate('checklistYetkileri.hedefRol');
+    const updatedUsta = await Role.findById(ustaRole._id).populate(
+      'checklistYetkileri.hedefRol',
+    );
     const updatedKalite = await Role.findById(kaliteKontrolRole._id).populate(
       'checklistYetkileri.hedefRol',
     );
@@ -85,13 +90,15 @@ const updateRolePermissions = async () => {
     console.log(
       '🔍 Usta rolü yetkileri:',
       updatedUsta.checklistYetkileri.map(
-        y => `${y.hedefRol.ad} (${y.gorebilir ? 'G' : ''}${y.onaylayabilir ? 'O' : ''})`,
+        y =>
+          `${y.hedefRol.ad} (${y.gorebilir ? 'G' : ''}${y.onaylayabilir ? 'O' : ''})`,
       ),
     );
     console.log(
       '🔍 Kalite Kontrol yetkileri:',
       updatedKalite.checklistYetkileri.map(
-        y => `${y.hedefRol.ad} (${y.gorebilir ? 'G' : ''}${y.onaylayabilir ? 'O' : ''})`,
+        y =>
+          `${y.hedefRol.ad} (${y.gorebilir ? 'G' : ''}${y.onaylayabilir ? 'O' : ''})`,
       ),
     );
   } catch (error) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -47,7 +47,8 @@ const LeaderCard = styled(Card)(({ theme, rank }) => ({
           : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // Normal
   padding: theme.spacing(3),
   borderRadius: 16,
-  boxShadow: rank <= 3 ? '0 8px 32px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.1)',
+  boxShadow:
+    rank <= 3 ? '0 8px 32px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.1)',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   cursor: 'pointer',
   position: 'relative',
@@ -72,14 +73,20 @@ const LeaderCard = styled(Card)(({ theme, rank }) => ({
   },
 }));
 
-const ScoreChip = styled(Chip)(({ color }) => ({
+const ScoreChip = styled(Chip)(({ bgcolor }) => ({
   fontWeight: 'bold',
   fontSize: '0.9rem',
   padding: '4px 8px',
   borderRadius: 8,
-  background: color,
+  background: bgcolor,
   color: '#fff',
   boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+  '& .MuiChip-label': {
+    color: '#fff',
+  },
+  '& .MuiChip-icon': {
+    color: '#fff',
+  },
 }));
 
 const AnimatedAvatar = styled(Avatar)(() => ({
@@ -147,7 +154,10 @@ const Performance = () => {
       const response = await performanceAPI.getScores();
       setPerformanceData(response.data);
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') {
+      if (
+        typeof process !== 'undefined' &&
+        process.env?.NODE_ENV === 'development'
+      ) {
         console.error('Performans verileri yükleme hatası:', err);
       }
       // Test verisi ekle
@@ -221,32 +231,44 @@ const Performance = () => {
             alignItems: 'center',
             mb: 3,
             p: 2,
-            background: 'linear-gradient(90deg, rgba(103,58,183,0.1) 0%, rgba(63,81,181,0.1) 100%)',
+            background:
+              'linear-gradient(90deg, rgba(103,58,183,0.1) 0%, rgba(63,81,181,0.1) 100%)',
             borderRadius: 2,
           }}
         >
           {roleIcons[roleName] || <GroupsIcon />}
-          <Typography variant="h4" sx={{ ml: 2, fontWeight: 'bold', color: '#333' }}>
+          <Typography
+            variant='h4'
+            sx={{ ml: 2, fontWeight: 'bold', color: '#333' }}
+          >
             {roleName} Liderlik Tablosu
           </Typography>
         </Box>
 
         <Grid container spacing={3}>
           {roleData.slice(0, 10).map((data, index) => (
-            <Grid size={{ xs: 12 }} key={data.user._id}>
+            <Grid item xs={12} key={data.user._id}>
               <Grow in timeout={1000 + index * 100}>
                 <LeaderCard rank={data.rank}>
-                  <Grid container alignItems="center" spacing={2}>
+                  <Grid container alignItems='center' spacing={2}>
                     {/* Sıralama ve Avatar */}
-                    <Grid size={{ xs: 12, md: 3 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Grid item xs={12} md={3}>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
+                      >
                         {data.rank <= 3 && (
                           <Zoom in timeout={1500}>
                             <TrophyIcon
                               sx={{
-                                fontSize: data.rank === 1 ? 60 : data.rank === 2 ? 50 : 40,
+                                fontSize:
+                                  data.rank === 1
+                                    ? 60
+                                    : data.rank === 2
+                                      ? 50
+                                      : 40,
                                 color: '#fff',
-                                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
+                                filter:
+                                  'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
                               }}
                             />
                           </Zoom>
@@ -256,21 +278,39 @@ const Performance = () => {
                           {data.user.soyad?.charAt(0)}
                         </AnimatedAvatar>
                         <Box>
-                          <Typography variant="h5" sx={{ color: '#fff', fontWeight: 'bold' }}>
+                          <Typography
+                            variant='h5'
+                            sx={{ color: '#fff', fontWeight: 'bold' }}
+                          >
                             #{data.rank}
                           </Typography>
-                          <Typography variant="h6" sx={{ color: '#fff' }}>
+                          <Typography variant='h6' sx={{ color: '#fff' }}>
                             {data.user.ad} {data.user.soyad}
                           </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                            }}
+                          >
                             {data.trend === 'up' ? (
-                              <TrendingUpIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                              <TrendingUpIcon
+                                sx={{ color: '#4caf50', fontSize: 20 }}
+                              />
                             ) : (
                               <TrendingUpIcon
-                                sx={{ color: '#f44336', fontSize: 20, transform: 'rotate(180deg)' }}
+                                sx={{
+                                  color: '#f44336',
+                                  fontSize: 20,
+                                  transform: 'rotate(180deg)',
+                                }}
                               />
                             )}
-                            <Typography variant="caption" sx={{ color: '#fff' }}>
+                            <Typography
+                              variant='caption'
+                              sx={{ color: '#fff' }}
+                            >
                               {data.trendValue} sıra
                             </Typography>
                           </Box>
@@ -279,60 +319,63 @@ const Performance = () => {
                     </Grid>
 
                     {/* Puan Detayları */}
-                    <Grid size={{ xs: 12, md: 6 }}>
+                    <Grid item xs={12} md={6}>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        <Tooltip title="İK Şablon Puanı">
+                        <Tooltip title='İK Şablon Puanı'>
                           <ScoreChip
                             icon={<AssignmentIcon />}
                             label={`İK-Ş: ${data.scores.ik_sablon}`}
-                            color={scoreColors.ik_sablon}
+                            bgcolor={scoreColors.ik_sablon}
                           />
                         </Tooltip>
-                        <Tooltip title="İK Devamsızlık/Fazla Mesai">
+                        <Tooltip title='İK Devamsızlık/Fazla Mesai'>
                           <ScoreChip
                             icon={<AccessTimeIcon />}
                             label={`İK-D: ${data.scores.ik_devamsizlik}`}
-                            color={scoreColors.ik_devamsizlik}
+                            bgcolor={scoreColors.ik_devamsizlik}
                           />
                         </Tooltip>
-                        <Tooltip title="Kalite Kontrol Puanı">
+                        <Tooltip title='Kalite Kontrol Puanı'>
                           <ScoreChip
                             icon={<CheckCircleIcon />}
                             label={`KK: ${data.scores.kalite_kontrol}`}
-                            color={scoreColors.kalite_kontrol}
+                            bgcolor={scoreColors.kalite_kontrol}
                           />
                         </Tooltip>
-                        <Tooltip title="Checklist Puanı">
+                        <Tooltip title='Checklist Puanı'>
                           <ScoreChip
                             icon={<AssignmentIcon />}
                             label={`CL: ${data.scores.checklist}`}
-                            color={scoreColors.checklist}
+                            bgcolor={scoreColors.checklist}
                           />
                         </Tooltip>
-                        <Tooltip title="İşe Bağlı Checklist">
+                        <Tooltip title='İşe Bağlı Checklist'>
                           <ScoreChip
                             icon={<BuildIcon />}
                             label={`İB: ${data.scores.is_bagli}`}
-                            color={scoreColors.is_bagli}
+                            bgcolor={scoreColors.is_bagli}
                           />
                         </Tooltip>
-                        <Tooltip title="Kalıp Değişimi Puanı">
+                        <Tooltip title='Kalıp Değişimi Puanı'>
                           <ScoreChip
                             icon={<EngineeringIcon />}
                             label={`KD: ${data.scores.kalip_degisim}`}
-                            color={scoreColors.kalip_degisim}
+                            bgcolor={scoreColors.kalip_degisim}
                           />
                         </Tooltip>
                       </Box>
                     </Grid>
 
                     {/* Toplam Puan */}
-                    <Grid size={{ xs: 12, md: 3 }}>
+                    <Grid item xs={12} md={3}>
                       <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="h2" sx={{ color: '#fff', fontWeight: 'bold', mb: 1 }}>
+                        <Typography
+                          variant='h2'
+                          sx={{ color: '#fff', fontWeight: 'bold', mb: 1 }}
+                        >
                           <CountUp end={data.totalScore} duration={2} />
                         </Typography>
-                        <Typography variant="h6" sx={{ color: '#fff' }}>
+                        <Typography variant='h6' sx={{ color: '#fff' }}>
                           Toplam Puan
                         </Typography>
                         <Box
@@ -343,11 +386,16 @@ const Performance = () => {
                             mt: 1,
                           }}
                         >
-                          {data.rank === 1 && <FireIcon sx={{ color: '#fff', mr: 1 }} />}
+                          {data.rank === 1 && (
+                            <FireIcon sx={{ color: '#fff', mr: 1 }} />
+                          )}
                           {data.rank <= 3 && (
                             <Box sx={{ display: 'flex' }}>
                               {[...Array(4 - data.rank)].map((_, i) => (
-                                <StarIcon key={i} sx={{ color: '#fff', fontSize: 20 }} />
+                                <StarIcon
+                                  key={i}
+                                  sx={{ color: '#fff', fontSize: 20 }}
+                                />
                               ))}
                             </Box>
                           )}
@@ -359,7 +407,7 @@ const Performance = () => {
                   {/* Progress Bar */}
                   <Box sx={{ mt: 2 }}>
                     <StyledLinearProgress
-                      variant="determinate"
+                      variant='determinate'
                       value={(data.totalScore / 600) * 100}
                     />
                   </Box>
@@ -385,7 +433,7 @@ const Performance = () => {
       >
         <Box sx={{ textAlign: 'center' }}>
           <BoltIcon sx={{ fontSize: 80, color: '#fff', mb: 2 }} />
-          <Typography variant="h4" sx={{ color: '#fff' }}>
+          <Typography variant='h4' sx={{ color: '#fff' }}>
             Performans Verileri Yükleniyor...
           </Typography>
         </Box>
@@ -411,23 +459,26 @@ const Performance = () => {
           boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
         }}
       >
-        <Grid container alignItems="center">
-          <Grid size={{ xs: 12, md: 8 }}>
+        <Grid container alignItems='center'>
+          <Grid item xs={12} md={8}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <WorkspacePremiumIcon sx={{ fontSize: 60, color: '#fff' }} />
               <Box>
-                <Typography variant="h2" sx={{ color: '#fff', fontWeight: 'bold' }}>
+                <Typography
+                  variant='h2'
+                  sx={{ color: '#fff', fontWeight: 'bold' }}
+                >
                   MMM PERFORMANS YARIŞMASI
                 </Typography>
-                <Typography variant="h5" sx={{ color: '#fff', opacity: 0.9 }}>
+                <Typography variant='h5' sx={{ color: '#fff', opacity: 0.9 }}>
                   Fabrikamızın Şampiyonları
                 </Typography>
               </Box>
             </Box>
           </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid item xs={12} md={4}>
             <Box sx={{ textAlign: 'right' }}>
-              <Typography variant="h4" sx={{ color: '#fff' }}>
+              <Typography variant='h4' sx={{ color: '#fff' }}>
                 {currentTime.toLocaleDateString('tr-TR', {
                   weekday: 'long',
                   year: 'numeric',
@@ -435,7 +486,10 @@ const Performance = () => {
                   day: 'numeric',
                 })}
               </Typography>
-              <Typography variant="h3" sx={{ color: '#fff', fontWeight: 'bold' }}>
+              <Typography
+                variant='h3'
+                sx={{ color: '#fff', fontWeight: 'bold' }}
+              >
                 {currentTime.toLocaleTimeString('tr-TR')}
               </Typography>
             </Box>
@@ -445,12 +499,12 @@ const Performance = () => {
 
       {/* Puan Açıklamaları */}
       <Paper sx={{ p: 2, mb: 4, backgroundColor: 'rgba(255,255,255,0.95)' }}>
-        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+        <Typography variant='h6' gutterBottom sx={{ fontWeight: 'bold' }}>
           Puan Kategorileri
         </Typography>
         <Grid container spacing={2}>
           {Object.entries(scoreColors).map(([key, color]) => (
-            <Grid size={{ xs: 6, md: 2 }} key={key}>
+            <Grid item xs={6} md={2} key={key}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Box
                   sx={{
@@ -460,7 +514,7 @@ const Performance = () => {
                     borderRadius: '50%',
                   }}
                 />
-                <Typography variant="body2">
+                <Typography variant='body2'>
                   {key === 'ik_sablon' && 'İK Şablon'}
                   {key === 'ik_devamsizlik' && 'İK Devamsızlık'}
                   {key === 'kalite_kontrol' && 'Kalite Kontrol'}
@@ -480,8 +534,8 @@ const Performance = () => {
           <Tabs
             value={tabValue}
             onChange={(e, newValue) => setTabValue(newValue)}
-            variant="scrollable"
-            scrollButtons="auto"
+            variant='scrollable'
+            scrollButtons='auto'
             sx={{
               '& .MuiTab-root': {
                 color: '#fff',
@@ -502,7 +556,7 @@ const Performance = () => {
                 key={role}
                 label={role}
                 icon={roleIcons[role] || <GroupsIcon />}
-                iconPosition="start"
+                iconPosition='start'
               />
             ))}
           </Tabs>
@@ -510,8 +564,9 @@ const Performance = () => {
 
         {/* Seçili Rol Liderlik Tablosu */}
         {Object.keys(performanceData).map((role, index) => (
-          <Box key={role} role="tabpanel" hidden={tabValue !== index}>
-            {tabValue === index && renderLeaderboard(performanceData[role], role)}
+          <Box key={role} role='tabpanel' hidden={tabValue !== index}>
+            {tabValue === index &&
+              renderLeaderboard(performanceData[role], role)}
           </Box>
         ))}
       </Container>

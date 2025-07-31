@@ -1,0 +1,157 @@
+{
+  "folders": [
+    {
+      "name": "🏠 MMM95 Root",
+      "path": "."
+    },
+    {
+      "name": "🚀 Backend",
+      "path": "./backend"
+    },
+    {
+      "name": "🎮 Frontend",
+      "path": "./frontend"
+    },
+    {
+      "name": "📚 Documentation",
+      "path": "./docs"
+    },
+    {
+      "name": "📊 Scripts",
+      "path": "./backend/scripts"
+    }
+  ],
+  "settings": {
+    // ===== WORKSPACE LEVEL SETTINGS =====
+    "files.associations": {
+      "*.mdc": "markdown",
+      "*.env*": "properties",
+      "Dockerfile*": "dockerfile"
+    },
+
+    // ===== TERMINAL CONFIGURATION =====
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "terminal.integrated.cwd": "${workspaceFolder}",
+    "terminal.integrated.enableMultiLinePasteWarning": false,
+    "terminal.integrated.copyOnSelection": true,
+
+    // ===== NODE.JS CONFIGURATION =====
+    "typescript.preferences.includePackageJsonAutoImports": "on",
+    "npm.enableRunFromFolder": true,
+    "npm.packageManager": "npm",
+
+    // ===== ESLINT MULTI-ROOT =====
+    "eslint.workingDirectories": ["backend", "frontend"],
+    "eslint.format.enable": true,
+
+    // ===== SEARCH EXCLUSIONS =====
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/build": true,
+      "**/.git": true,
+      "**/coverage": true,
+      "**/logs": true,
+      "**/.cache": true,
+      "**/tmp": true
+    },
+
+    // ===== .ENV FILES FORCE ENABLE =====
+    "files.exclude": {
+      "**/.env": false
+    },
+
+    // ===== FILE WATCHING =====
+    "files.watcherExclude": {
+      "**/node_modules/**": true,
+      "**/dist/**": true,
+      "**/build/**": true,
+      "**/.git/objects/**": true,
+      "**/tmp/**": true,
+      "**/.cache/**": true
+    },
+
+    // ===== GIT CONFIGURATION =====
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "git.autofetch": true,
+
+    // ===== EDITOR SETTINGS =====
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.fixAll.eslint": "explicit"
+    },
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+
+    // ===== LANGUAGE SPECIFIC =====
+    "[javascript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[jsonc]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[markdown]": {
+      "editor.defaultFormatter": "yzhang.markdown-all-in-one",
+      "editor.wordWrap": "on"
+    },
+    "powershell.cwd": "🏠 MMM95 Root"
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "🎯 Full Stack Start",
+        "dependsOrder": "parallel",
+        "dependsOn": ["🚀 Start Backend", "🎮 Start Frontend"],
+        "group": "build"
+      },
+      {
+        "label": "📦 Install All Dependencies",
+        "dependsOrder": "parallel",
+        "dependsOn": [
+          "📦 Install Backend Dependencies",
+          "📦 Install Frontend Dependencies"
+        ],
+        "group": "build"
+      }
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "🎯 MMM Full Stack",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/backend/server.js",
+        "cwd": "${workspaceFolder}/backend",
+        "env": {
+          "NODE_ENV": "development",
+          "MONGODB_URI": "mongodb://localhost:27017/mmm-checklist"
+        },
+        "console": "integratedTerminal",
+        "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe"
+      }
+    ]
+  },
+  "extensions": {
+    "recommendations": [
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "ms-vscode.vscode-typescript-next",
+      "mongodb.mongodb-vscode",
+      "christian-kohler.npm-intellisense",
+      "eamodio.gitlens",
+      "gruntfuggly.todo-tree",
+      "pkief.material-icon-theme"
+    ]
+  }
+}

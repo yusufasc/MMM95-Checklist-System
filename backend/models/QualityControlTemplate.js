@@ -45,6 +45,13 @@ const qualityControlTemplateSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Kontrol puanı - Bu şablonu puanlayan kişiye verilecek puan
+    kontrolPuani: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
     // Değerlendirme saatleri
     degerlendirmeSaatleri: [
       {
@@ -68,7 +75,15 @@ const qualityControlTemplateSchema = new mongoose.Schema(
     degerlendirmeGunleri: [
       {
         type: String,
-        enum: ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'],
+        enum: [
+          'Pazartesi',
+          'Salı',
+          'Çarşamba',
+          'Perşembe',
+          'Cuma',
+          'Cumartesi',
+          'Pazar',
+        ],
       },
     ],
     // Değerlendirme sıklığı
@@ -96,4 +111,7 @@ const qualityControlTemplateSchema = new mongoose.Schema(
 qualityControlTemplateSchema.index({ rol: 1, aktif: 1 });
 qualityControlTemplateSchema.index({ ad: 'text' });
 
-module.exports = mongoose.model('QualityControlTemplate', qualityControlTemplateSchema);
+module.exports = mongoose.model(
+  'QualityControlTemplate',
+  qualityControlTemplateSchema,
+);

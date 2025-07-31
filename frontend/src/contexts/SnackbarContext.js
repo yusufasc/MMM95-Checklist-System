@@ -44,7 +44,7 @@ export const SnackbarProvider = ({ children }) => {
           severity={severity}
           sx={{ width: '100%' }}
           elevation={6}
-          variant="filled"
+          variant='filled'
         >
           {message}
         </Alert>

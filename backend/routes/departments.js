@@ -1,23 +1,30 @@
 const express = require('express');
 const Department = require('../models/Department');
 const { auth, checkModulePermission } = require('../middleware/auth');
+const { departmentsListCache } = require('../middleware/cache');
 const router = express.Router();
 
 // @route   GET /api/departments
 // @desc    Tüm departmanları listele
 // @access  Private (Departman Yönetimi modülü erişim yetkisi)
-router.get('/', auth, checkModulePermission('Departman Yönetimi'), async (req, res) => {
-  try {
-    const departments = await Department.find().populate(
-      'digerDepartmanYetkileri.hedefDepartman',
-      'ad',
-    );
-    res.json(departments);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send('Sunucu hatası');
-  }
-});
+router.get(
+  '/',
+  auth,
+  checkModulePermission('Departman Yönetimi'),
+  departmentsListCache(), // 🚀 CACHE: 60 dakika
+  async (req, res) => {
+    try {
+      const departments = await Department.find().populate(
+        'digerDepartmanYetkileri.hedefDepartman',
+        'ad',
+      );
+      res.json(departments);
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send('Sunucu hatası');
+    }
+  },
+);
 
 // @route   POST /api/departments
 // @desc    Yeni departman ekle
@@ -38,10 +45,9 @@ router.post(
       await department.save();
 
       // Populate edilmiş hali ile döndür
-      const populatedDepartment = await Department.findById(department._id).populate(
-        'digerDepartmanYetkileri.hedefDepartman',
-        'ad',
-      );
+      const populatedDepartment = await Department.findById(
+        department._id,
+      ).populate('digerDepartmanYetkileri.hedefDepartman', 'ad');
 
       res.status(201).json(populatedDepartment);
     } catch (error) {

@@ -70,7 +70,9 @@ const validateUsername = username => {
   // Sadece harf, rakam, nokta ve alt çizgi
   const usernameRegex = /^[a-zA-Z0-9._]+$/;
   if (!usernameRegex.test(username)) {
-    errors.push('Kullanıcı adı sadece harf, rakam, nokta ve alt çizgi içerebilir');
+    errors.push(
+      'Kullanıcı adı sadece harf, rakam, nokta ve alt çizgi içerebilir',
+    );
   }
 
   return {
@@ -206,7 +208,12 @@ const validateNumber = (value, fieldName, options = {}) => {
  * @returns {object} - {isValid, errors}
  */
 const validateArray = (value, fieldName, options = {}) => {
-  const { required = true, minLength = 0, maxLength = null, itemValidator = null } = options;
+  const {
+    required = true,
+    minLength = 0,
+    maxLength = null,
+    itemValidator = null,
+  } = options;
 
   const errors = [];
 
@@ -302,7 +309,9 @@ const validateEnum = (value, allowedValues, fieldName, required = true) => {
   }
 
   if (value && !allowedValues.includes(value)) {
-    errors.push(`${fieldName} geçerli değerlerden biri olmalıdır: ${allowedValues.join(', ')}`);
+    errors.push(
+      `${fieldName} geçerli değerlerden biri olmalıdır: ${allowedValues.join(', ')}`,
+    );
   }
 
   return {
@@ -401,7 +410,9 @@ const validateRoleCreation = roleData => {
       }
 
       if (typeof modul.duzenleyebilir !== 'boolean') {
-        allErrors.push(`Modül ${index + 1} düzenleme yetkisi boolean olmalıdır`);
+        allErrors.push(
+          `Modül ${index + 1} düzenleme yetkisi boolean olmalıdır`,
+        );
       }
     });
   }

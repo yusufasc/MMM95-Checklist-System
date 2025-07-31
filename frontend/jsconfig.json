@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "baseUrl": "src",
+    "paths": {
+      "@/hooks/*": ["hooks/*"],
+      "@/components/*": ["components/*"],
+      "@/ControlPending/*": ["components/ControlPending/*"],
+      "@/HR/*": ["components/HR/*"],
+      "@/pages/*": ["pages/*"],
+      "@/services/*": ["services/*"],
+      "@/utils/*": ["utils/*"],
+      "@/contexts/*": ["contexts/*"]
+    }
+  },
+  "include": ["src/**/*"]
+}

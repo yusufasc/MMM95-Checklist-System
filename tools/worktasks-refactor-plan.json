@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-06-10T12:01:57.485Z",
+  "originalFile": "../frontend/src/pages/WorkTasks.js",
+  "originalLines": 127,
+  "status": "analysis_complete",
+  "customHooks": [],
+  "plannedComponents": [
+    "WorkTaskList.js",
+    "WorkTaskForm.js",
+    "WorkTaskFilters.js"
+  ],
+  "nextSteps": [
+    "1. Custom hook'lari WorkTasks.js'e import et",
+    "2. Component'lari WorkTasks.js'den ayir",
+    "3. State'leri custom hook'lara tasi",
+    "4. Fonksiyonlari ilgili hook'lara tasi",
+    "5. Test et ve debug yap"
+  ]
+}

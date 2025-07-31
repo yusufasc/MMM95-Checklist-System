@@ -43,7 +43,10 @@ const Login = () => {
         setError(result.error);
       }
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
+      if (
+        typeof process !== 'undefined' &&
+        process.env?.NODE_ENV === 'development'
+      ) {
         console.error('Login hatası:', error);
       }
       setError('Beklenmeyen bir hata oluştu');
@@ -53,7 +56,7 @@ const Login = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
+    <Container component='main' maxWidth='xs'>
       <Box
         sx={{
           marginTop: 8,
@@ -64,53 +67,61 @@ const Login = () => {
       >
         <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
           <Box
-            component="form"
+            component='form'
             onSubmit={handleSubmit}
-            sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
           >
-            <Typography component="h1" variant="h4" sx={{ mb: 3, color: 'primary.main' }}>
+            <Typography
+              component='h1'
+              variant='h4'
+              sx={{ mb: 3, color: 'primary.main' }}
+            >
               Serinova 360
             </Typography>
-            <Typography component="h2" variant="h5" sx={{ mb: 3 }}>
+            <Typography component='h2' variant='h5' sx={{ mb: 3 }}>
               Giriş Yap
             </Typography>
 
             {error && (
-              <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+              <Alert severity='error' sx={{ width: '100%', mb: 2 }}>
                 {error}
               </Alert>
             )}
 
             <TextField
-              margin="normal"
+              margin='normal'
               required
               fullWidth
-              id="kullaniciAdi"
-              label="Kullanıcı Adı"
-              name="kullaniciAdi"
-              autoComplete="username"
+              id='kullaniciAdi'
+              label='Kullanıcı Adı'
+              name='kullaniciAdi'
+              autoComplete='username'
               autoFocus
               value={formData.kullaniciAdi}
               onChange={handleChange}
               disabled={loading}
             />
             <TextField
-              margin="normal"
+              margin='normal'
               required
               fullWidth
-              name="sifre"
-              label="Şifre"
-              type="password"
-              id="sifre"
-              autoComplete="current-password"
+              name='sifre'
+              label='Şifre'
+              type='password'
+              id='sifre'
+              autoComplete='current-password'
               value={formData.sifre}
               onChange={handleChange}
               disabled={loading}
             />
             <Button
-              type="submit"
+              type='submit'
               fullWidth
-              variant="contained"
+              variant='contained'
               sx={{ mt: 3, mb: 2 }}
               disabled={loading}
             >
@@ -119,20 +130,23 @@ const Login = () => {
 
             {/* Test Kullanıcıları Bilgisi */}
             <Box sx={{ mt: 2, width: '100%' }}>
-              <Typography variant="subtitle2" gutterBottom>
+              <Typography variant='subtitle2' gutterBottom>
                 Test Kullanıcıları:
               </Typography>
-              <Typography variant="caption" display="block">
+              <Typography variant='caption' display='block'>
                 Admin: admin / 123456
               </Typography>
-              <Typography variant="caption" display="block">
-                Ali Veli: ali.veli / 123456
+              <Typography variant='caption' display='block'>
+                Usta: usta.test / usta123
               </Typography>
-              <Typography variant="caption" display="block">
-                Ayşe Yılmaz: ayse.yilmaz / 123456
+              <Typography variant='caption' display='block'>
+                Ortacı: ortaci.test / ortaci123
               </Typography>
-              <Typography variant="caption" display="block">
-                Mehmet Kaya: mehmet.kaya / 123456
+              <Typography variant='caption' display='block'>
+                Paketlemeci: paketlemeci.test / paket123
+              </Typography>
+              <Typography variant='caption' display='block'>
+                Kalite: kalite.test / kalite123
               </Typography>
             </Box>
           </Box>

@@ -30,7 +30,9 @@ async function cleanOldMachineReferences() {
       }
     }
 
-    console.log(`✅ ${cleanedCount} kullanıcıdan eski makina referansları temizlendi`);
+    console.log(
+      `✅ ${cleanedCount} kullanıcıdan eski makina referansları temizlendi`,
+    );
     console.log('ℹ️  Kullanıcılar şimdi envanterden makina seçebilir');
   } catch (error) {
     console.error('❌ Hata:', error);

@@ -34,61 +34,75 @@ const colors = {
 };
 
 // Debug helper functions
-const createLogger = (namespace) => {
+const createLogger = namespace => {
   const log = debuggers[namespace] || debug(`mmm:${namespace}`);
-  
+
   return {
     info: (message, data = null) => {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`${colors.cyan}[${namespace.toUpperCase()}]${colors.reset} ${message}`);
+        console.log(
+          `${colors.cyan}[${namespace.toUpperCase()}]${colors.reset} ${message}`,
+        );
         if (data) {
           console.log(`${colors.dim}`, data, colors.reset);
         }
       }
       log(`INFO: ${message}`, data);
     },
-    
+
     success: (message, data = null) => {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`${colors.green}[${namespace.toUpperCase()}] ✅${colors.reset} ${message}`);
+        console.log(
+          `${colors.green}[${namespace.toUpperCase()}] ✅${colors.reset} ${message}`,
+        );
         if (data) {
           console.log(`${colors.dim}`, data, colors.reset);
         }
       }
       log(`SUCCESS: ${message}`, data);
     },
-    
+
     warn: (message, data = null) => {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`${colors.yellow}[${namespace.toUpperCase()}] ⚠️${colors.reset} ${message}`);
+        console.log(
+          `${colors.yellow}[${namespace.toUpperCase()}] ⚠️${colors.reset} ${message}`,
+        );
         if (data) {
           console.log(`${colors.dim}`, data, colors.reset);
         }
       }
       log(`WARN: ${message}`, data);
     },
-    
+
     error: (message, error = null) => {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`${colors.red}[${namespace.toUpperCase()}] ❌${colors.reset} ${message}`);
+        console.log(
+          `${colors.red}[${namespace.toUpperCase()}] ❌${colors.reset} ${message}`,
+        );
         if (error) {
-          console.log(`${colors.red}${colors.dim}`, error.stack || error, colors.reset);
+          console.log(
+            `${colors.red}${colors.dim}`,
+            error.stack || error,
+            colors.reset,
+          );
         }
       }
       log(`ERROR: ${message}`, error);
       debuggers.error(`[${namespace}] ${message}`, error);
     },
-    
+
     debug: (message, data = null) => {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`${colors.magenta}[${namespace.toUpperCase()}] 🐛${colors.reset} ${message}`);
+        console.log(
+          `${colors.magenta}[${namespace.toUpperCase()}] 🐛${colors.reset} ${message}`,
+        );
         if (data) {
           console.log(`${colors.dim}`, data, colors.reset);
         }
       }
       log(`DEBUG: ${message}`, data);
     },
-    
+
     performance: (label, startTime) => {
       const duration = Date.now() - startTime;
       const message = `${label} completed in ${duration}ms`;
@@ -97,11 +111,18 @@ const createLogger = (namespace) => {
       }
       debuggers.performance(message);
     },
-    
+
     api: (method, path, statusCode, duration) => {
-      const statusColor = statusCode >= 400 ? colors.red : statusCode >= 300 ? colors.yellow : colors.green;
+      const statusColor =
+        statusCode >= 400
+          ? colors.red
+          : statusCode >= 300
+            ? colors.yellow
+            : colors.green;
       if (process.env.NODE_ENV === 'development') {
-        console.log(`${colors.blue}[API]${colors.reset} ${method} ${path} ${statusColor}${statusCode}${colors.reset} ${duration}ms`);
+        console.log(
+          `${colors.blue}[API]${colors.reset} ${method} ${path} ${statusColor}${statusCode}${colors.reset} ${duration}ms`,
+        );
       }
       debuggers.api(`${method} ${path} - ${statusCode} - ${duration}ms`);
     },
@@ -112,15 +133,15 @@ const createLogger = (namespace) => {
 const requestLogger = (req, res, next) => {
   const startTime = Date.now();
   const { method, path, ip } = req;
-  
+
   debuggers.api(`${method} ${path} - ${ip} - Started`);
-  
+
   res.on('finish', () => {
     const duration = Date.now() - startTime;
     const logger = createLogger('api');
     logger.api(method, path, res.statusCode, duration);
   });
-  
+
   next();
 };
 
@@ -133,11 +154,16 @@ const errorLogger = (err, req, res, next) => {
 
 // Environment check
 const checkDebugMode = () => {
-  const isDebugMode = process.env.DEBUG || process.env.NODE_ENV === 'development';
+  const isDebugMode =
+    process.env.DEBUG || process.env.NODE_ENV === 'development';
   if (isDebugMode) {
     console.log(`${colors.green}🐛 Debug mode aktif!${colors.reset}`);
-    console.log(`${colors.cyan}Environment: ${process.env.NODE_ENV}${colors.reset}`);
-    console.log(`${colors.cyan}Debug namespaces: ${process.env.DEBUG || 'All'}${colors.reset}`);
+    console.log(
+      `${colors.cyan}Environment: ${process.env.NODE_ENV}${colors.reset}`,
+    );
+    console.log(
+      `${colors.cyan}Debug namespaces: ${process.env.DEBUG || 'All'}${colors.reset}`,
+    );
   }
   return isDebugMode;
 };
@@ -149,4 +175,4 @@ module.exports = {
   checkDebugMode,
   debuggers,
   colors,
-}; 
+};

@@ -12,17 +12,67 @@
     "build:frontend": "cd frontend && npm run build",
     "build:frontend:no-lint": "cd frontend && set DISABLE_ESLINT_PLUGIN=true && npm run build",
     "test:frontend": "cd frontend && npm test",
+    "test:coverage": "cd frontend && npm test -- --coverage --watchAll=false",
     "lint:frontend": "cd frontend && npm run lint",
     "lint:backend": "cd backend && npm run lint",
     "lint:all": "npm run lint:frontend && npm run lint:backend",
     "lint:fix:all": "cd frontend && npm run lint:fix && cd ../backend && npm run lint:fix",
+    "lint:fast": "cd frontend && npx eslint --cache --cache-location .eslintcache src/ && cd ../backend && npx eslint --cache --cache-location .eslintcache src/",
+    "lint:fix:fast": "cd frontend && npx eslint --cache --fix --cache-location .eslintcache src/ && cd ../backend && npx eslint --cache --fix --cache-location .eslintcache src/",
     "format:frontend": "cd frontend && npm run format",
     "format:backend": "cd backend && npm run format",
     "format:all": "npm run format:frontend && npm run format:backend",
     "code-quality": "npm run lint:all && npm run format:all",
+    "quality-report": "node quality-report.js",
+    "audit:security": "npm audit && cd backend && npm audit && cd ../frontend && npm audit",
+    "fix:all": "cd backend && npx eslint . --fix && npm run format && cd ../frontend && npx eslint src --fix && npm run format",
+    "check:all": "npm run fix:all && npm run quality-report",
+    "health-check": "node quality-report.js && echo '✅ System Health OK'",
+    "setup:prompt-dev": "scripts\\setup-prompt-development.bat",
+    "validate:env": "scripts\\validate-environment.bat",
+    "mcp:test": "npx @modelcontextprotocol/server-filesystem --version",
+    "security:audit": "npm audit --audit-level moderate && cd backend && npm audit --audit-level moderate && cd ../frontend && npm audit --audit-level moderate",
+    "optimize:cursor": "echo '🎯 Cursor optimization complete - check .cursor/settings.json'",
+    "ai-rules:test": "scripts\\test-ai-rule-system.bat",
+    "ai-rules:analyze": "node tools\\ai-rule-auto-activator.js analyze",
+    "ai-rules:help": "node tools\\ai-rule-auto-activator.js",
+    "optimize": "npm run fix:all && npm run build:frontend && npm run quality-report",
+    "dev:monitor": "npm run start:dev | tee development.log",
     "clean": "rm -rf node_modules backend/node_modules frontend/node_modules",
     "clean:build": "rm -rf frontend/build",
-    "setup": "npm run install:all && npm run build:frontend:no-lint"
+    "setup": "npm run install:all && npm run build:frontend:no-lint",
+    "quality:full": "npm run lint:all && npm run test:frontend -- --coverage --watchAll=false && npm run build:frontend",
+    "perf:analyze": "cd frontend && npm run build:analyze",
+    "security:check": "npm run audit:security && echo 'Security check completed'",
+    "quality:gate": "npm run cursor:auto-fix && npm run test:frontend -- --watchAll=false && npm run build:frontend && npm run cursor:refactor-check",
+    "complexity:check": "cd frontend && npx complexity-report --format json src/",
+    "duplicates:check": "cd frontend && npx jscpd src/ --threshold 0.1",
+    "deps:check": "cd frontend && npx depcheck && cd ../backend && npx depcheck",
+    "unused:check": "cd frontend && npx unimported",
+    "bundle:analyze": "cd frontend && npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
+    "accessibility:check": "cd frontend && npx axe-core src/",
+    "docs:api": "cd backend && npx swagger-jsdoc -d swaggerDef.js -o swagger.json routes/*.js",
+    "docs:components": "cd frontend && npx react-docgen src/components/**/*.js",
+    "docs:generate": "npm run docs:api && npm run docs:components",
+    "world-class:check": "npm run cursor:quality-suite && npm run complexity:check && npm run security:check && npm run perf:analyze",
+    "db:optimize": "cd backend && node scripts/optimizeDatabase.js",
+    "files:cleanup": "cd backend && node scripts/cleanupFiles.js",
+    "logs:archive": "cd backend && node scripts/archiveLogs.js",
+    "backup:create": "cd backend && node scripts/createBackup.js",
+    "health:check": "cd backend && node scripts/healthCheck.js",
+    "maintenance:trigger": "cd backend && node scripts/triggerMaintenance.js",
+    "maintenance:status": "cd backend && node scripts/maintenanceStatus.js",
+    "cursor:auto-fix": "cd frontend && npm run lint:fix && cd ../backend && npm run lint:fix && cd ..",
+    "cursor:pre-commit": "powershell -ExecutionPolicy Bypass -File tools/pre-commit-hook.ps1",
+    "cursor:refactor-check": "node tools/refactor-large-files.js",
+    "cursor:refactor-dashboard": "node tools/refactoring-dashboard.js",
+    "cursor:split-inventory": "node tools/split-inventory-routes.js",
+    "cursor:split-worktasks": "node tools/split-worktasks-component.js",
+    "cursor:add-comments": "node tools/add-smart-comments.js",
+    "cursor:visualize": "node tools/visualize-architecture.js",
+    "cursor:quality-suite": "npm run cursor:auto-fix && npm run quality:gate && npm run cursor:refactor-check",
+    "cursor:maintenance-suite": "npm run cursor:add-comments && npm run cursor:visualize && npm run maintenance:trigger",
+    "cursor:full-analysis": "npm run cursor:refactor-dashboard && npm run world-class:check && npm run cursor:visualize"
   },
   "keywords": [
     "checklist",
@@ -35,6 +85,7 @@
   "author": "MMM Team",
   "license": "MIT",
   "devDependencies": {
+    "@cspell/dict-tr-tr": "^3.0.6",
     "concurrently": "^8.2.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.0"
@@ -45,7 +96,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "npm run cursor:pre-commit"
     }
   },
   "lint-staged": {
@@ -54,7 +105,7 @@
       "prettier --write"
     ],
     "backend/**/*.js": [
-      "eslint --fix", 
+      "eslint --fix",
       "prettier --write"
     ],
     "**/*.{json,md}": [

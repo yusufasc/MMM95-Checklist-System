@@ -2,10 +2,10 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "🔧 Backend Debug",
+      "label": "🚀 Start Backend",
       "type": "shell",
-      "command": "npm",
-      "args": ["run", "debug"],
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "args": ["server.js"],
       "options": {
         "cwd": "${workspaceFolder}/backend"
       },
@@ -18,12 +18,27 @@
         "showReuseMessage": true,
         "clear": false
       },
-      "problemMatcher": []
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Server starting.*$",
+          "endsPattern": "^.*Server started.*$"
+        }
+      }
     },
     {
-      "label": "⚛️ Frontend Start",
+      "label": "🎮 Start Frontend",
       "type": "shell",
-      "command": "npm",
+      "command": "C:\\Program Files\\nodejs\\npm.cmd",
       "args": ["start"],
       "options": {
         "cwd": "${workspaceFolder}/frontend"
@@ -37,126 +52,152 @@
         "showReuseMessage": true,
         "clear": false
       },
-      "problemMatcher": []
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "webpack-dev-server",
+          "endsPattern": "webpack: Compiled successfully"
+        }
+      }
     },
     {
-      "label": "🔨 Fix All ESLint Errors",
+      "label": "📦 Install Backend Dependencies",
+      "type": "shell",
+      "command": "C:\\Program Files\\nodejs\\npm.cmd",
+      "args": ["install"],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "shared",
+        "showReuseMessage": false
+      }
+    },
+    {
+      "label": "📦 Install Frontend Dependencies",
+      "type": "shell",
+      "command": "C:\\Program Files\\nodejs\\npm.cmd",
+      "args": ["install"],
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "shared",
+        "showReuseMessage": false
+      }
+    },
+    {
+      "label": "🧹 Clean Install",
       "type": "shell",
       "command": "powershell",
-      "args": ["-ExecutionPolicy", "Bypass", "-File", ".\\fix-all.bat"],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "shared"
-      },
-      "problemMatcher": []
-    },
-    // GitLens ile entegre Git komutları
-    {
-      "label": "📊 Git Status (GitLens Enhanced)",
-      "type": "shell",
-      "command": "git",
-      "args": ["status", "--porcelain", "--branch"],
-      "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "🌳 Git Log (GitLens Format)",
-      "type": "shell",
-      "command": "git",
       "args": [
-        "log",
-        "--oneline",
-        "--graph",
-        "--decorate",
-        "--all",
-        "--max-count=20",
-        "--date=format:%d/%m/%Y %H:%M",
-        "--pretty=format:%C(yellow)%h%C(reset) %C(blue)%ad%C(reset) %C(green)%an%C(reset) %s %C(red)%d%C(reset)"
+        "-Command",
+        "Remove-Item -Recurse -Force -Path node_modules, package-lock.json -ErrorAction SilentlyContinue; npm install"
       ],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
       "group": "build",
       "presentation": {
         "echo": true,
         "reveal": "always",
-        "focus": true,
         "panel": "shared"
-      },
-      "problemMatcher": []
+      }
     },
     {
-      "label": "🔍 Git Diff (Working Directory)",
+      "label": "🔍 ESLint Check",
       "type": "shell",
-      "command": "git",
-      "args": ["diff", "--stat"],
-      "group": "build",
+      "command": "C:\\Program Files\\nodejs\\npm.cmd",
+      "args": ["run", "lint"],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "group": "test",
       "presentation": {
         "echo": true,
         "reveal": "always",
-        "focus": false,
         "panel": "shared"
       },
-      "problemMatcher": []
+      "problemMatcher": "$eslint-stylish"
     },
     {
-      "label": "📈 Git Contributors Stats",
+      "label": "🧪 Run Tests",
       "type": "shell",
-      "command": "git",
-      "args": ["shortlog", "-sn", "--all", "--no-merges"],
-      "group": "build",
+      "command": "C:\\Program Files\\nodejs\\npm.cmd",
+      "args": ["test"],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "group": "test",
       "presentation": {
         "echo": true,
         "reveal": "always",
-        "focus": false,
         "panel": "shared"
-      },
-      "problemMatcher": []
+      }
     },
     {
-      "label": "🔄 Git Pull + Status",
+      "label": "📊 Run Script",
       "type": "shell",
-      "command": "git",
-      "args": ["pull", "&&", "git", "status"],
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "args": ["${input:scriptFile}"],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
       "group": "build",
       "presentation": {
         "echo": true,
         "reveal": "always",
-        "focus": true,
         "panel": "shared"
-      },
-      "problemMatcher": []
+      }
     },
     {
-      "label": "💾 Quick Commit (GitLens)",
+      "label": "🗄️ MongoDB Connect Test",
       "type": "shell",
-      "command": "git",
-      "args": ["add", ".", "&&", "git", "commit", "-m", "\"${input:commitMessage}\""],
-      "group": "build",
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "args": ["-e", "const mongoose = require('mongoose'); mongoose.connect('mongodb://localhost:27017/mmm-checklist').then(() => { console.log('✅ MongoDB bağlantısı başarılı'); process.exit(0); }).catch(err => { console.error('❌ MongoDB bağlantı hatası:', err.message); process.exit(1); });"],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "group": "test",
       "presentation": {
         "echo": true,
         "reveal": "always",
-        "focus": true,
         "panel": "shared"
-      },
-      "problemMatcher": []
+      }
     }
   ],
   "inputs": [
     {
-      "id": "commitMessage",
-      "description": "Commit mesajını girin (Türkçe)",
-      "default": "feat: yeni özellik eklendi",
-      "type": "promptString"
+      "id": "scriptFile",
+      "description": "Script dosyası seç",
+      "type": "pickString",
+      "options": [
+        "scripts/setup/create-standard-modules.js",
+        "scripts/setup/createPlasticInjectionCategories.js",
+        "scripts/create-admin-user.js",
+        "scripts/recreate-roles.js",
+        "scripts/create-department.js",
+        "scripts/data/createTestUsers.js",
+        "scripts/data/createTestMachines.js",
+        "scripts/data/createTestTasks.js",
+        "scripts/create-ortaci-checklist.js",
+        "scripts/create-paketlemeci-checklist.js"
+      ]
     }
   ]
 }

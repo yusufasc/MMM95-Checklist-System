@@ -1,6 +1,24 @@
 const js = require('@eslint/js');
 
 module.exports = [
+  // Ignore patterns (ESLint 9.x format)
+  {
+    ignores: [
+      'node_modules/**',
+      'logs/**',
+      '*.log',
+      'coverage/**',
+      '.eslintcache',
+      '*.tmp',
+      '*.temp',
+      'temp-*',
+      '*.generated.js',
+      '*.db',
+      '*.sqlite',
+      'scripts/output/**',
+      'scripts/temp/**',
+    ],
+  },
   js.configs.recommended,
   {
     files: ['**/*.js'],
@@ -78,7 +96,7 @@ module.exports = [
     },
   },
   {
-    files: ['**/*.test.js', '**/*.spec.js'],
+    files: ['**/*.test.js', '**/*.spec.js', 'jest.setup.js'],
     languageOptions: {
       globals: {
         test: 'readonly',
@@ -87,8 +105,13 @@ module.exports = [
         it: 'readonly',
         beforeEach: 'readonly',
         afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
         jest: 'readonly',
       },
+    },
+    rules: {
+      'no-await-in-loop': 'off', // Test setup'da sequential operations normal
     },
   },
 ];

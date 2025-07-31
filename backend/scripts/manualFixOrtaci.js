@@ -9,7 +9,9 @@ async function manualFixOrtaci() {
 
     // Ortacı ve Paketlemeci rollerini bul
     const ortaciRole = await db.collection('roles').findOne({ ad: 'Ortacı' });
-    const paketlemeciRole = await db.collection('roles').findOne({ ad: 'Paketlemeci' });
+    const paketlemeciRole = await db
+      .collection('roles')
+      .findOne({ ad: 'Paketlemeci' });
 
     console.log('🔍 Ortacı rolü bulundu:', !!ortaciRole);
     console.log('🔍 Paketlemeci rolü bulundu:', !!paketlemeciRole);
@@ -26,8 +28,12 @@ async function manualFixOrtaci() {
     // Mevcut yetkiler
     console.log('\n📋 Mevcut checklist yetkileri:');
     ortaciRole.checklistYetkileri.forEach((yetki, index) => {
-      console.log(`  ${index}: hedefRol="${yetki.hedefRol}" (type: ${typeof yetki.hedefRol})`);
-      console.log(`      gorebilir=${yetki.gorebilir}, puanlayabilir=${yetki.puanlayabilir}`);
+      console.log(
+        `  ${index}: hedefRol="${yetki.hedefRol}" (type: ${typeof yetki.hedefRol})`,
+      );
+      console.log(
+        `      gorebilir=${yetki.gorebilir}, puanlayabilir=${yetki.puanlayabilir}`,
+      );
       console.log(
         `      Paketlemeci ile eşit mi: ${yetki.hedefRol.toString() === paketlemeciRole._id.toString()}`,
       );
@@ -48,9 +54,13 @@ async function manualFixOrtaci() {
       if (yetki.hedefRol.toString() === paketlemeciRole._id.toString()) {
         newYetki.gorebilir = true;
         newYetki.puanlayabilir = true;
-        console.log('  ✅ Paketlemeci yetkisi: görebilir=true, puanlayabilir=true');
+        console.log(
+          '  ✅ Paketlemeci yetkisi: görebilir=true, puanlayabilir=true',
+        );
       } else {
-        console.log(`  ℹ️  Diğer rol: görebilir=${newYetki.gorebilir}, puanlayabilir=false`);
+        console.log(
+          `  ℹ️  Diğer rol: görebilir=${newYetki.gorebilir}, puanlayabilir=false`,
+        );
       }
 
       return newYetki;
@@ -61,7 +71,10 @@ async function manualFixOrtaci() {
     // İlk olarak checklistYetkileri alanını tamamen sil
     await db
       .collection('roles')
-      .updateOne({ _id: ortaciRole._id }, { $unset: { checklistYetkileri: '' } });
+      .updateOne(
+        { _id: ortaciRole._id },
+        { $unset: { checklistYetkileri: '' } },
+      );
     console.log('🗑️  Eski checklistYetkileri silindi');
 
     // Sonra yeni değerlerle tekrar oluştur
@@ -79,12 +92,16 @@ async function manualFixOrtaci() {
 
     // DOĞRULAMA: Yeniden oku
     console.log('\n🔍 Doğrulama yapılıyor...');
-    const verifiedRole = await db.collection('roles').findOne({ _id: ortaciRole._id });
+    const verifiedRole = await db
+      .collection('roles')
+      .findOne({ _id: ortaciRole._id });
 
     console.log('📊 Güncellenmiş checklistYetkileri:');
     verifiedRole.checklistYetkileri.forEach((yetki, index) => {
       const roleName =
-        yetki.hedefRol.toString() === paketlemeciRole._id.toString() ? 'Paketlemeci' : 'Diğer';
+        yetki.hedefRol.toString() === paketlemeciRole._id.toString()
+          ? 'Paketlemeci'
+          : 'Diğer';
       console.log(
         `  ${index}: ${roleName} - görebilir=${yetki.gorebilir}, puanlayabilir=${yetki.puanlayabilir}, onaylayabilir=${yetki.onaylayabilir}`,
       );
@@ -101,7 +118,9 @@ async function manualFixOrtaci() {
       console.log(`   ✅ Onaylayabilir: ${paketlemeciYetkisi.onaylayabilir}`);
 
       if (paketlemeciYetkisi.puanlayabilir === true) {
-        console.log('\n🎉 BAŞARILI! Ortacı artık Paketlemeci checklistlerini puanlayabilir!');
+        console.log(
+          '\n🎉 BAŞARILI! Ortacı artık Paketlemeci checklistlerini puanlayabilir!',
+        );
       } else {
         console.log('\n❌ BAŞARISIZ! Puanlayabilir hala true değil');
       }

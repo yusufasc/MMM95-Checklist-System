@@ -1,0 +1,223 @@
+---
+description: Production deployment, CI/CD, Docker, environment configuration. File types: Dockerfile, .yml, .env. Triggers: deployment, production, docker, CI/CD, build, environment.
+globs: 
+alwaysApply: false
+---
+# 🚀 MMM Checklist - Deployment & Production Kuralları
+
+## Pre-Deployment Checklist (ZORUNLU)
+```bash
+# ✅ Quality gate validation
+npm run quality:gate          # ESLint + Build + Tests
+npm run world-class:check     # Full analysis
+npm run security:check        # Security audit
+npm run bundle:analyze        # Bundle size check
+```
+
+## Production Build Optimization
+```bash
+# ✅ Frontend production build
+cd frontend/
+npm run build:production      # GENERATE_SOURCEMAP=false
+npm run analyze:size         # Bundle analysis
+
+# ✅ Backend production setup
+cd backend/
+npm prune --production       # Remove dev dependencies
+npm audit fix               # Security fixes
+```
+
+## Environment Configuration
+```javascript
+// ✅ Production environment variables
+// .env.production
+NODE_ENV=production
+JWT_SECRET=your-production-secret
+MONGODB_URI=mongodb://prod-server/mmm-checklist
+FRONTEND_URL=https://yourdomain.com
+API_URL=https://api.yourdomain.com
+
+// ✅ Security headers for production
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", process.env.API_URL]
+    }
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
+}));
+```
+
+## Performance Validation Targets
+- **Frontend Bundle**: < 600KB (gzipped) ✅
+- **Backend Response**: < 200ms average ✅
+- **Lighthouse Score**: > 90 ✅
+- **PWA Score**: > 90 ✅
+- **ESLint Compliance**: 100% ✅
+
+## Docker Deployment
+```dockerfile
+# ✅ Frontend Dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY build/ ./build/
+EXPOSE 3000
+CMD ["npx", "serve", "-s", "build", "-l", "3000"]
+
+# ✅ Backend Dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+EXPOSE 5000
+CMD ["node", "server.js"]
+```
+
+## Database Migration & Backup
+```javascript
+// ✅ Production migration script
+const migrateToProduction = async () => {
+  try {
+    // 1. Backup current data
+    await backupDatabase();
+    
+    // 2. Run migrations
+    await runMigrations();
+    
+    // 3. Verify data integrity
+    await verifyData();
+    
+    console.log("Migration completed successfully");
+  } catch (error) {
+    console.error("Migration failed:", error);
+    await restoreBackup();
+  }
+};
+```
+
+## Monitoring & Logging
+```javascript
+// ✅ Production logging
+const winston = require('winston');
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'combined.log' })
+  ]
+});
+
+// ✅ Health check endpoint
+app.get('/health', async (req, res) => {
+  try {
+    await mongoose.connection.db.admin().ping();
+    res.json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
+  } catch (error) {
+    res.status(500).json({ status: 'unhealthy', error: error.message });
+  }
+});
+```
+
+## CI/CD Pipeline
+```yaml
+# ✅ GitHub Actions workflow
+name: MMM Checklist CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Install dependencies
+      run: |
+        cd frontend && npm ci
+        cd ../backend && npm ci
+    
+    - name: Run quality checks
+      run: |
+        cd frontend && npm run lint && npm run build
+        cd ../backend && npm run lint && npm test
+    
+    - name: Security audit
+      run: |
+        cd frontend && npm audit
+        cd ../backend && npm audit
+```
+
+## Performance Monitoring
+```javascript
+// ✅ Real-time performance tracking
+const performanceMonitor = {
+  trackAPICall: (endpoint, duration) => {
+    if (duration > 1000) {
+      logger.warn(`Slow API call: ${endpoint} took ${duration}ms`);
+    }
+  },
+  
+  trackBundleSize: (size) => {
+    if (size > 600 * 1024) { // 600KB
+      logger.error(`Bundle size exceeded: ${size} bytes`);
+    }
+  }
+};
+```
+
+## Rollback Strategy
+```bash
+# ✅ Rollback commands
+# Database rollback
+npm run db:rollback --to=version-x.x.x
+
+# Application rollback
+docker tag myapp:previous myapp:latest
+docker-compose restart
+
+# Frontend rollback
+aws s3 sync s3://backup-bucket/version-x.x.x/ s3://production-bucket/
+```
+
+## Post-Deployment Verification
+- [ ] Health check endpoint responds ✅
+- [ ] Database connection successful ✅
+- [ ] All API endpoints functional ✅
+- [ ] Frontend loads correctly ✅
+- [ ] Performance metrics within targets ✅
+- [ ] Security headers active ✅
+- [ ] SSL certificate valid ✅
+- [ ] PWA installable ✅
+
+## Production Emergency Contacts
+- **DevOps**: emergency@yourcompany.com
+- **Database**: dba@yourcompany.com
+- **Security**: security@yourcompany.com 

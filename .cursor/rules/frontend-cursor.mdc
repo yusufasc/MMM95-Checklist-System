@@ -1,0 +1,2726 @@
+---
+description: React components, JSX files, Material-UI, hooks, state management. File paths: src/components/, src/pages/, src/hooks/. Triggers: React, component, jsx, useState, useEffect, Material-UI, MUI, frontend, responsive, UI.
+globs: 
+alwaysApply: false
+---
+# 🎯 MMM Checklist - Frontend Development Rules
+
+## 📋 Bugünkü Güncellemeler (2025-01-21)
+
+### Bonus Evaluation System Fixes
+- **NaN Display Prevention**: Fallback values for undefined scores
+  ```javascript
+  // ✅ Doğru: NaN önleme
+  puanlama.puan || 0
+  puanlama.maksimumPuan || 10
+  const percentage = maxPuan > 0 ? ((puan / maxPuan) * 100) : 0;
+  
+  // ❌ Yanlış: NaN riski
+  puanlama.puan
+  (puan / maxPuan) * 100
+  ```
+
+- **Field Mapping Compatibility**: Backend-Frontend field uyumluluğu
+  ```javascript
+  // ✅ Backward compatibility
+  madde.baslik || madde.soru
+  madde.puan || madde.kontrolPuani || 0
+  madde.maksimumPuan || madde.maxPuan
+  ```
+
+### React Key Uniqueness Patterns
+- **Unique Key Generation**: Duplicate key hatalarını önleme
+  ```javascript
+  // ✅ Doğru: Unique key patterns
+  key={`${activity.tip || 'activity'}_${activity._id}_${index}`}
+  key={`bonus_eval_${evaluation._id}`}
+  key={`kalip_degisim_main_${evaluation._id}`}
+  
+  // ❌ Yanlış: Duplicate key riski
+  key={activity._id}
+  key={evaluation._id}
+  ```
+
+### Rating Component Safety
+- **Safe Rating Values**: Material-UI Rating component güvenliği
+  ```javascript
+  // ✅ Doğru: Güvenli rating
+  <Rating
+    value={puan || 0}
+    max={maksimumPuan || 10}
+    readOnly
+    precision={0.1}
+  />
+  
+  // ❌ Yanlış: Undefined value riski
+  <Rating value={puan} max={maksimumPuan} />
+  ```
+
+## 🔧 React Best Practices
+
+### Component Key Management
+- Her list item için unique key kullan
+- Tip + ID + index kombinasyonu ile unique key oluştur
+#### 1. Kullanılmayan Import'lar Temizlendi
+```javascript
+// ✅ TestExcelDownload.js - Kullanılmayan Upload icon kaldırıldı
+// ❌ ÖNCE: 
+import { Download, Upload } from '@mui/icons-material';
+
+// ✅ SONRA: Sadece kullanılan import
+import { Download } from '@mui/icons-material';
+
+// ✅ MonthlyPerformance.js - Kullanılmayan Material-UI import'ları
+// ❌ ÖNCE: 
+import {
+  Box, Typography, Card, CardContent,
+  Paper, Grid, Chip, IconButton, Tooltip,
+} from '@mui/material';
+import {
+  TrendingUp as TrendingUpIcon,
+  TrendingDown as TrendingDownIcon,
+  VisibilityIcon,
+} from '@mui/icons-material';
+import {
+  ResponsiveContainer, LineChart, Line,
+  XAxis, YAxis, CartesianGrid,
+  Tooltip as RechartsTooltip, Legend,
+} from 'recharts';
+
+// ✅ SONRA: Sadece kullanılan import'lar
+import {
+  Box, Typography, Card, CardContent,
+  Grid, Chip, Avatar, LinearProgress,
+} from '@mui/material';
+import {
+  TrendingUp as TrendingUpIcon,
+  Assignment as AssignmentIcon,
+} from '@mui/icons-material';
+import {
+  ResponsiveContainer, XAxis, YAxis, CartesianGrid,
+  Tooltip as RechartsTooltip, AreaChart, Area,
+} from 'recharts';
+
+// ✅ OverviewDashboard.js - Kullanılmayan prop kaldırıldı
+// ❌ ÖNCE: const OverviewDashboard = ({ summary, dailyPerformance, onShowTaskDetails }) => {
+// ✅ SONRA: const OverviewDashboard = ({ summary, dailyPerformance }) => {
+
+// ✅ useWorkTaskData.js - Kullanılmayan React hook import'u
+// ❌ ÖNCE: import { useState, useCallback, useEffect } from 'react';
+// ✅ SONRA: import { useState, useCallback } from 'react';
+```
+
+#### 2. React Hook Dependencies Düzeltildi
+```javascript
+// ✅ useTaskScoring.js - useCallback dependency uyarısı düzeltildi
+// ❌ ÖNCE: Missing dependency 'onTabSwitch'
+const submitScore = useCallback(async () => {
+  // ... işlem kodları ...
+  
+  // Puanlama sonrası onaylananlar tab'ına geç
+  if (onTabSwitch) {
+    setTimeout(() => {
+      onTabSwitch(1); // Tab 1: Onaylananlar
+    }, 1000);
+  }
+}, [
+  selectedTask,
+  scoringData,
+  onSuccess,
+  onError,
+  onDataRefresh,
+  closeScoreDialog,
+]); // onTabSwitch eksik dependency
+
+// ✅ SONRA: onTabSwitch dependency eklendi
+}, [
+  selectedTask,
+  scoringData,
+  onSuccess,
+  onError,
+  onDataRefresh,
+  onTabSwitch, // ✅ Missing dependency eklendi
+  closeScoreDialog,
+]);
+
+// ✅ ScoreDetails.js - useCallback ile dependency düzeltmesi
+// ❌ ÖNCE: Missing dependency warning
+useEffect(() => {
+  loadScoreData();
+}, [filters, page, sortBy, sortOrder]); // loadScoreData eksik
+
+const loadScoreData = async () => {
+  // API çağrısı
+};
+
+// ✅ SONRA: useCallback ile çözüm
+const loadScoreData = useCallback(async () => {
+  try {
+    setLoading(true);
+    const response = await myActivityAPI.getScoresDetail({
+      ...filters, page, limit: 10, sortBy, sortOrder,
+    });
+    setScoreData(response.data);
+  } catch (error) {
+    console.error('Puan detayları yükleme hatası:', error);
+  } finally {
+    setLoading(false);
+  }
+}, [filters, page, sortBy, sortOrder]);
+
+useEffect(() => {
+  loadScoreData();
+}, [loadScoreData]);
+```
+
+#### 3. Kullanılmayan Parametreler ve Değişkenler Düzeltildi
+```javascript
+// ✅ ManualEntry.js - Kullanılmayan state değişkenleri kaldırıldı
+// ❌ ÖNCE: Kullanılmayan upload state'leri
+const [uploadProgress, setUploadProgress] = useState(0);
+const [uploadResults, setUploadResults] = useState(null);
+const [uploadYear, setUploadYear] = useState(new Date().getFullYear()); // Kullanılmıyor
+const [uploadMonth, setUploadMonth] = useState(new Date().getMonth() + 1); // Kullanılmıyor
+
+// ✅ SONRA: Kullanılmayan değişkenler kaldırıldı
+const [uploadProgress, setUploadProgress] = useState(0);
+const [uploadResults, setUploadResults] = useState(null);
+// uploadYear ve uploadMonth kaldırıldı
+
+// ✅ MonthlyPerformance.js - onShowTaskDetails parametresi kaldırıldı
+// ❌ ÖNCE: 
+const MonthlyPerformance = ({ filters, onShowTaskDetails }) => {
+  // onShowTaskDetails hiç kullanılmıyor
+  return <div>{/* component content */}</div>;
+};
+
+// ✅ SONRA:
+const MonthlyPerformance = ({ filters }) => {
+  // Sadece kullanılan prop'lar
+  return <div>{/* component content */}</div>;
+};
+
+// ✅ OverviewDashboard.js - Aynı düzeltme
+// ❌ ÖNCE: ({ summary, dailyPerformance, onShowTaskDetails })
+// ✅ SONRA: ({ summary, dailyPerformance })
+```
+
+#### 4. Emoji Accessibility Düzeltildi ✅ YENİ
+```javascript
+// ✅ TestExcelDownload.js - Screen reader uyumluluğu
+// ❌ ÖNCE: Accessible emoji uyarıları
+<Typography variant="h5" gutterBottom>
+  📊 Excel Download Test
+</Typography>
+
+<Typography variant="subtitle2" gutterBottom>
+  📋 Yeni Basit Format - 4 Kolon:
+</Typography>
+
+<Typography variant="subtitle2" color="primary" gutterBottom>
+  📖 Kullanım Rehberi:
+</Typography>
+
+// ✅ SONRA: ARIA-compliant emoji'ler
+<Typography variant="h5" gutterBottom>
+  <span role="img" aria-label="grafik tablosu">📊</span> Excel Download Test
+</Typography>
+
+<Typography variant="subtitle2" gutterBottom>
+  <span role="img" aria-label="pano">📋</span> Yeni Basit Format - 4 Kolon:
+</Typography>
+
+<Typography variant="subtitle2" color="primary" gutterBottom>
+  <span role="img" aria-label="kitap">📖</span> Kullanım Rehberi:
+</Typography>
+```
+
+### 🔧 Runtime Hataları Düzeltmesi (2025-02-06)
+
+#### 1. PropTypes Hatası (Quality Control)
+```javascript
+// ❌ HATA: Failed prop type: The prop `evaluation.kalip.kod` is marked as required in `EvaluationDetail`, but its value is `undefined`.
+
+// ❌ ÖNCE: Required prop'lar
+EvaluationDetail.propTypes = {
+  evaluation: PropTypes.shape({
+    kalip: PropTypes.shape({
+      kod: PropTypes.string.isRequired, // ❌ Required ama undefined olabiliyor
+      ad: PropTypes.string.isRequired,  // ❌ Required ama undefined olabiliyor
+    }),
+  }).isRequired,
+};
+
+// ✅ SONRA: Optional prop'lar
+EvaluationDetail.propTypes = {
+  evaluation: PropTypes.shape({
+    kalip: PropTypes.shape({
+      kod: PropTypes.string, // ✅ Optional
+      ad: PropTypes.string,  // ✅ Optional
+    }),
+  }).isRequired,
+};
+```
+
+#### 2. DOM Nesting Hatası (QualityScores)
+```javascript
+// ❌ HATA: validateDOMNesting(...): <div> cannot appear as a descendant of <p>.
+
+// ❌ ÖNCE: Chip inside Typography (p > div)
+<Typography variant="body2" sx={{ mb: 1 }}>
+  <strong>Kategori:</strong>
+  <Chip label={item.kategori} size="small" />
+</Typography>
+
+// ✅ SONRA: Box container with span Typography
+<Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+  <Typography variant="body2" component="span">
+    <strong>Kategori:</strong>
+  </Typography>
+  <Chip label={item.kategori} size="small" />
+</Box>
+```
+
+#### 3. Güvenli Kalıp Gösterimi
+```javascript
+// ❌ ÖNCE: Unsafe kalıp gösterimi
+<Typography variant='body2' fontWeight='medium'>
+  {`${evaluation.kalip.kod} - ${evaluation.kalip.ad}`} // ❌ Crash if undefined
+</Typography>
+
+// ✅ SONRA: Safe kalıp gösterimi
+<Typography variant='body2' fontWeight='medium'>
+  {evaluation.kalip?.kod && evaluation.kalip?.ad 
+    ? `${evaluation.kalip.kod} - ${evaluation.kalip.ad}`
+    : evaluation.kalip?.kod || evaluation.kalip?.ad || 'Kalıp bilgisi eksik'
+  }
+</Typography>
+```
+
+### 🔧 ESLint Düzeltme Patterns
+
+#### 1. Import Optimization
+```javascript
+// ❌ Gereksiz import'lar - Bundle size artırır
+import {
+  Paper, IconButton, Tooltip, // Kullanılmıyor
+  Box, Typography, Card       // Kullanılıyor
+} from '@mui/material';
+
+// ✅ Sadece kullanılan import'lar
+import { Box, Typography, Card } from '@mui/material';
+
+// ❌ Kullanılmayan icon import'ları
+import {
+  VisibilityIcon,    // Kullanılmıyor
+  TrendingUpIcon,    // Kullanılıyor
+  TrendingDownIcon   // Kullanılmıyor
+} from '@mui/icons-material';
+
+// ✅ Sadece kullanılan icon'lar
+import { TrendingUpIcon } from '@mui/icons-material';
+```
+
+#### 2. React Hook Dependencies
+```javascript
+// ❌ Missing dependency - ESLint uyarısı
+useEffect(() => {
+  loadData();
+}, [filters]); // loadData eksik
+
+const loadData = async () => {
+  // API call with filters
+};
+
+// ✅ useCallback ile dependency çözümü
+const loadData = useCallback(async () => {
+  // API call with filters
+}, [filters, page, sortBy]);
+
+useEffect(() => {
+  loadData();
+}, [loadData]);
+
+// ✅ Alternatif: Inline function
+useEffect(() => {
+  const loadData = async () => {
+    // API call
+  };
+  loadData();
+}, [filters, page, sortBy]);
+```
+
+#### 3. Prop Validation
+```javascript
+// ❌ Kullanılmayan prop - ESLint uyarısı
+const Component = ({ data, onAction, unusedProp }) => {
+  return (
+    <div>
+      {data.map(item => (
+        <button key={item.id} onClick={() => onAction(item)}>
+          {item.name}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+// ✅ Kullanılmayan prop kaldırıldı
+const Component = ({ data, onAction }) => {
+  return (
+    <div>
+      {data.map(item => (
+        <button key={item.id} onClick={() => onAction(item)}>
+          {item.name}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+// ✅ Alternatif: Underscore prefix
+const Component = ({ data, onAction, unusedProp: _unusedProp }) => {
+  // _unusedProp ESLint uyarısı vermez
+};
+```
+
+#### 4. Tree-Shaking Optimization
+```javascript
+// ❌ Bundle killer - Tüm library import'u
+import * as MUI from '@mui/material';
+import * as Icons from '@mui/icons-material';
+
+// ✅ Selective imports - Tree-shaking friendly
+import { Button, TextField, Dialog } from '@mui/material';
+import { Add as AddIcon, Edit as EditIcon } from '@mui/icons-material';
+
+// ❌ Default import for large libraries
+import moment from 'moment'; // Tüm moment.js
+
+// ✅ Specific imports
+import { format, parseISO } from 'date-fns'; // Sadece gerekli fonksiyonlar
+```
+
+#### 5. PropTypes Best Practices
+```javascript
+// ✅ Safe PropTypes patterns
+Component.propTypes = {
+  // Required props
+  id: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  
+  // Optional props
+  description: PropTypes.string,
+  isActive: PropTypes.bool,
+  
+  // Nested objects - optional fields
+  user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    email: PropTypes.string, // Optional
+    avatar: PropTypes.string, // Optional
+  }),
+  
+  // Arrays
+  items: PropTypes.arrayOf(PropTypes.string),
+  
+  // Functions
+  onClick: PropTypes.func,
+  onSubmit: PropTypes.func.isRequired,
+  
+  // Enums
+  status: PropTypes.oneOf(['active', 'inactive', 'pending']),
+  
+  // Any type (use sparingly)
+  data: PropTypes.any,
+};
+
+// ✅ Default props
+Component.defaultProps = {
+  description: '',
+  isActive: false,
+  items: [],
+  onClick: () => {},
+};
+```
+
+## 🚀 FRONTEND CACHE SİSTEMİ (2025-02-06)
+
+### Frontend Cache Service Integration ✅
+```javascript
+// frontend/src/services/cacheService.js - Browser-based caching
+import frontendCache from './cacheService';
+
+// Cache TTL in milliseconds
+frontendCache.TTL = {
+  // SHORT CACHE (1-5 minutes)
+  DASHBOARD: 2 * 60 * 1000,        // 2 min
+  USER_TASKS: 2 * 60 * 1000,       // 2 min
+  CONTROL_PENDING: 1 * 60 * 1000,  // 1 min
+  MY_ACTIVITY: 3 * 60 * 1000,      // 3 min
+  
+  // MEDIUM CACHE (5-15 minutes)
+  USERS_LIST: 10 * 60 * 1000,      // 10 min
+  ROLES_LIST: 15 * 60 * 1000,      // 15 min
+  DEPARTMENTS: 15 * 60 * 1000,     // 15 min
+  MACHINES: 10 * 60 * 1000,        // 10 min
+  INVENTORY: 10 * 60 * 1000,       // 10 min
+  
+  // LONG CACHE (15-60 minutes)
+  TEMPLATES: 30 * 60 * 1000,       // 30 min
+  SETTINGS: 60 * 60 * 1000,        // 60 min
+};
+```
+
+### API Cache Wrapper Pattern ✅
+```javascript
+// frontend/src/services/api.js - Cache wrapper function
+const withCache = (apiCall, cacheKey, ttl = frontendCache.TTL.DASHBOARD, storage = 'memory') => {
+  return async (...args) => {
+    // Cache'den kontrol et
+    const cachedData = frontendCache.get(cacheKey, storage);
+    if (cachedData) {
+      return { data: cachedData };
+    }
+    
+    // Cache miss - API çağrısı yap
+    const response = await apiCall(...args);
+    
+    // Başarılı response'u cache'le
+    if (response.data) {
+      frontendCache.set(cacheKey, response.data, ttl, storage);
+    }
+    
+    return response;
+  };
+};
+
+// ✅ Cached API calls
+export const usersAPI = {
+  getAll: withCache(
+    () => api.get('/users'),
+    frontendCache.KEYS.USERS_LIST,
+    frontendCache.TTL.USERS_LIST,
+    'sessionStorage'
+  ), // 🚀 CACHE: 10 dakika
+  
+  create: (userData) => {
+    // Cache'i temizle
+    frontendCache.invalidateUser();
+    return api.post('/users', userData);
+  },
+  
+  update: (id, userData) => {
+    // Cache'i temizle
+    frontendCache.invalidateUser(id);
+    return api.put(`/users/${id}`, userData);
+  },
+};
+```
+
+### Cache Key Management ✅
+```javascript
+// Cache key patterns
+frontendCache.KEYS = {
+  // Dashboard
+  DASHBOARD_SUMMARY: (userId) => `dashboard_summary_${userId}`,
+  DASHBOARD_ROLE: (role) => `dashboard_role_${role}`,
+  
+  // Users & Auth
+  USER_PROFILE: (userId) => `user_profile_${userId}`,
+  USERS_LIST: 'users_list',
+  
+  // Tasks
+  USER_TASKS: (userId) => `user_tasks_${userId}`,
+  CONTROL_PENDING: (userId) => `control_pending_${userId}`,
+  
+  // MyActivity
+  MY_ACTIVITY_SUMMARY: (userId) => `my_activity_summary_${userId}`,
+  MY_ACTIVITY_DETAILED: (userId, page) => `my_activity_detailed_${userId}_${page}`,
+  MY_ACTIVITY_SCORES: (userId, type) => `my_activity_scores_${userId}_${type}`,
+  
+  // Inventory
+  INVENTORY_DASHBOARD: 'inventory_dashboard',
+  INVENTORY_CATEGORIES: 'inventory_categories',
+  MACHINES_LIST: (source) => `machines_list_${source || 'all'}`,
+};
+```
+
+### Cache Storage Options ✅
+```javascript
+// Storage types: 'memory', 'localStorage', 'sessionStorage'
+
+// Memory cache - Sayfa yenileme ile silinir
+frontendCache.set(key, data, ttl, 'memory');
+
+// Session storage - Tab kapanana kadar kalır
+frontendCache.set(key, data, ttl, 'sessionStorage');
+
+// Local storage - Manuel silinene kadar kalır
+frontendCache.set(key, data, ttl, 'localStorage');
+```
+
+### Cache Invalidation Helpers ✅
+```javascript
+// Cache invalidation on data changes
+const handleUserUpdate = async (userData) => {
+  try {
+    await usersAPI.update(userId, userData);
+    
+    // Cache'i temizle
+    frontendCache.invalidateUser(userId);
+    
+    // UI'yi güncelle
+    showSnackbar('Kullanıcı güncellendi', 'success');
+  } catch (error) {
+    showSnackbar('Güncelleme hatası', 'error');
+  }
+};
+
+// Pattern-based cache clearing
+frontendCache.clearPattern('user_'); // Tüm user cache'lerini temizle
+frontendCache.clearPattern('inventory_'); // Tüm inventory cache'lerini temizle
+```
+
+### React Hook Cache Integration ✅
+```javascript
+// Custom hook with cache support
+const useUsersData = () => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadUsers = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Cache'li API çağrısı
+      const response = await usersAPI.getAll();
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Users loading error:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const createUser = useCallback(async (userData) => {
+    try {
+      await usersAPI.create(userData);
+      
+      // Cache temizlendikten sonra yeniden yükle
+      await loadUsers();
+    } catch (error) {
+      throw error;
+    }
+  }, [loadUsers]);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
+
+  return { users, loading, createUser, refreshUsers: loadUsers };
+};
+```
+
+## 🚨 GÜNCEL DEĞİŞİKLİKLER (2025-02-06)
+
+### 🎯 MyActivity - Kontrol Puanları Kart Entegrasyonu
+```javascript
+// ✅ YENİ: "Kontrol Puanlarım" segmenti → "Genel Karnem" segmentine kart olarak taşındı
+// ScoreBreakdown.js component'ine kontrol puanları kartı eklendi
+
+// Import'lar güncellendi
+import controlScoresAPI from '../../services/controlScoresAPI';
+import { SecurityIcon } from '@mui/icons-material';
+
+// State eklendi
+const [controlSummary, setControlSummary] = useState(null);
+const [controlLoading, setControlLoading] = useState(false);
+const [controlError, setControlError] = useState(null);
+
+// API çağrısı eklendi
+const loadControlScores = useCallback(async () => {
+  try {
+    setControlLoading(true);
+    const response = await controlScoresAPI.getMySummary();
+    setControlSummary(response.data);
+  } catch (err) {
+    setControlError(
+      err.response?.data?.message ||
+        'Kontrol puanları yüklenirken hata oluştu',
+    );
+  } finally {
+    setControlLoading(false);
+  }
+}, []);
+
+// Grid yapısı: md=6 → md=4 değişimi (3'lü hizalama için)
+<Grid item xs={12} md={4}>
+  <Fade in={true} timeout={1700}>
+    <Card sx={{
+      height: '100%',
+      border: '2px solid',
+      borderColor: controlSummary?.genel?.toplamPuan > 0 ? 'purple' : 'grey.300',
+      transition: 'all 0.3s ease',
+      '&:hover': {
+        transform: 'translateY(-4px)',
+        boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+      },
+    }}>
+      <CardContent>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'purple' }}>
+            🛡️ Kontrol Puanları
+          </Typography>
+          <SecurityIcon sx={{ color: 'purple', fontSize: 28 }} />
+        </Box>
+        
+        {/* Puan gösterimi */}
+        <Typography variant="h3" sx={{ 
+          fontWeight: 'bold', 
+          color: 'purple', 
+          textAlign: 'center', 
+          mb: 1 
+        }}>
+          {controlSummary?.genel?.toplamPuan || 0}
+        </Typography>
+        
+        {/* Alt bilgiler */}
+        <Stack spacing={1}>
+          <Chip
+            label={`${controlSummary?.genel?.toplamGorev || 0} Görev Puanlandı`}
+            size="small"
+            sx={{ backgroundColor: 'purple', color: 'white' }}
+          />
+          <LinearProgress
+            variant="determinate"
+            value={Math.min(((controlSummary?.genel?.toplamPuan || 0) / 1000) * 100, 100)}
+            sx={{ height: 8, borderRadius: 4 }}
+          />
+        </Stack>
+      </CardContent>
+    </Card>
+  </Fade>
+</Grid>
+```
+
+### 🎯 MyActivity Tab Yapısı Düzenlendi
+```javascript
+// ❌ ESKİ: 8 tab (Kontrol Puanlarım ayrı tab)
+// ✅ YENİ: 7 tab (Kontrol Puanları Genel Karnem'de kart olarak)
+
+const tabs = [
+  { id: 0, label: 'Genel Bakış' },
+  { id: 1, label: 'Detaylı Aktiviteler' },
+  { id: 2, label: 'Genel Karnem' }, // ← Kontrol Puanları kartı burada
+  { id: 3, label: 'Kalite Kontrol Puanlarım' },
+  { id: 4, label: 'İK Puanlarım' },
+  { id: 5, label: 'Görev Puanlarım' },
+  { id: 6, label: 'Sıralama' },
+];
+
+// Tab 2 yükleme aksiyonu güncellendi
+{
+  id: 2,
+  label: 'Genel Karnem',
+  loadAction: async () => {
+    await loadScoreBreakdown({ ...filters, tip: 'all' });
+    await loadMonthlyTotals(filters);
+    // Kontrol puanları otomatik yükleniyor (useEffect'te)
+  },
+}
+```
+
+### 🧪 WorkTask Test Verisi Oluşturma ✅
+```javascript
+// ✅ YENİ: backend/create-test-worktasks.js
+// WorkTask test verileri:
+// - 3 adet test WorkTask oluşturuldu
+// - ID'ler: 684685b4f6e91d8a01935914, 684685b4f6e91d8a01935919, 684685b4f6e91d8a0193591e
+// - Machine model kullanımı (InventoryItem yerine)
+// - Required field'lar: makinaDurmaSaati, yeniKalipAktifSaati
+// - 80-100% arası kontrol puanları
+// - Tamamlanmış ve onaylanmış durumda
+
+const workTask = new WorkTask({
+  kullanici: adminUser._id,
+  checklist: checklistTemplate._id,
+  makina: makina._id,
+  indirilenKalip: indirilenKalip._id,
+  baglananHamade: baglananKalip._id,
+  makinaDurmaSaati: new Date(Date.now() - (i * 24 * 60 * 60 * 1000) - (60 * 60 * 1000)), // 1 saat önce durdu
+  yeniKalipAktifSaati: new Date(Date.now() - (i * 24 * 60 * 60 * 1000) - (30 * 60 * 1000)), // 30 dk sonra aktif
+  maddeler: checklistTemplate.maddeler.map((madde, index) => ({
+    maddeId: madde._id,
+    soru: madde.soru,
+    yapildi: true,
+    yapilmaTarihi: new Date(),
+    puan: madde.puan,
+    maxPuan: madde.puan,
+    kontrolPuani: Math.floor(madde.puan * (0.8 + Math.random() * 0.2)), // 80-100% puan
+    kontrolYorumu: `Test kontrol yorumu ${index + 1}`,
+    yorum: `Test kullanıcı yorumu ${index + 1}`,
+    resimUrl: '',
+  })),
+  durum: 'tamamlandi',
+  toplamPuan: checklistTemplate.maddeler.reduce((sum, madde) => sum + madde.puan, 0),
+  tamamlanmaTarihi: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)), // i gün önce
+  onaylayanKullanici: adminUser._id,
+  onayTarihi: new Date(Date.now() - (i * 24 * 60 * 60 * 1000) + (2 * 60 * 60 * 1000)), // 2 saat sonra onaylanmış
+  onayNotu: `Test onay notu ${i}`,
+});
+```
+
+### TaskDetailsModal React Render Hatası Düzeltmeleri ✅
+```javascript
+// ❌ ESKİ: Object render hatası veren kod
+<Typography variant='h4'>
+  {taskDetails.puanlar.kontrolToplamPuani || 0}
+</Typography>
+
+// ✅ YENİ: Backend data yapısına uygun düzeltme
+<Typography variant='h4'>
+  {taskDetails.kontrolToplamPuani || 0}
+</Typography>
+
+// ❌ ESKİ: Object'i direkt render etme hatası
+<strong>Makina:</strong> {taskDetails.makina} // Object render hatası
+
+// ✅ YENİ: Backend string olarak döndürüyor
+<strong>Makina:</strong> {taskDetails.makina} // String format: "Makina Adı (Envanter Kodu)"
+```
+
+### MyActivity API Integration ✅
+```javascript
+// ✅ YENİ: TaskDetailsModal API endpoint
+// GET /api/my-activity/task-details/:id
+// Desteklenen task tipleri:
+// - Normal Task (checklist)
+// - WorkTask (worktask) 
+// - HR Evaluation (hr_checklist_, hr_mesai_, hr_devamsizlik_)
+// - Quality Control (quality_control)
+
+const TaskDetailsModal = ({ open, onClose, taskId }) => {
+  const [taskDetails, setTaskDetails] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (open && taskId) {
+      loadTaskDetails();
+    }
+  }, [open, taskId]);
+
+  const loadTaskDetails = async () => {
+    try {
+      setLoading(true);
+      const response = await myActivityAPI.getTaskDetails(taskId);
+      setTaskDetails(response.data);
+    } catch (error) {
+      console.error('Task details yüklenirken hata:', error);
+      showSnackbar('Görev detayları yüklenemedi', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Backend'den gelen data yapısı:
+  // {
+  //   id: string,
+  //   tip: 'checklist' | 'worktask' | 'hr_checklist' | 'quality_control',
+  //   checklistAdi: string,
+  //   kategori: string,
+  //   makina: string, // "Makina Adı (Envanter Kodu)" format
+  //   kontrolToplamPuani: number, // Direkt erişim
+  //   maddeler: [{ soru, maxPuan, kontrolPuani, sira, ... }]
+  // }
+};
+```
+
+### React Object Render Error Solutions ✅
+```javascript
+// ❌ YANLIŞ: Objects are not valid as a React child
+<Typography>
+  {taskDetails.makina} // Object: {ad: "...", envanterKodu: "..."}
+</Typography>
+
+// ✅ DOĞRU: Backend string döndürüyor
+<Typography>
+  {taskDetails.makina} // String: "Makina Adı (Envanter Kodu)"
+</Typography>
+
+// ❌ YANLIŞ: Nested object access
+{taskDetails.puanlar.kontrolToplamPuani}
+
+// ✅ DOĞRU: Direct property access
+{taskDetails.kontrolToplamPuani}
+
+// ❌ YANLIŞ: Object in JSX
+<p>
+  <div>Content</div> // DOM validation error
+</p>
+
+// ✅ DOĞRU: Proper nesting
+<Box>
+  <Box>Content</Box>
+</Box>
+```
+
+### Process.env Browser Compatibility ✅
+```javascript
+// ❌ ESKİ: Browser'da crash eden kod
+if (process.env.NODE_ENV === 'development') {
+  console.log('Debug mode');
+}
+
+// ✅ YENİ: Güvenli process.env kontrolü
+if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+  console.log('Debug mode');
+}
+
+// ✅ TaskDetailsModal'da güvenli debug
+const TaskDetailsModal = ({ open, onClose, taskId }) => {
+  const loadTaskDetails = async () => {
+    try {
+      // API call
+      if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+        console.log('🔍 TaskDetails Debug:', { taskId, taskDetails });
+      }
+    } catch (error) {
+      console.error('Task details yüklenirken hata:', error);
+    }
+  };
+};
+```
+
+### WorkTasks Mega Refactoring Tamamlandı ✅
+```javascript
+// ✅ YENİ MODÜLER YAPI (1037 → 121 satır, %88 azalma)
+WorkTasks.js (121 satır) - Ana sayfa component
+├── useWorkTaskData.js - Custom hook (data management)
+├── WorkTaskList.js - Checklist grid component  
+├── WorkTaskForm.js - Form dialog component
+└── WorkTaskList-simple.js - Emergency fallback
+
+// ✅ WorkTask pattern - 3 aşamalı görev oluşturma
+const handleSubmit = async () => {
+  // 1. Görevi oluştur
+  const response = await workTasksAPI.create(submitData);
+  
+  // 2. Checklist maddelerini güncelle
+  await workTasksAPI.updateItems(createdTask._id, { maddeler: completedItems });
+  
+  // 3. Görevi tamamla
+  await workTasksAPI.complete(createdTask._id);
+};
+```
+
+### API Standardizasyonu ✅
+```javascript
+// ✅ Birleştirilmiş makina API kullanımı
+const machines = await inventoryAPI.getMachines('all'); // Tüm makinalar
+const machineDetail = await inventoryAPI.getMachineDetail(id);
+
+// ❌ ESKİ: Deprecated API'ler - KULLANMA
+tasksAPI.getInventoryMachines() → inventoryAPI.getMachines() kullan
+inventoryAPI.getMachinesForTasks() → inventoryAPI.getMachines() kullan
+```
+
+### Temizlenen Dosyalar ve Organizasyon
+- **Components**: Tüm `.commented` dosyalar silindi (20+ adet)
+- **Silinen dosyalar**: `Inventory.js.backup` ve diğer backup dosyaları
+- **HR Modülü temizliği**:
+  - Silinen: `UserManagement.js`, `HRUserManagement.js`, `UserDialog.js`
+  - Eklenen: `UserManagementHR.js` (HR modülü için özel component)
+- **Yeni organizasyon**:
+  ```
+  components/
+  ├── Inventory/
+  │   ├── CategoryDialog.js
+  │   ├── ItemDialog.js
+  │   ├── FieldTemplateDialog.js
+  │   ├── ExcelUploadDialog.js
+  │   └── ...diğer inventory bileşenleri
+  ├── Quality/
+  │   ├── QualityControlEvaluation.js
+  │   ├── QualityControlStatistics.js
+  │   └── QualityControlTemplates.js
+  ├── Dashboard/
+  │   └── DashboardCards.js
+  ├── WorkTask/ (YENİ MODÜL)
+  │   ├── useWorkTaskData.js
+  │   ├── WorkTaskList.js
+  │   ├── WorkTaskForm.js
+  │   └── WorkTaskList-simple.js
+  └── HR/
+      └── UserManagementHR.js
+  ```
+
+## 🔧 Process.env Güvenlik Kuralları (YENİ ZORUNLU)
+
+### Browser Compatibility Fix
+```javascript
+// ❌ YANLIŞ: process undefined hatası
+if (process.env.NODE_ENV === 'development') {
+  console.log('Development mode');
+}
+
+// ✅ DOĞRU: Güvenli process kontrol pattern
+if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+  console.log('Development mode');
+}
+
+// ✅ Production build kontrol
+if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') {
+  // Production-only kod
+}
+
+// ✅ Custom environment variable
+if (typeof process !== 'undefined' && process.env?.REACT_APP_DEBUG === 'true') {
+  // Debug mode
+}
+```
+
+### Utility Functions Pattern
+```javascript
+// utils/debugLogger.js pattern
+const isDevelopment = (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') || false;
+const isDebugEnabled = (typeof process !== 'undefined' && process.env?.REACT_APP_DEBUG === 'true') || isDevelopment;
+
+// utils/performanceMonitor.js pattern
+export const initPerformanceDashboard = () => {
+  if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+    console.log('🚀 Performance Monitoring Active');
+  }
+};
+```
+
+## 🧩 Modüler Component Pattern (WorkTasks Example)
+
+### Custom Hook Pattern
+```javascript
+// useWorkTaskData.js - Data management hook
+export const useWorkTaskData = () => {
+  const { hasModulePermission } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [checklists, setChecklists] = useState([]);
+  
+  // 📖 Promise.all optimization
+  const loadData = useCallback(async (showSnackbar) => {
+    const [checklistsRes, makinalarRes, kaliplarRes] = await Promise.all([
+      workTasksAPI.getChecklists(),
+      inventoryAPI.getMachines('all'),
+      inventoryAPI.getKalipsForTasks(),
+    ]);
+    // ...
+  }, []);
+
+  // 📤 Business logic encapsulation
+  const createWorkTask = useCallback(async (submitData, showSnackbar) => {
+    // 3-step process: create → updateItems → complete
+  }, []);
+
+  return {
+    loading, checklists, makinalar, kaliplar,
+    loadData, createWorkTask,
+    hasData: checklists.length > 0,
+    isReady: !loading && hasModulePermission('Yaptım'),
+  };
+};
+```
+
+### Component Composition Pattern
+```javascript
+// WorkTasks.js - Main page (121 satır)
+const WorkTasks = () => {
+  const { hasModulePermission, user } = useAuth();
+  const { showSnackbar } = useSnackbar();
+  
+  // 🎯 Custom Hook usage
+  const {
+    loading, submitting, checklists, makinalar, kaliplar,
+    createWorkTask, isReady,
+  } = useWorkTaskData();
+
+  // 🎯 Local state for UI
+  const [openForm, setOpenForm] = useState(false);
+  const [selectedChecklist, setSelectedChecklist] = useState(null);
+
+  const handleFormSubmit = async (submitData) => {
+    const result = await createWorkTask(submitData, showSnackbar);
+    if (result.success) handleFormClose();
+  };
+
+  return (
+    <>
+      <Container maxWidth='xl'>
+        {/* 🧩 Modüler component usage */}
+        <WorkTaskList
+          checklists={checklists}
+          onChecklistSelect={handleChecklistSelect}
+          loading={loading}
+          hasPermission={isReady}
+        />
+      </Container>
+
+      <WorkTaskForm
+        open={openForm}
+        onClose={handleFormClose}
+        selectedChecklist={selectedChecklist}
+        makinalar={makinalar}
+        kaliplar={kaliplar}
+        onSubmit={handleFormSubmit}
+        submitting={submitting}
+      />
+    </>
+  );
+};
+```
+
+## 🔧 Common React Errors & Solutions
+
+### DOM Validation Errors
+```javascript
+// ❌ YANLIŞ: <p> içinde <div> kullanımı DOM validation hatası verir
+<ListItemText
+  primary={<Typography variant="h6">Başlık</Typography>}
+  secondary={
+    <p style={{ color: '#666' }}>
+      <div><strong>Tip:</strong> {activity.type}</div>
+      <div><strong>Tarih:</strong> {activity.date}</div>
+    </p>
+  }
+/>
+
+// ✅ DOĞRU: Box veya Typography kullan
+<ListItemText
+  primary={<Typography variant="h6">Başlık</Typography>}
+  secondary={
+    <Box sx={{ color: '#666' }}>
+      <Box><strong>Tip:</strong> {activity.type}</Box>
+      <Box><strong>Tarih:</strong> {activity.date}</Box>
+    </Box>
+  }
+/>
+```
+
+### React Key Prop Warning
+```javascript
+// ❌ YANLIŞ: Key prop eksik
+{items.map((item) => (
+  <ListItem>
+    <ListItemText primary={item.name} />
+  </ListItem>
+))}
+
+// ✅ DOĞRU: Her zaman unique key kullan
+{items.map((item, index) => (
+  <ListItem key={item.id || `item-${index}`}>
+    <ListItemText primary={item.name} />
+  </ListItem>
+))}
+```
+
+### Type Coercion Errors
+```javascript
+// ❌ YANLIŞ: Logical AND string döndürebilir
+const isFormValid = () => {
+  return formData.ad.trim() && formData.rol && formData.maddeler.length > 0;
+};
+// formData.ad.trim() string döndürür, logical AND ilk truthy değeri döndürür
+
+// ✅ DOĞRU: Double negation ile boolean'a çevir
+const isFormValid = () => {
+  return !!(formData.ad.trim() && formData.rol && formData.maddeler.length > 0);
+};
+
+// ✅ DOĞRU: Boolean constructor kullan
+const isFormValid = () => {
+  return Boolean(formData.ad.trim() && formData.rol && formData.maddeler.length > 0);
+};
+```
+
+### Material-UI Select Component Errors
+```javascript
+// ❌ YANLIŞ: Multi-select'te object array value kullanımı
+<Select
+  multiple
+  value={selectedMachines} // Object array
+  onChange={(e) => setSelectedMachines(e.target.value)} // String array döner!
+>
+
+// ✅ DOĞRU: ID array kullan ve onChange'de convert et
+<Select
+  multiple
+  value={selectedMachines.map(m => m._id)}
+  onChange={(e) => {
+    const selectedIds = e.target.value;
+    const selectedObjects = selectedIds.map(id => 
+      allMachines.find(m => m._id === id)
+    ).filter(Boolean);
+    setSelectedMachines(selectedObjects);
+  }}
+>
+```
+
+## React Component Yapısı (Zorunlu Pattern)
+```javascript
+const ComponentName = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getData();
+      setData(response.data);
+    } catch (error) {
+      setError("Veri yüklenirken hata oluştu");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <CircularProgress />;
+
+  return (
+    <Box>
+      {error && <Alert severity="error">{error}</Alert>}
+      {/* Component content */}
+    </Box>
+  );
+};
+```
+
+## State Management Kuralları
+- **Local State**: `useState` kullan
+- **Global State**: Context API kullan
+- **API State**: Loading + Error + Success states ZORUNLU
+- **Form State**: Controlled components tercih et
+- **Custom Hooks**: Data management için custom hook'lar oluştur
+- **Cache State**: Frontend cache service kullan
+
+## Material-UI Kuralları
+- **Styling**: SADECE `sx` prop kullan
+- **Grid**: Normal `Grid` kullan (`Grid2` YASAKLI)
+- **Responsive**: `{ xs: 1, sm: 2, md: 3 }` format
+- **Touch-friendly**: Button minimum 44px height
+- **Icons**: Material Icons kullan
+
+## Import Kuralları (Performance)
+```javascript
+// ✅ Tree-shaking friendly
+import { Button, TextField, Box } from "@mui/material";
+import { Delete, Edit, Add } from "@mui/icons-material";
+
+// ✅ Modüler import paths
+import CategoryDialog from '../components/Inventory/CategoryDialog';
+import useWorkTaskData from '../components/WorkTask/useWorkTaskData';
+
+// ❌ Bundle killer - YASAKLI
+import * as MUI from "@mui/material";
+import * as Icons from "@mui/icons-material";
+```
+
+## API Call Patterns
+```javascript
+// ✅ Paralel API calls
+const [users, tasks] = await Promise.all([
+  api.getUsers(),
+  api.getTasks()
+]);
+
+// ✅ Birleştirilmiş makina API kullanımı
+const machines = await inventoryAPI.getMachines('all'); // Tüm makinalar
+const machineDetail = await inventoryAPI.getMachineDetail(id);
+
+// ✅ Cache'li API calls
+const users = await usersAPI.getAll(); // Otomatik cache
+
+// ❌ Sequential - YASAKLI
+const users = await api.getUsers();
+const tasks = await api.getTasks();
+```
+
+## WorkTasks Modülü Pattern (GÜNCEL)
+```javascript
+// ✅ WorkTask form submission pattern
+const handleSubmit = async () => {
+  try {
+    setSubmitting(true);
+    
+    // 1. Görevi oluştur
+    const response = await workTasksAPI.create(submitData);
+    const createdTask = response.data;
+    
+    // 2. Checklist maddelerini güncelle
+    await workTasksAPI.updateItems(createdTask._id, { maddeler: completedItems });
+    
+    // 3. Görevi tamamla
+    await workTasksAPI.complete(createdTask._id);
+    
+    showSnackbar('Görev başarıyla tamamlandı!', 'success');
+  } catch (error) {
+    showSnackbar(error.response?.data?.message || error.message, 'error');
+  } finally {
+    setSubmitting(false);
+  }
+};
+```
+
+## Error Handling
+- Her API call'da try-catch zorunlu
+- User-friendly Türkçe error messages
+- Loading states her async operation'da
+- Process.env güvenlik kontrolü zorunlu
+
+## Component Organization
+- `frontend/src/components/` altında organize et
+- Her modül kendi klasöründe
+- Custom hook'lar component klasörü içinde
+- `.commented` veya `.backup` dosyalar YASAKLI
+
+### Checklist Modülü Organizasyonu (GÜNCEL - 2025-06-08)
+```
+components/
+├── Checklists/
+│   ├── ChecklistCard.js - Checklist kartı (değerlendirme saatleri gösterimi)
+│   ├── ChecklistDialog.js - Checklist form dialog'u (değerlendirme ayarları)
+│   ├── TemplateScheduleManager.js - Değerlendirme saatleri yönetimi (YENİ)
+│   └── useChecklistDialog.js - Form state yönetimi hook'u
+```
+
+### Checklist Değerlendirme Saatleri Pattern
+```javascript
+// useChecklistDialog.js - Değerlendirme saatleri state yönetimi
+const [degerlendirmeSaatleri, setDegerlendirmeSaatleri] = useState([]);
+const [degerlendirmePeriyodu, setDegerlendirmePeriyodu] = useState(2);
+const [degerlendirmeGunleri, setDegerlendirmeGunleri] = useState([]);
+const [degerlendirmeSikligi, setDegerlendirmeSikligi] = useState('Günlük');
+const [aktif, setAktif] = useState(true);
+
+// Saat ekleme/silme fonksiyonları
+const handleAddSchedule = (schedule) => {
+  setDegerlendirmeSaatleri([...degerlendirmeSaatleri, schedule]);
+};
+
+const handleRemoveSchedule = (index) => {
+  setDegerlendirmeSaatleri(degerlendirmeSaatleri.filter((_, i) => i !== index));
+};
+
+// TemplateScheduleManager.js - Değerlendirme saatleri UI
+<TemplateScheduleManager
+  schedules={degerlendirmeSaatleri}
+  onAddSchedule={handleAddSchedule}
+  onRemoveSchedule={handleRemoveSchedule}
+/>
+
+// ChecklistDialog.js - Değerlendirme ayarları bölümü
+<Box sx={{ mt: 3 }}>
+  <Typography variant="h6" gutterBottom>
+    Değerlendirme Ayarları
+  </Typography>
+  
+  {/* Aktif/Pasif durumu */}
+  <FormControlLabel
+    control={<Switch checked={aktif} onChange={(e) => setAktif(e.target.checked)} />}
+    label="Şablon Aktif"
+  />
+  
+  {/* Değerlendirme periyodu slider */}
+  <Typography gutterBottom>
+    Değerlendirme Periyodu: {degerlendirmePeriyodu} saat
+  </Typography>
+  <Slider
+    value={degerlendirmePeriyodu}
+    onChange={(e, value) => setDegerlendirmePeriyodu(value)}
+    min={1}
+    max={8}
+    marks
+    valueLabelDisplay="auto"
+  />
+  
+  {/* Değerlendirme sıklığı */}
+  <FormControl fullWidth sx={{ mt: 2 }}>
+    <InputLabel>Değerlendirme Sıklığı</InputLabel>
+    <Select
+      value={degerlendirmeSikligi}
+      onChange={(e) => setDegerlendirmeSikligi(e.target.value)}
+    >
+      <MenuItem value="Günlük">Günlük</MenuItem>
+      <MenuItem value="Haftalık">Haftalık</MenuItem>
+      <MenuItem value="Aylık">Aylık</MenuItem>
+      <MenuItem value="Özel">Özel</MenuItem>
+    </Select>
+  </FormControl>
+</Box>
+```
+
+### Checklist Madde Özellikleri Pattern
+```javascript
+// Madde ekleme/düzenleme dialog'unda yeni checkbox'lar
+<FormControlLabel
+  control={
+    <Checkbox
+      checked={madde.fotografGereklimi || false}
+      onChange={(e) => handleMaddeChange(index, 'fotografGereklimi', e.target.checked)}
+    />
+  }
+  label="Fotoğraf Gerekli"
+/>
+
+<FormControlLabel
+  control={
+    <Checkbox
+      checked={madde.zorunlu !== false} // Default true
+      onChange={(e) => handleMaddeChange(index, 'zorunlu', e.target.checked)}
+    />
+  }
+  label="Zorunlu Madde"
+/>
+```
+
+## Performance Zorunlulukları
+- `
+
+## Makina Seçimi Zorunluluğu (2025-02-06) ⚠️
+
+### Rutin Görevler (Task)
+```javascript
+// ✅ useTaskDialog.js - Makina kontrolü ZORUNLU
+const handleTaskComplete = async (onSuccess, onError) => {
+  try {
+    setCompleting(true);
+
+    // Makina kontrolü - ZORUNLU
+    const finalMakina = taskData.makina || selectedTask?.makina?._id;
+
+    if (!finalMakina) {
+      onError('⚠️ Makina seçimi zorunludur! Lütfen bir makina seçin.');
+      setCompleting(false);
+      return;
+    }
+
+    const completeData = {
+      maddeler: processedMaddeler,
+      makina: finalMakina,
+    };
+
+    await tasksAPI.complete(selectedTask._id, completeData);
+    onSuccess('Görev başarıyla tamamlandı! 🎉');
+  } catch (error) {
+    onError(error.response?.data?.message || error.message);
+  }
+};
+
+// ✅ TaskDialog.js - Makina seçim alanı ZORUNLU
+{selectedTask.durum === 'bekliyor' && !taskData.makina && (
+  <Box sx={{ p: { xs: 1.5, md: 3 }, bgcolor: 'error.light', borderBottom: '1px solid', borderColor: 'error.main' }}>
+    <Alert severity="error" sx={{ mb: 2 }}>
+      <AlertTitle>Makina Seçimi Zorunlu!</AlertTitle>
+      Görevi tamamlayabilmek için mutlaka bir makina seçmelisiniz.
+    </Alert>
+    
+    <FormControl fullWidth required error={!taskData.makina}>
+      <InputLabel>Makina Seçin *</InputLabel>
+      <Select
+        value={taskData.makina || ''}
+        onChange={(e) => setTaskData({ ...taskData, makina: e.target.value })}
+        label="Makina Seçin *"
+      >
+        {selectedMachines.map((machine) => (
+          <MenuItem key={machine._id} value={machine._id}>
+            {machine.makinaNo || machine.kod} - {machine.ad}
+          </MenuItem>
+        ))}
+      </Select>
+      <FormHelperText>
+        {!taskData.makina && 'Lütfen çalıştığınız makinayı seçin'}
+      </FormHelperText>
+    </FormControl>
+  </Box>
+)}
+```
+
+### İşe Bağlı Görevler (WorkTask)
+```javascript
+// ✅ WorkTaskForm.js - Makina seçimi ZORUNLU
+const handleSubmit = () => {
+  // Validation
+  if (!selectedChecklist || !formData.selectedMakina) {
+    console.error('❌ Form submit failed: Missing required data');
+    return;
+  }
+
+  const submitData = {
+    checklistId: selectedChecklist._id,
+    makinaId: formData.selectedMakina._id, // ZORUNLU
+    // ... diğer alanlar
+  };
+
+  onSubmit(submitData);
+};
+
+// Submit butonu makina seçilmeden disabled
+<Button
+  onClick={handleSubmit}
+  disabled={submitting || !selectedChecklist || !formData.selectedMakina}
+  variant='contained'
+  size='large'
+>
+  {submitting ? 'Kaydediliyor...' : 'Kalıp Değişim Görevini Tamamla'}
+</Button>
+```
+
+## API Call Patterns
+```
+
+## 🚨 React Uyarıları ve Hataları (2025-02-06) ✅ YENİ
+
+### PropTypes Hatası Çözümü
+```javascript
+// ❌ HATA: The prop `formData.aciklama` is marked as required but its value is `undefined`.
+
+// ❌ YANLIŞ: Required prop tanımı
+TemplateFormDialog.propTypes = {
+  formData: PropTypes.shape({
+    aciklama: PropTypes.string.isRequired, // ❌ Required ama undefined olabilir
+  }).isRequired,
+};
+
+// ✅ DOĞRU: Optional prop tanımı
+TemplateFormDialog.propTypes = {
+  formData: PropTypes.shape({
+    aciklama: PropTypes.string, // ✅ Optional
+  }).isRequired,
+};
+
+// ✅ Component'te safe value handling
+<TextField
+  value={formData.aciklama || ''} // ✅ Undefined protection
+  onChange={(e) => onFormChange('aciklama', e.target.value)}
+/>
+```
+
+### DOM Nesting Hatası Çözümü
+```javascript
+// ❌ HATA: <div> cannot appear as a descendant of <p>
+
+// ❌ YANLIŞ: ListItemText içinde div kullanımı
+<ListItemText
+  primary={
+    <Box sx={{ display: 'flex', alignItems: 'center' }}> // ❌ <p> içinde <div>
+      <Typography variant='body1'>
+        {item.title}
+      </Typography>
+    </Box>
+  }
+  secondary={
+    <Box> // ❌ <p> içinde <div>
+      <Typography variant='body2'>
+        {item.description}
+      </Typography>
+    </Box>
+  }
+/>
+
+// ✅ DOĞRU: component="span" kullanımı
+<ListItemText
+  primary={
+    <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}> // ✅ <span>
+      <Typography variant='body1' component="span">
+        {item.title}
+      </Typography>
+    </Box>
+  }
+  secondary={
+    <Box component="span"> // ✅ <span>
+      <Typography variant='body2' component="span">
+        {item.description}
+      </Typography>
+    </Box>
+  }
+/>
+```
+
+### Material-UI Typography DOM Nesting Fix
+```javascript
+// ❌ YANLIŞ: Typography içinde Chip (p > div)
+<Typography variant="body2">
+  <strong>Kategori:</strong>
+  <Chip label={item.kategori} size="small" /> // ❌ <p> içinde <div>
+</Typography>
+
+// ✅ DOĞRU: Box container kullanımı
+<Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+  <Typography variant="body2" component="span">
+    <strong>Kategori:</strong>
+  </Typography>
+  <Chip label={item.kategori} size="small" sx={{ ml: 1 }} />
+</Box>
+
+// ✅ DOĞRU: Typography span component
+<Typography variant="body2" component="div" sx={{ display: 'flex', alignItems: 'center' }}>
+  <span><strong>Kategori:</strong></span>
+  <Chip label={item.kategori} size="small" sx={{ ml: 1 }} />
+</Typography>
+```
+
+### Quality Control Template Specific Fixes
+```javascript
+// ✅ TemplateFormDialog.js - PropTypes düzeltmesi
+TemplateFormDialog.propTypes = {
+  formData: PropTypes.shape({
+    ad: PropTypes.string.isRequired,
+    aciklama: PropTypes.string, // ✅ Optional (required kaldırıldı)
+    rol: PropTypes.string.isRequired,
+    aktif: PropTypes.bool.isRequired,
+    maddeler: PropTypes.array.isRequired,
+    degerlendirmeSaatleri: PropTypes.array.isRequired,
+    degerlendirmeSikligi: PropTypes.string.isRequired,
+    degerlendirmePeriyodu: PropTypes.number.isRequired,
+  }).isRequired,
+};
+
+// ✅ TemplateItemsManager.js - DOM nesting düzeltmesi  
+<ListItemText
+  primary={
+    <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
+      <Typography variant='body1' component="span" sx={{ flex: 1 }}>
+        {index + 1}. {madde.baslik}
+      </Typography>
+      <Chip label={`${madde.maksimumPuan} puan`} size='small' color='primary' />
+    </Box>
+  }
+  secondary={
+    <Box component="span">
+      {madde.aciklama && (
+        <Typography variant='body2' color='text.secondary' component="span">
+          {madde.aciklama}
+        </Typography>
+      )}
+    </Box>
+  }
+/>
+```
+
+### ESLint Trailing Comma Fix
+```javascript
+// ❌ YANLIŞ: Missing trailing comma
+roles: PropTypes.arrayOf(
+  PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    ad: PropTypes.string.isRequired,
+  }) // ❌ Trailing comma eksik
+).isRequired,
+
+// ✅ DOĞRU: Trailing comma eklenmeli
+roles: PropTypes.arrayOf(
+  PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    ad: PropTypes.string.isRequired,
+  }), // ✅ Trailing comma
+).isRequired,
+```
+
+### React PropTypes Best Practices (GÜNCEL)
+```javascript
+// ✅ Safe PropTypes patterns
+Component.propTypes = {
+  // Required props
+  id: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  
+  // Optional props
+  description: PropTypes.string,
+  isActive: PropTypes.bool,
+  
+  // Nested objects - optional fields
+  user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    email: PropTypes.string, // Optional
+    avatar: PropTypes.string, // Optional
+  }),
+  
+  // Arrays
+  items: PropTypes.arrayOf(PropTypes.string),
+  
+  // Functions
+  onClick: PropTypes.func,
+  onSubmit: PropTypes.func.isRequired,
+  
+  // Enums
+  status: PropTypes.oneOf(['active', 'inactive', 'pending']),
+  
+  // Any type (use sparingly)
+  data: PropTypes.any,
+};
+```
+
+### DOM Validation Best Practices
+```javascript
+// ✅ Material-UI component patterns
+
+// 1. ListItemText içinde Box kullanımı
+<ListItemText
+  primary={<Box component="span">{content}</Box>}
+  secondary={<Box component="span">{content}</Box>}
+/>
+
+// 2. Typography içinde interactive elements
+<Typography variant="body2" component="div">
+  <span>Text content</span>
+  <Button>Action</Button>
+</Typography>
+
+// 3. Chip inside text content
+<Box sx={{ display: 'flex', alignItems: 'center' }}>
+  <Typography component="span">Label:</Typography>
+  <Chip label="value" size="small" />
+</Box>
+
+// 4. Complex nested content
+<Box component="div"> // ✅ Explicit div
+  <Typography variant="h6">Title</Typography>
+  <Box> // ✅ Nested Box is OK
+    <Typography>Content</Typography>
+  </Box>
+</Box>
+```
+
+## 🚨 React Uyarıları ve Hataları (2025-02-06) ✅ YENİ
+
+### Inventory Field Templates Sorunu Çözümü ✅
+
+#### Problem Analizi
+```javascript
+// ❌ SORUN: Field templates API çağrısı başarılı ama frontend'de görünmüyor
+// Console Log Sırası:
+// 1. ✅ Categories API yanıt: 3 kategori
+// 2. ✅ Items API yanıt: 13 item  
+// 3. 🔧 Field templates yükleniyor, categoryId: 68380aa8b945226655fd3a9b
+// 4. 🔍 ItemDynamicFields Debug: categoryFieldTemplates: 0 (SORUN BURADA!)
+
+// ❌ Root Cause: loadFieldTemplates fonksiyonu çağrılıyor ama log görünmüyor
+```
+
+#### Çözüm Adımları
+```javascript
+// ✅ 1. API Endpoint Kontrolü
+// Backend: POST /api/inventory/categories/:id/fields ✅ MEVCUT
+// Frontend: inventoryAPI.getCategoryFields(categoryId) ✅ DOĞRU
+
+// ✅ 2. loadFieldTemplates Debug Pattern
+const loadFieldTemplates = useCallback(async (categoryId) => {
+  console.log('🚀 ENTERED loadFieldTemplates function with categoryId:', categoryId);
+  console.log('🔍 CategoryId type:', typeof categoryId);
+  console.log('🔍 CategoryId value:', categoryId);
+  
+  if (!categoryId) {
+    console.log('❌ No categoryId provided to loadFieldTemplates');
+    setFieldTemplates([]);
+    return;
+  }
+
+  try {
+    console.log('🔧 Loading field templates for categoryId:', categoryId);
+    console.log('🌐 Making API call to:', `/api/inventory/categories/${categoryId}/fields`);
+    
+    const response = await inventoryAPI.getCategoryFields(categoryId);
+    
+    console.log('✅ Field templates response received');
+    console.log('📊 Response status:', response.status);
+    console.log('📦 Response data:', response.data);
+    console.log('🔢 Templates count:', response.data?.length || 0);
+    
+    if (response.data && response.data.length > 0) {
+      console.log('🔍 First template:', response.data[0]);
+      console.log('🔍 Sample template fields:', {
+        ad: response.data[0]?.ad,
+        tip: response.data[0]?.tip,
+        gerekli: response.data[0]?.gerekli,
+        kategoriId: response.data[0]?.kategoriId,
+      });
+    }
+    
+    setFieldTemplates(response.data || []);
+  } catch (error) {
+    console.error('❌ Field template yükleme hatası:', error);
+    console.error('🔍 Error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+    });
+    
+    if (error.response?.status === 404) {
+      console.error(
+        "🚫 Endpoint bulunamadı - backend'de /categories/:id/fields endpoint'i eksik olabilir",
+      );
+    }
+    
+    setFieldTemplates([]);
+  }
+}, []);
+
+// ✅ 3. ItemEdit Debug Pattern
+const handleItemEdit = async (item) => {
+  console.log('🎯 handleItemEdit called with item:', item);
+  
+  try {
+    setSelectedItem(item);
+    
+    if (item.kategoriId) {
+      const categoryId =
+        typeof item.kategoriId === 'object'
+          ? item.kategoriId._id
+          : item.kategoriId;
+      console.log('🔧 Field templates yükleniyor, categoryId:', categoryId);
+      console.log('🔍 loadFieldTemplates function type:', typeof loadFieldTemplates);
+      console.log('🔍 loadFieldTemplates function:', loadFieldTemplates);
+      
+      console.log('⏳ About to call loadFieldTemplates...');
+      await loadFieldTemplates(categoryId);
+      console.log('✅ loadFieldTemplates completed successfully');
+    }
+    
+    setItemDialogOpen(true);
+    console.log('✅ Item dialog opened successfully');
+  } catch (error) {
+    console.error('❌ Error in handleItemEdit:', error);
+    console.error('🔍 Error stack:', error.stack);
+    setError('Field templates yüklenirken hata oluştu: ' + error.message);
+  }
+};
+```
+
+### MyActivity Yenilikleri ✅
+
+#### Birleştirilmiş Task Detail Support
+```javascript
+// ✅ YENİ: Multi-type task detail support
+const TaskDetailDialog = ({ taskId, open, onClose }) => {
+  const [taskDetails, setTaskDetails] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (open && taskId) {
+      loadTaskDetails();
+    }
+  }, [open, taskId]);
+
+  const loadTaskDetails = async () => {
+    try {
+      setLoading(true);
+      const response = await myActivityAPI.getTaskDetails(taskId);
+      setTaskDetails(response.data);
+    } catch (error) {
+      console.error('Task details error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderTaskContent = () => {
+    if (!taskDetails) return null;
+
+    switch (taskDetails.tip) {
+      case 'checklist':
+        return <ChecklistTaskDetails task={taskDetails} />;
+      case 'worktask':
+        return <WorkTaskDetails task={taskDetails} />;
+      case 'hr_checklist':
+      case 'hr_mesai':
+      case 'hr_devamsizlik':
+        return <HRTaskDetails task={taskDetails} />;
+      case 'quality_control':
+        return <QualityControlDetails task={taskDetails} />;
+      default:
+        return <div>Bilinmeyen görev tipi: {taskDetails.tip}</div>;
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+      <DialogTitle>{taskDetails?.checklistAdi || 'Görev Detayları'}</DialogTitle>
+      <DialogContent>
+        {loading ? (
+          <CircularProgress />
+        ) : (
+          renderTaskContent()
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
+```
+
+#### MyActivity API Pattern
+```javascript
+// ✅ YENİ: MyActivity API service
+export const myActivityAPI = {
+  // Ana endpoint'ler
+  getSummary: () => api.get('/my-activity/summary'),
+  getScoresDetail: (params) => {
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(`/my-activity/scores-detail${queryString ? `?${queryString}` : ''}`);
+  },
+  getRanking: () => api.get('/my-activity/ranking'),
+  
+  // ✅ YENİ: Task details (multi-type support)
+  getTaskDetails: (id) => api.get(`/my-activity/task-details/${id}`),
+  
+  // Control scores
+  getControlScoresSummary: () => api.get('/control-scores/my-summary'),
+};
+
+// ✅ Usage pattern
+const useMyActivityData = () => {
+  const [summary, setSummary] = useState(null);
+  const [scoresDetail, setScoresDetail] = useState([]);
+  const [ranking, setRanking] = useState([]);
+  const [controlSummary, setControlSummary] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const loadSummary = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await myActivityAPI.getSummary();
+      setSummary(response.data);
+    } catch (error) {
+      console.error('Summary error:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadScoresDetail = useCallback(async (tip, ay, yil) => {
+    try {
+      const params = { tip };
+      if (ay) params.ay = ay;
+      if (yil) params.yil = yil;
+      
+      const response = await myActivityAPI.getScoresDetail(params);
+      setScoresDetail(response.data || []);
+    } catch (error) {
+      console.error('Scores detail error:', error);
+    }
+  }, []);
+
+  return {
+    summary,
+    scoresDetail,
+    ranking,
+    controlSummary,
+    loading,
+    loadSummary,
+    loadScoresDetail,
+  };
+};
+```
+
+## 🎯 Frontend Debugging Patterns ✅
+
+### React Hook Debug Pattern
+```javascript
+// ✅ Custom hook debugging
+const useInventoryData = () => {
+  const [fieldTemplates, setFieldTemplates] = useState([]);
+  
+  // Debug state changes
+  useEffect(() => {
+    console.log('📊 fieldTemplates state updated:', {
+      count: fieldTemplates.length,
+      firstTemplate: fieldTemplates[0],
+      allTemplates: fieldTemplates
+    });
+  }, [fieldTemplates]);
+
+  const loadFieldTemplates = useCallback(async (categoryId) => {
+    console.log('🔄 loadFieldTemplates called with:', categoryId);
+    
+    try {
+      const response = await inventoryAPI.getCategoryFields(categoryId);
+      console.log('📦 API response:', response.data);
+      
+      setFieldTemplates(response.data || []);
+      console.log('✅ fieldTemplates state updated');
+    } catch (error) {
+      console.error('❌ loadFieldTemplates error:', error);
+      setFieldTemplates([]);
+    }
+  }, []);
+
+  return {
+    fieldTemplates,
+    loadFieldTemplates,
+  };
+};
+```
+
+### Component Debug Pattern
+```javascript
+// ✅ Component debugging
+const ItemDynamicFields = ({ categoryFieldTemplates, selectedCategory }) => {
+  // Debug props
+  useEffect(() => {
+    console.log('🔍 ItemDynamicFields Debug:');
+    console.log('   categoryFieldTemplates:', categoryFieldTemplates?.length || 0);
+    console.log('   fieldTemplatesLoading:', fieldTemplatesLoading);
+    console.log('   selectedCategory:', selectedCategory);
+    
+    if (categoryFieldTemplates && categoryFieldTemplates.length > 0) {
+      console.log('   First template:', categoryFieldTemplates[0]);
+    }
+  }, [categoryFieldTemplates, selectedCategory]);
+
+  // Render debugging
+  if (!categoryFieldTemplates || categoryFieldTemplates.length === 0) {
+    console.log('🚫 No field templates to render');
+    return (
+      <Alert severity="info">
+        Bu kategori için henüz alan şablonu tanımlanmamış.
+      </Alert>
+    );
+  }
+
+  console.log(`✅ Rendering ${categoryFieldTemplates.length} field templates`);
+  // Component render logic...
+};
+```
+
+### API Debug Helpers
+```javascript
+// ✅ API debugging utilities
+const debugAPI = {
+  logRequest: (method, url, data) => {
+    console.log(`🌐 ${method.toUpperCase()} ${url}`);
+    if (data) console.log('📤 Request data:', data);
+  },
+  
+  logResponse: (response) => {
+    console.log('📥 Response:', {
+      status: response.status,
+      data: response.data,
+      headers: response.headers
+    });
+  },
+  
+  logError: (error) => {
+    console.error('❌ API Error:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url
+    });
+  }
+};
+
+// Axios interceptors for debugging
+api.interceptors.request.use(
+  (config) => {
+    if (process.env.NODE_ENV === 'development') {
+      debugAPI.logRequest(config.method, config.url, config.data);
+    }
+    return config;
+  },
+  (error) => {
+    debugAPI.logError(error);
+    return Promise.reject(error);
+  }
+);
+
+api.interceptors.response.use(
+  (response) => {
+    if (process.env.NODE_ENV === 'development') {
+      debugAPI.logResponse(response);
+    }
+    return response;
+  },
+  (error) => {
+    debugAPI.logError(error);
+    return Promise.reject(error);
+  }
+);
+```
+
+## React Hook Kuralları (Zorunlu)
+
+### useState Pattern
+```javascript
+// ✅ DOĞRU: Destructuring ve clear naming
+const [users, setUsers] = useState([]);
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState('');
+
+// ❌ YANLIŞ: Generic naming
+const [data, setData] = useState();
+const [state, setState] = useState();
+```
+
+### useEffect Dependencies
+```javascript
+// ✅ DOĞRU: Complete dependencies
+useEffect(() => {
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const response = await api.getUsers(filters);
+      setUsers(response.data);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  loadData();
+}, [filters]); // filters dependency dahil
+
+// ❌ YANLIŞ: Missing dependencies
+useEffect(() => {
+  loadUsers(filters);
+}, []); // filters missing
+```
+
+### Custom Hook Pattern
+```javascript
+// ✅ DOĞRU: Reusable custom hook
+const useUserManagement = () => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const loadUsers = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await userService.getAll();
+      setUsers(response.data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const createUser = useCallback(async (userData) => {
+    try {
+      await userService.create(userData);
+      await loadUsers(); // Refresh list
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  }, [loadUsers]);
+
+  return {
+    users,
+    loading,
+    error,
+    loadUsers,
+    createUser,
+    setError
+  };
+};
+```
+
+## Material-UI Styling (Zorunlu)
+
+### sx Prop Pattern
+```javascript
+// ✅ DOĞRU: sx prop kullanımı
+<Box
+  sx={{
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 2,
+    p: 3,
+    bgcolor: 'background.paper',
+    borderRadius: 1,
+    boxShadow: 1
+  }}
+>
+  Content
+</Box>
+
+// ❌ YANLIŞ: Inline styles
+<div style={{ display: 'flex', padding: '24px' }}>
+  Content
+</div>
+```
+
+### Theme Integration
+```javascript
+// ✅ DOĞRU: Theme-aware styling
+<Typography
+  variant="h4"
+  sx={{
+    color: 'primary.main',
+    fontWeight: 'bold',
+    mb: 2,
+    background: (theme) => 
+      `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
+    backgroundClip: 'text',
+    textFillColor: 'transparent',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent'
+  }}
+>
+  Title
+</Typography>
+```
+
+### Responsive Design
+```javascript
+// ✅ DOĞRU: Responsive breakpoints
+<Grid
+  container
+  spacing={2}
+  sx={{
+    flexDirection: { xs: 'column', md: 'row' },
+    alignItems: { xs: 'center', md: 'flex-start' }
+  }}
+>
+  <Grid item xs={12} md={6}>
+    Content
+  </Grid>
+</Grid>
+```
+
+## Component Architecture
+
+### Component Structure
+```javascript
+// ✅ DOĞRU: Component structure
+const UserManagement = () => {
+  // 1. Hooks
+  const { users, loading, error, loadUsers, createUser } = useUserManagement();
+  
+  // 2. Local state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  
+  // 3. Effects
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
+  
+  // 4. Event handlers
+  const handleUserEdit = (user) => {
+    setSelectedUser(user);
+    setDialogOpen(true);
+  };
+  
+  // 5. Render helpers
+  const renderUserCard = (user) => (
+    <Card key={user._id}>
+      <CardContent>
+        <Typography>{user.ad} {user.soyad}</Typography>
+      </CardContent>
+    </Card>
+  );
+  
+  // 6. Main render
+  return (
+    <Container>
+      {error && <Alert severity="error">{error}</Alert>}
+      {loading ? (
+        <CircularProgress />
+      ) : (
+        <Grid container spacing={2}>
+          {users.map(renderUserCard)}
+        </Grid>
+      )}
+    </Container>
+  );
+};
+```
+
+### Props Validation
+```javascript
+// ✅ DOĞRU: PropTypes validation
+import PropTypes from 'prop-types';
+
+const UserCard = ({ user, onEdit, onDelete }) => {
+  return (
+    <Card>
+      <CardContent>
+        <Typography>{user.ad} {user.soyad}</Typography>
+        <Button onClick={() => onEdit(user)}>Düzenle</Button>
+      </CardContent>
+    </Card>
+  );
+};
+
+UserCard.propTypes = {
+  user: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    ad: PropTypes.string.isRequired,
+    soyad: PropTypes.string.isRequired,
+    kullaniciAdi: PropTypes.string.isRequired
+  }).isRequired,
+  onEdit: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired
+};
+```
+
+## State Management
+
+### Context Pattern
+```javascript
+// ✅ Context for global state
+const AppContext = createContext();
+
+export const AppProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [theme, setTheme] = useState('light');
+  
+  const login = useCallback((userData) => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+  }, []);
+  
+  const logout = useCallback(() => {
+    setUser(null);
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+  }, []);
+  
+  const value = {
+    user,
+    theme,
+    login,
+    logout,
+    setTheme
+  };
+  
+  return (
+    <AppContext.Provider value={value}>
+      {children}
+    </AppContext.Provider>
+  );
+};
+
+export const useApp = () => {
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useApp must be used within AppProvider');
+  }
+  return context;
+};
+```
+
+## Performance Optimization
+
+### React.memo Pattern
+```javascript
+// ✅ DOĞRU: Memoized component
+const UserCard = React.memo(({ user, onEdit }) => {
+  return (
+    <Card>
+      <CardContent>
+        <Typography>{user.ad} {user.soyad}</Typography>
+        <Button onClick={() => onEdit(user)}>Düzenle</Button>
+      </CardContent>
+    </Card>
+  );
+});
+
+// ✅ useMemo for expensive calculations
+const expensiveValue = useMemo(() => {
+  return users.filter(user => user.durum === 'aktif')
+    .sort((a, b) => a.ad.localeCompare(b.ad));
+}, [users]);
+
+// ✅ useCallback for event handlers
+const handleUserEdit = useCallback((user) => {
+  setSelectedUser(user);
+  setDialogOpen(true);
+}, []);
+```
+
+### Code Splitting
+```javascript
+// ✅ DOĞRU: Lazy loading
+const UserManagement = React.lazy(() => import('./pages/UserManagement'));
+const TaskManagement = React.lazy(() => import('./pages/TaskManagement'));
+
+// Usage with Suspense
+<Suspense fallback={<CircularProgress />}>
+  <Routes>
+    <Route path="/users" element={<UserManagement />} />
+    <Route path="/tasks" element={<TaskManagement />} />
+  </Routes>
+</Suspense>
+```
+
+## Error Handling
+
+### Error Boundary
+```javascript
+// ✅ Error boundary component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Alert severity="error">
+          Bir hata oluştu. Sayfayı yenilemeyi deneyin.
+        </Alert>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+### Try-Catch Pattern
+```javascript
+// ✅ DOĞRU: Async error handling
+const handleSubmit = async (data) => {
+  setLoading(true);
+  setError('');
+  
+  try {
+    await userService.create(data);
+    setSuccess('Kullanıcı başarıyla oluşturuldu');
+    onClose();
+  } catch (error) {
+    const message = error.response?.data?.message || 'Bir hata oluştu';
+    setError(message);
+  } finally {
+    setLoading(false);
+  }
+};
+```
+
+## ⭐ Modern Rating & Scoring System (2025-01-20)
+
+### Star Rating Implementation
+```javascript
+// ✅ DOĞRU: Material-UI Rating ile yıldız sistemi
+import { Rating, Typography, Box } from '@mui/material';
+
+const ScoreDialog = ({ scoringData, onScoreChange }) => {
+  const handleStarRating = (index, value) => {
+    onScoreChange(index, 'kontrolPuani', value);
+  };
+
+  return (
+    <Box>
+      {scoringData.maddeler?.map((madde, index) => (
+        <Paper key={index} sx={{ p: 3, mb: 2 }}>
+          <Typography variant='h6' sx={{ mb: 2 }}>
+            {madde.soru || `Madde ${index + 1}`}
+          </Typography>
+          
+          {/* 10 Yıldız Rating System */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 2,
+            py: 2,
+            bgcolor: 'grey.50',
+            borderRadius: 2,
+          }}>
+            <Typography variant='body1' sx={{ fontWeight: 'medium' }}>
+              Puan:
+            </Typography>
+            
+            <Rating
+              name={`rating-${index}`}
+              value={madde.kontrolPuani || 0}
+              onChange={(event, newValue) => handleStarRating(index, newValue)}
+              max={10}
+              size="large"
+              sx={{
+                fontSize: '2rem',
+                '& .MuiRating-iconFilled': { color: '#ffd700' },
+                '& .MuiRating-iconHover': { color: '#ffb400' },
+              }}
+            />
+            
+            <Typography variant='h6' sx={{ 
+              fontWeight: 'bold',
+              color: madde.kontrolPuani ? 'primary.main' : 'text.secondary',
+            }}>
+              {madde.kontrolPuani || 0} / 10
+            </Typography>
+          </Box>
+        </Paper>
+      ))}
+    </Box>
+  );
+};
+```
+
+### Gradient Design System
+```javascript
+// ✅ Modern gradient backgrounds
+const GradientHeader = () => (
+  <DialogTitle sx={{
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    py: 3,
+    px: 4,
+  }}>
+    <Typography variant='h5' sx={{ fontWeight: 'bold' }}>
+      Bonus Değerlendirme
+    </Typography>
+  </DialogTitle>
+);
+
+const ScoreSummaryCard = ({ totalScore, maxScore }) => (
+  <Paper elevation={3} sx={{
+    p: 3,
+    borderRadius: 3,
+    background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    color: 'white',
+  }}>
+    <Typography variant='h6' sx={{ fontWeight: 'bold', mb: 1 }}>
+      Toplam Puan
+    </Typography>
+    <Typography variant='h3' sx={{ fontWeight: 'bold' }}>
+      {totalScore} / {maxScore}
+    </Typography>
+  </Paper>
+);
+```
+
+### Interactive UI Patterns
+```javascript
+// ✅ Hover animations ve transitions
+const InteractiveCard = () => (
+  <Paper sx={{
+    p: 3,
+    borderRadius: 3,
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+      transform: 'translateY(-2px)',
+    },
+  }}>
+    <Content />
+  </Paper>
+);
+
+// ✅ Loading states with smooth transitions
+const SubmitButton = ({ submitting, onSubmit }) => (
+  <Button
+    variant='contained'
+    onClick={onSubmit}
+    disabled={submitting}
+    startIcon={submitting ? <CircularProgress size={16} /> : <SaveIcon />}
+    sx={{
+      borderRadius: 2,
+      px: 4,
+      py: 1.5,
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      transition: 'all 0.3s ease',
+      '&:hover': {
+        background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+      },
+    }}
+  >
+    {submitting ? 'Kaydediliyor...' : 'KAYDET'}
+  </Button>
+);
+```
+
+# 🎯 Personnel Tracking System Updates (2025-01-20)
+
+## Modern Role-Based Filtering
+
+### Dynamic Role Filter Chips
+```javascript
+// ✅ DOĞRU: Role filter with Material-UI Chips
+const [selectedRoleFilter, setSelectedRoleFilter] = useState('');
+
+<Paper sx={{ p: 2, mb: 3, bgcolor: 'background.paper' }}>
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+    <FilterListIcon color="primary" />
+    <Typography variant="h6" color="primary">
+      Personel Rol Filtresi
+    </Typography>
+  </Box>
+  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+    <Chip
+      label="Tümü"
+      variant={selectedRoleFilter === '' ? 'filled' : 'outlined'}
+      color={selectedRoleFilter === '' ? 'primary' : 'default'}
+      onClick={() => setSelectedRoleFilter('')}
+      clickable
+    />
+    <Chip
+      label="Paketlemeci"
+      variant={selectedRoleFilter === 'paketlemeci' ? 'filled' : 'outlined'}
+      color={selectedRoleFilter === 'paketlemeci' ? 'secondary' : 'default'}
+      onClick={() => setSelectedRoleFilter('paketlemeci')}
+      clickable
+    />
+  </Box>
+</Paper>
+```
+
+## Performance Score Display
+
+### Color-Coded Performance Chips
+```javascript
+// ✅ DOĞRU: Performance scoring with color coding
+<Chip
+  label={`${person.avgControlScore || 0}/100`}
+  size="small"
+  color={
+    (person.avgControlScore || 0) >= 80 
+      ? 'success' 
+      : (person.avgControlScore || 0) >= 60 
+      ? 'warning' 
+      : 'error'
+  }
+/>
+
+// ✅ DOĞRU: Performance status display
+<Box sx={{ display: 'flex', gap: 0.5 }}>
+  <Chip
+    label={`Görev: ${person.totalTasks || 0}`}
+    size="small"
+    color="info"
+    variant="outlined"
+  />
+  <Chip
+    label={`Kalite: ${person.totalQualityEvaluations || 0}`}
+    size="small"
+    color="secondary"
+    variant="outlined"
+  />
+</Box>
+```
+
+## Machine-Personnel Data Integration
+
+### Conditional Data Rendering
+```javascript
+// ✅ DOĞRU: Machine-based data with fallback
+const displayData = machineBasedData || data;
+const machineData = machineBasedData?.machinePersonnelData || data?.machinePersonnel || {};
+
+// ✅ DOĞRU: Performance data conditional rendering
+{machineBasedData && (
+  <Box sx={{ mb: 2 }}>
+    <Typography variant='body2' color='text.secondary' gutterBottom>
+      Performans:
+    </Typography>
+    <Box sx={{ display: 'flex', gap: 0.5, mb: 1 }}>
+      <Chip
+        label={`${person.avgControlScore || 0}/100`}
+        size='small'
+        color={getPerformanceColor(person.avgControlScore)}
+      />
+    </Box>
+  </Box>
+)}
+```
+
+## Statistics Dashboard
+
+### Real-time Statistics Cards
+```javascript
+// ✅ DOĞRU: Real-time statistics with conditional styling
+{machineBasedData && (
+  <Box sx={{ mt: 2, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
+    <Grid container spacing={2}>
+      <Grid item xs={12} sm={3}>
+        <Typography variant="body2" color="text.secondary">
+          Ortalama Puan
+        </Typography>
+        <Typography 
+          variant="h6" 
+          color={machineBasedData.stats.avgSystemScore >= 70 ? 'success.main' : 'warning.main'}
+        >
+          {machineBasedData.stats.avgSystemScore}/100
+        </Typography>
+      </Grid>
+    </Grid>
+  </Box>
+)}
+```
+
+## API Integration Patterns
+
+### Multiple Endpoint Data Loading
+```javascript
+// ✅ DOĞRU: Separate data loading for enhanced features
+const loadMachineBasedData = useCallback(async (roleFilter = '') => {
+  try {
+    setLoading(true);
+    console.log('🔄 Makina bazlı veri yükleniyor, rol filtresi:', roleFilter);
+    
+    const response = await fetch(
+      `/api/personnel-tracking/machine-based${roleFilter ? `?roleFilter=${roleFilter}` : ''}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      setMachineBasedData(result.data);
+    }
+  } catch (error) {
+    console.error('Machine-based data error:', error);
+    showSnackbar('Makina bazlı veri yüklenirken hata oluştu: ' + error.message, 'error');
+  } finally {
+    setLoading(false);
+  }
+}, [showSnackbar]);
+
+// ✅ DOĞRU: Tab-based data loading
+useEffect(() => {
+  if (activeTab === 0) {
+    loadMachineBasedData(selectedRoleFilter);
+  }
+}, [activeTab, selectedRoleFilter, loadMachineBasedData]);
+```
+
+## Empty State Handling
+
+### Context-Aware Empty States
+```javascript
+// ✅ DOĞRU: Contextual empty state messages
+{Object.keys(machineData).length === 0 && (
+  <Paper sx={{ p: 4, textAlign: 'center' }}>
+    <MachineIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
+    <Typography variant="h6" color="text.secondary">
+      {selectedRoleFilter 
+        ? `${selectedRoleFilter} rolünde makina atanmış personel bulunamadı`
+        : 'Makina atanmış personel bulunamadı'
+      }
+    </Typography>
+  </Paper>
+)}
+```

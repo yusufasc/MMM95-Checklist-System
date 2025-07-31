@@ -68,7 +68,10 @@ const Machines = () => {
       setDepartments(departmentsRes.data);
       setRoles(rolesRes.data);
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
+      if (
+        typeof process !== 'undefined' &&
+        process.env?.NODE_ENV === 'development'
+      ) {
         console.error('Veri yükleme hatası:', error);
       }
       setError('Veriler yüklenirken hata oluştu');
@@ -149,7 +152,9 @@ const Machines = () => {
         setSuccess('Makina başarıyla silindi');
         await loadData();
       } catch (error) {
-        setError(error.response?.data?.message || 'Silme işlemi sırasında hata oluştu');
+        setError(
+          error.response?.data?.message || 'Silme işlemi sırasında hata oluştu',
+        );
       }
     }
   };
@@ -186,7 +191,12 @@ const Machines = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        minHeight='400px'
+      >
         <CircularProgress />
       </Box>
     );
@@ -194,28 +204,39 @@ const Machines = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3,
+        }}
+      >
         <Typography
-          variant="h4"
-          component="h1"
+          variant='h4'
+          component='h1'
           sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
         >
           <BuildIcon />
           Envanter Yönetimi
         </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
+        <Button
+          variant='contained'
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenDialog()}
+        >
           Yeni Makina
         </Button>
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+        <Alert severity='error' sx={{ mb: 2 }} onClose={() => setError('')}>
           {error}
         </Alert>
       )}
 
       {success && (
-        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>
+        <Alert severity='success' sx={{ mb: 2 }} onClose={() => setSuccess('')}>
           {success}
         </Alert>
       )}
@@ -230,14 +251,14 @@ const Machines = () => {
               <TableCell>Sorumlu Roller</TableCell>
               <TableCell>Durum</TableCell>
               <TableCell>Açıklama</TableCell>
-              <TableCell align="center">İşlemler</TableCell>
+              <TableCell align='center'>İşlemler</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {machines.map(machine => (
               <TableRow key={machine._id}>
                 <TableCell>
-                  <Typography variant="body2" fontWeight="bold">
+                  <Typography variant='body2' fontWeight='bold'>
                     {machine.makinaNo}
                   </Typography>
                 </TableCell>
@@ -246,7 +267,12 @@ const Machines = () => {
                 <TableCell>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {machine.sorumluRoller.map(role => (
-                      <Chip key={role._id} label={role.ad} size="small" variant="outlined" />
+                      <Chip
+                        key={role._id}
+                        label={role.ad}
+                        size='small'
+                        variant='outlined'
+                      />
                     ))}
                   </Box>
                 </TableCell>
@@ -254,24 +280,27 @@ const Machines = () => {
                   <Chip
                     label={getDurumText(machine.durum)}
                     color={getDurumColor(machine.durum)}
-                    size="small"
+                    size='small'
                   />
                 </TableCell>
                 <TableCell>
-                  <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
+                  <Typography variant='body2' noWrap sx={{ maxWidth: 200 }}>
                     {machine.aciklama}
                   </Typography>
                 </TableCell>
-                <TableCell align="center">
-                  <Tooltip title="Düzenle">
-                    <IconButton size="small" onClick={() => handleOpenDialog(machine)}>
+                <TableCell align='center'>
+                  <Tooltip title='Düzenle'>
+                    <IconButton
+                      size='small'
+                      onClick={() => handleOpenDialog(machine)}
+                    >
                       <EditIcon />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Sil">
+                  <Tooltip title='Sil'>
                     <IconButton
-                      size="small"
-                      color="error"
+                      size='small'
+                      color='error'
                       onClick={() => handleDelete(machine._id)}
                     >
                       <DeleteIcon />
@@ -285,14 +314,23 @@ const Machines = () => {
       </TableContainer>
 
       {/* Makina Ekleme/Düzenleme Dialog */}
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>{editingMachine ? 'Makina Düzenle' : 'Yeni Makina Ekle'}</DialogTitle>
+      <Dialog
+        open={dialogOpen}
+        onClose={handleCloseDialog}
+        maxWidth='md'
+        fullWidth
+      >
+        <DialogTitle>
+          {editingMachine ? 'Makina Düzenle' : 'Yeni Makina Ekle'}
+        </DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+            <Box
+              sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}
+            >
               <TextField
-                name="makinaNo"
-                label="Makina Numarası"
+                name='makinaNo'
+                label='Makina Numarası'
                 value={formData.makinaNo}
                 onChange={handleInputChange}
                 required
@@ -300,8 +338,8 @@ const Machines = () => {
               />
 
               <TextField
-                name="ad"
-                label="Makina Adı"
+                name='ad'
+                label='Makina Adı'
                 value={formData.ad}
                 onChange={handleInputChange}
                 required
@@ -311,10 +349,10 @@ const Machines = () => {
               <FormControl fullWidth required>
                 <InputLabel>Departman</InputLabel>
                 <Select
-                  name="departman"
+                  name='departman'
                   value={formData.departman}
                   onChange={handleInputChange}
-                  label="Departman"
+                  label='Departman'
                 >
                   {departments.map(dept => (
                     <MenuItem key={dept._id} value={dept._id}>
@@ -330,12 +368,14 @@ const Machines = () => {
                   multiple
                   value={formData.sorumluRoller}
                   onChange={handleRoleChange}
-                  label="Sorumlu Roller"
+                  label='Sorumlu Roller'
                   renderValue={selected => (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                       {selected.map(value => {
                         const role = roles.find(r => r._id === value);
-                        return <Chip key={value} label={role?.ad} size="small" />;
+                        return (
+                          <Chip key={value} label={role?.ad} size='small' />
+                        );
                       })}
                     </Box>
                   )}
@@ -351,21 +391,21 @@ const Machines = () => {
               <FormControl fullWidth>
                 <InputLabel>Durum</InputLabel>
                 <Select
-                  name="durum"
+                  name='durum'
                   value={formData.durum}
                   onChange={handleInputChange}
-                  label="Durum"
+                  label='Durum'
                 >
-                  <MenuItem value="aktif">Aktif</MenuItem>
-                  <MenuItem value="bakim">Bakımda</MenuItem>
-                  <MenuItem value="arizali">Arızalı</MenuItem>
-                  <MenuItem value="pasif">Pasif</MenuItem>
+                  <MenuItem value='aktif'>Aktif</MenuItem>
+                  <MenuItem value='bakim'>Bakımda</MenuItem>
+                  <MenuItem value='arizali'>Arızalı</MenuItem>
+                  <MenuItem value='pasif'>Pasif</MenuItem>
                 </Select>
               </FormControl>
 
               <TextField
-                name="aciklama"
-                label="Açıklama"
+                name='aciklama'
+                label='Açıklama'
                 value={formData.aciklama}
                 onChange={handleInputChange}
                 multiline
@@ -376,7 +416,7 @@ const Machines = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseDialog}>İptal</Button>
-            <Button type="submit" variant="contained">
+            <Button type='submit' variant='contained'>
               {editingMachine ? 'Güncelle' : 'Ekle'}
             </Button>
           </DialogActions>

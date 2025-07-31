@@ -1,0 +1,371 @@
+{
+  "ruleCoordinator": {
+    "version": "1.0.0",
+    "description": "AI hangi durumlarda hangi cursor rules kullanacağını yöneten akıllı koordinasyon sistemi",
+
+    "contextDetection": {
+      "filePatterns": {
+        "backend": [
+          "backend/**/*.js",
+          "backend/**/*.ts",
+          "backend/models/**/*",
+          "backend/routes/**/*",
+          "backend/controllers/**/*",
+          "backend/middleware/**/*",
+          "backend/services/**/*",
+          "server.js"
+        ],
+        "frontend": [
+          "frontend/**/*.js",
+          "frontend/**/*.jsx",
+          "frontend/**/*.ts",
+          "frontend/**/*.tsx",
+          "frontend/src/**/*",
+          "src/components/**/*",
+          "src/pages/**/*"
+        ],
+        "database": [
+          "backend/models/**/*",
+          "backend/scripts/**/*db*",
+          "**/*migration*",
+          "**/*seed*"
+        ],
+        "api": [
+          "backend/routes/**/*",
+          "backend/controllers/**/*",
+          "**/*api*",
+          "**/*endpoint*"
+        ],
+        "testing": [
+          "**/*.test.js",
+          "**/*.test.ts",
+          "**/*.spec.js",
+          "**/*.spec.ts",
+          "jest.config.js",
+          "cypress/**/*"
+        ],
+        "security": [
+          "backend/middleware/auth*",
+          "**/*security*",
+          "**/*permission*",
+          "**/*auth*"
+        ],
+        "deployment": [
+          "Dockerfile*",
+          "docker-compose*",
+          "package.json",
+          "*.yml",
+          "*.yaml",
+          ".github/**/*"
+        ],
+        "documentation": ["docs/**/*", "README*", "**/*.md"]
+      },
+
+      "contentKeywords": {
+        "backend": [
+          "express",
+          "mongoose",
+          "mongodb",
+          "api",
+          "route",
+          "controller",
+          "middleware",
+          "server",
+          "database",
+          "model",
+          "schema"
+        ],
+        "frontend": [
+          "react",
+          "component",
+          "jsx",
+          "tsx",
+          "useState",
+          "useEffect",
+          "props",
+          "state",
+          "render",
+          "dom"
+        ],
+        "database": [
+          "mongodb",
+          "mongoose",
+          "schema",
+          "model",
+          "collection",
+          "find",
+          "create",
+          "update",
+          "delete",
+          "aggregate"
+        ],
+        "security": [
+          "auth",
+          "jwt",
+          "bcrypt",
+          "password",
+          "token",
+          "permission",
+          "role",
+          "access",
+          "login",
+          "authentication"
+        ],
+        "performance": [
+          "optimization",
+          "cache",
+          "memory",
+          "performance",
+          "speed",
+          "bundle",
+          "lazy",
+          "async",
+          "await"
+        ],
+        "testing": [
+          "test",
+          "jest",
+          "describe",
+          "it",
+          "expect",
+          "mock",
+          "cypress",
+          "spec",
+          "unit",
+          "integration"
+        ]
+      },
+
+      "userIntentKeywords": {
+        "debugging": [
+          "hata",
+          "error",
+          "bug",
+          "debug",
+          "sorun",
+          "problem",
+          "çalışmıyor",
+          "broken",
+          "fix",
+          "düzelt"
+        ],
+        "development": [
+          "yeni",
+          "new",
+          "create",
+          "add",
+          "ekle",
+          "oluştur",
+          "geliştir",
+          "develop",
+          "implement"
+        ],
+        "optimization": [
+          "optimize",
+          "performance",
+          "hızlandır",
+          "iyileştir",
+          "improve",
+          "faster",
+          "better"
+        ],
+        "deployment": [
+          "deploy",
+          "production",
+          "yayınla",
+          "publish",
+          "build",
+          "release"
+        ]
+      }
+    },
+
+    "ruleActivationMatrix": {
+      "contextPriority": {
+        "primary": {
+          "backend": ["backend-cursor.mdc"],
+          "frontend": ["frontend-cursor.mdc"],
+          "database": ["database-cursor.mdc"],
+          "security": ["security-cursor.mdc"],
+          "testing": ["testing-cursor.mdc"],
+          "deployment": ["deployment-cursor.mdc"]
+        },
+        "secondary": {
+          "backend": ["core-cursor.mdc", "eslint-performance-cursor.mdc"],
+          "frontend": ["core-cursor.mdc", "mobile-pwa-cursor.mdc"],
+          "database": ["backend-cursor.mdc", "monitoring-logging-cursor.mdc"],
+          "security": ["backend-cursor.mdc", "frontend-cursor.mdc"],
+          "testing": ["backend-cursor.mdc", "frontend-cursor.mdc"],
+          "deployment": ["backend-cursor.mdc", "frontend-cursor.mdc"]
+        }
+      },
+
+      "intentBasedActivation": {
+        "debugging": [
+          "debugging-troubleshooting-cursor.mdc",
+          "monitoring-logging-cursor.mdc",
+          "eslint-performance-cursor.mdc"
+        ],
+        "development": [
+          "core-cursor.mdc",
+          "backend-cursor.mdc",
+          "frontend-cursor.mdc"
+        ],
+        "optimization": [
+          "eslint-performance-cursor.mdc",
+          "monitoring-logging-cursor.mdc",
+          "database-cursor.mdc"
+        ],
+        "deployment": [
+          "deployment-cursor.mdc",
+          "security-cursor.mdc",
+          "monitoring-logging-cursor.mdc"
+        ],
+        "documentation": ["api-documentation-cursor.mdc", "core-cursor.mdc"],
+        "maintenance": [
+          "maintenance-cursor.mdc",
+          "monitoring-logging-cursor.mdc"
+        ]
+      }
+    },
+
+    "smartCombinations": {
+      "fullStackDevelopment": [
+        "core-cursor.mdc",
+        "backend-cursor.mdc",
+        "frontend-cursor.mdc",
+        "database-cursor.mdc"
+      ],
+      "apiDevelopment": [
+        "backend-cursor.mdc",
+        "api-documentation-cursor.mdc",
+        "security-cursor.mdc",
+        "database-cursor.mdc"
+      ],
+      "frontendDevelopment": [
+        "frontend-cursor.mdc",
+        "mobile-pwa-cursor.mdc",
+        "eslint-performance-cursor.mdc"
+      ],
+      "productionDeployment": [
+        "deployment-cursor.mdc",
+        "security-cursor.mdc",
+        "monitoring-logging-cursor.mdc",
+        "maintenance-cursor.mdc"
+      ],
+      "qualityAssurance": [
+        "testing-cursor.mdc",
+        "eslint-performance-cursor.mdc",
+        "security-cursor.mdc"
+      ],
+      "dataManagement": [
+        "database-cursor.mdc",
+        "data-management-cursor.mdc",
+        "backend-cursor.mdc"
+      ]
+    },
+
+    "contextualTriggers": {
+      "fileOpened": {
+        "*.js (backend)": ["backend-cursor.mdc", "core-cursor.mdc"],
+        "*.jsx": ["frontend-cursor.mdc", "mobile-pwa-cursor.mdc"],
+        "*.tsx": ["frontend-cursor.mdc", "mobile-pwa-cursor.mdc"],
+        "models/*.js": ["database-cursor.mdc", "backend-cursor.mdc"],
+        "routes/*.js": ["backend-cursor.mdc", "api-documentation-cursor.mdc"],
+        "*.test.js": ["testing-cursor.mdc", "backend-cursor.mdc"],
+        "*.spec.js": ["testing-cursor.mdc", "frontend-cursor.mdc"],
+        "package.json": [
+          "deployment-cursor.mdc",
+          "eslint-performance-cursor.mdc"
+        ],
+        "Dockerfile": ["deployment-cursor.mdc", "security-cursor.mdc"],
+        "*.md": ["api-documentation-cursor.mdc", "core-cursor.mdc"]
+      },
+
+      "errorKeywords": {
+        "mongoose": [
+          "database-cursor.mdc",
+          "debugging-troubleshooting-cursor.mdc"
+        ],
+        "eslint": [
+          "eslint-performance-cursor.mdc",
+          "debugging-troubleshooting-cursor.mdc"
+        ],
+        "react": [
+          "frontend-cursor.mdc",
+          "debugging-troubleshooting-cursor.mdc"
+        ],
+        "auth": ["security-cursor.mdc", "debugging-troubleshooting-cursor.mdc"],
+        "performance": [
+          "eslint-performance-cursor.mdc",
+          "monitoring-logging-cursor.mdc"
+        ],
+        "deployment": [
+          "deployment-cursor.mdc",
+          "debugging-troubleshooting-cursor.mdc"
+        ]
+      },
+
+      "taskType": {
+        "create": [
+          "core-cursor.mdc",
+          "backend-cursor.mdc",
+          "frontend-cursor.mdc"
+        ],
+        "fix": [
+          "debugging-troubleshooting-cursor.mdc",
+          "eslint-performance-cursor.mdc"
+        ],
+        "optimize": [
+          "eslint-performance-cursor.mdc",
+          "monitoring-logging-cursor.mdc"
+        ],
+        "test": ["testing-cursor.mdc", "debugging-troubleshooting-cursor.mdc"],
+        "deploy": ["deployment-cursor.mdc", "security-cursor.mdc"],
+        "document": ["api-documentation-cursor.mdc", "core-cursor.mdc"]
+      }
+    }
+  },
+
+  "activationInstructions": {
+    "autoActivation": {
+      "enabled": true,
+      "maxActiveRules": 4,
+      "priority": "contextual",
+      "fallback": ["core-cursor.mdc"]
+    },
+
+    "manualOverride": {
+      "enabled": true,
+      "commands": {
+        "@backend": ["backend-cursor.mdc", "core-cursor.mdc"],
+        "@frontend": ["frontend-cursor.mdc", "mobile-pwa-cursor.mdc"],
+        "@database": ["database-cursor.mdc", "backend-cursor.mdc"],
+        "@security": ["security-cursor.mdc", "backend-cursor.mdc"],
+        "@debug": [
+          "debugging-troubleshooting-cursor.mdc",
+          "monitoring-logging-cursor.mdc"
+        ],
+        "@test": ["testing-cursor.mdc", "eslint-performance-cursor.mdc"],
+        "@deploy": ["deployment-cursor.mdc", "security-cursor.mdc"],
+        "@docs": ["api-documentation-cursor.mdc", "core-cursor.mdc"],
+        "@performance": [
+          "eslint-performance-cursor.mdc",
+          "monitoring-logging-cursor.mdc"
+        ],
+        "@mobile": ["mobile-pwa-cursor.mdc", "frontend-cursor.mdc"],
+        "@data": ["data-management-cursor.mdc", "database-cursor.mdc"],
+        "@maintenance": [
+          "maintenance-cursor.mdc",
+          "monitoring-logging-cursor.mdc"
+        ],
+        "@fullstack": [
+          "backend-cursor.mdc",
+          "frontend-cursor.mdc",
+          "database-cursor.mdc"
+        ],
+        "@all": "allRules"
+      }
+    }
+  }
+}

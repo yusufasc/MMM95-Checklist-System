@@ -8,20 +8,28 @@ const ProtectedRoute = ({ children, module, permission = 'erisebilir' }) => {
   const { hasModulePermission, isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to='/login' replace />;
   }
 
   if (!hasModulePermission(module, permission)) {
+    alert(
+      `🚨 EMERGENCY: YETKİ REDDİ! Modül: ${module}, Permission: ${permission}`,
+    );
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        minHeight='400px'
+      >
         <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h5" color="error" gutterBottom>
+          <Typography variant='h5' color='error' gutterBottom>
             Erişim Reddedildi
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography variant='body1' color='text.secondary'>
             Bu sayfaya erişim yetkiniz bulunmuyor.
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
             Gerekli modül: {module}
           </Typography>
         </Paper>

@@ -1,231 +1,428 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Grid,
-  Card,
-  CardContent,
-  Paper,
-  Chip,
-  LinearProgress,
   Button,
   Alert,
   CircularProgress,
   Tabs,
   Tab,
+  Grid,
+  Chip,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  TextField,
-  Pagination,
+  Snackbar,
+  Card,
+  CardContent,
   Avatar,
-  Divider,
+  Fade,
+  Slide,
+  useTheme,
+  useMediaQuery,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import {
+  Dashboard as DashboardIcon,
   TrendingUp as TrendingUpIcon,
   Assignment as AssignmentIcon,
-  Build as BuildIcon,
-  Star as StarIcon,
-  CalendarToday as CalendarIcon,
+  Science as ScienceIcon,
+  People as PeopleIcon,
+  Work as WorkIcon,
+  ListAlt as ChecklistIcon,
+  EmojiEvents as RankingIcon,
+  CardGiftcard as CardGiftcardIcon,
+  Engineering as EngineIcon,
+  Refresh as RefreshIcon,
   FilterList as FilterIcon,
-  Assessment as AssessmentIcon,
-  WorkOutline as WorkOutlineIcon,
-  Timeline as TimelineIcon,
-  EmojiEvents as TrophyIcon,
+  Star as StarIcon,
 } from '@mui/icons-material';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
-import { myActivityAPI } from '../services/api';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { tr } from 'date-fns/locale';
 import { useAuth } from '../contexts/AuthContext';
-import CountUp from 'react-countup';
+import TaskDetailsModal from '../components/TaskDetailsModal';
+
+// Custom hooks
+import { useMyActivityData } from '../hooks/useMyActivityData';
+import controlScoresAPI from '../services/controlScoresAPI';
+
+// Components
+import SummaryCards from '../components/MyActivity/SummaryCards';
+import PerformanceChart from '../components/MyActivity/PerformanceChart';
+import CategoryChart from '../components/MyActivity/CategoryChart';
+import ActivityList from '../components/MyActivity/ActivityList';
+import QualityScores from '../components/MyActivity/QualityScores';
+import ControlPendingScores from '../components/MyActivity/ControlPendingScores';
+import HRScores from '../components/MyActivity/HRScores';
+import BonusScores from '../components/MyActivity/BonusScores';
+import ScoreBreakdown from '../components/MyActivity/ScoreBreakdown';
+import RankingBoard from '../components/MyActivity/RankingBoard';
+import UserEquipment from '../components/common/UserEquipment';
 
 const MyActivity = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [activeTab, setActiveTab] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  // Summary data
-  const [summary, setSummary] = useState(null);
-  const [dailyPerformance, setDailyPerformance] = useState([]);
-
-  // Detailed activity data
-  const [activities, setActivities] = useState([]);
-  const [pagination, setPagination] = useState({});
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
-    page: 1,
-    limit: 10,
-    durum: '',
-    tarih: '',
+    month: new Date().getMonth() + 1,
+    year: new Date().getFullYear(),
+    department: 'all',
+    taskType: 'all',
   });
 
-  // Score details data
-  const [scoreDetails, setScoreDetails] = useState([]);
-  const [scorePagination, setScorePagination] = useState({});
-  const [scoreFilters, setScoreFilters] = useState({
-    page: 1,
-    limit: 10,
-    days: 30,
+  // Kontrol puanları için state
+  const [controlSummary, setControlSummary] = useState(null);
+
+  // Snackbar state for UserEquipment
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success',
   });
 
   const { user } = useAuth();
 
+  // 🎯 Merkezi veri yönetimi
+  const {
+    loading,
+    error,
+    summary,
+    dailyPerformance,
+    activities,
+    pagination,
+    scoreDetails,
+    monthlyTotals,
+    qualityScores,
+    qualityScoresLoading,
+    hrScores,
+    workTaskScores,
+    bonusEvaluations,
+    loadSummaryData,
+    loadDetailedActivities,
+    loadScoreDetails,
+    loadScoreBreakdown,
+    loadMonthlyTotals,
+    loadQualityScores,
+    loadHRScores,
+    loadWorkTaskScores,
+    loadBonusEvaluations,
+  } = useMyActivityData();
+
+  // Kontrol puanları yükleme fonksiyonu
+  const loadControlScores = async () => {
+    try {
+      const summaryParams = {
+        year: filters.year,
+        month: filters.month,
+      };
+      const summaryRes = await controlScoresAPI.getSummary(summaryParams);
+      setControlSummary(summaryRes);
+    } catch (err) {
+      console.error('❌ Kontrol puanları özeti yüklenirken hata:', err);
+    }
+  };
+
+  // 🔢 ScoreBreakdown'dakiyle aynı puan hesaplaması
+  const calculateDetailedScores = () => {
+    // API response wrapper'ını handle et
+    const monthlyData = monthlyTotals?.data || monthlyTotals;
+
+    // Güvenli destructuring - backend'deki veri yapısına uygun
+    const {
+      ik = { toplam: 0 },
+      kaliteKontrol = { toplamPuan: 0 },
+      workTask = { toplamPuan: 0 },
+      checklistSablonlari = { iseBagliGorevler: 0, rutinGorevler: 0 },
+    } = monthlyData || {};
+
+    // İK toplam puanını hrScores'dan hesapla (daha güvenilir)
+    const ikToplamPuan =
+      hrScores && hrScores.length > 0
+        ? hrScores.reduce((sum, score) => {
+            const puan =
+              score.puan || score.toplamPuan || score.puanlar?.toplam || 0;
+            return sum + puan;
+          }, 0)
+        : ik.toplam;
+
+    // WorkTask toplam puanını workTaskScores'dan hesapla
+    const workTaskToplamPuan =
+      workTaskScores && workTaskScores.length > 0
+        ? workTaskScores.reduce((sum, score) => {
+            const puan =
+              score.puan ||
+              score.toplamPuan ||
+              score.puanlar?.toplam ||
+              score.puanlar?.alinan ||
+              0;
+            return sum + puan;
+          }, 0)
+        : workTask.toplamPuan || checklistSablonlari.iseBagliGorevler;
+
+    // Kalite Kontrol toplam puanını hesapla
+    const kaliteKontrolToplamPuan =
+      qualityScores && qualityScores.length > 0
+        ? qualityScores.reduce((sum, score) => {
+            const puan =
+              score.puan || score.toplamPuan || score.puanlar?.toplam || 0;
+            return sum + puan;
+          }, 0)
+        : kaliteKontrol.toplamPuan;
+
+    // Bonus evaluations toplam puanını hesapla
+    const bonusToplamPuan =
+      bonusEvaluations && bonusEvaluations.length > 0
+        ? bonusEvaluations.reduce((sum, bonus) => {
+            return sum + (bonus.toplamPuan || 0);
+          }, 0)
+        : 0;
+
+    // ✅ DÜZELTME: Checklist Şablonları puanını monthlyTotals'dan al
+    // Backend'de doğru hesaplanan değeri kullan (ControlScore dahil)
+    const checklistSablonlariPuani = checklistSablonlari?.rutinGorevler || 0;
+
+    // Kontrol Puanları toplam puanını hesapla (ControlScore'dan)
+    const kontrolKartiPuani = controlSummary?.genel?.toplamPuan || 0;
+
+    // Toplam puanı hesapla
+    const toplamPuan =
+      ikToplamPuan +
+      kaliteKontrolToplamPuan +
+      workTaskToplamPuan +
+      checklistSablonlariPuani + // ✅ Düzeltildi: scoreDetails'den geliyor
+      kontrolKartiPuani +
+      bonusToplamPuan;
+
+    // Görev sayılarını hesapla
+    const toplamGorevSayisi =
+      (hrScores?.length || 0) +
+      (qualityScores?.length || 0) +
+      (workTaskScores?.length || 0) +
+      (bonusEvaluations?.length || 0) +
+      (scoreDetails?.checklist?.length || 0) + // ✅ Düzeltildi: scoreDetails'den
+      (controlSummary?.genel?.kontrolSayisi || 0);
+
+    return {
+      ikToplamPuan,
+      kaliteKontrolToplamPuan,
+      workTaskToplamPuan,
+      checklistSablonlariPuani, // ✅ Yeni field
+      kontrolToplamPuan: kontrolKartiPuani,
+      bonusToplamPuan,
+      toplamPuan,
+      toplamGorevSayisi,
+      // Görev sayıları
+      ikGorevSayisi: hrScores?.length || 0,
+      kaliteKontrolGorevSayisi: qualityScores?.length || 0,
+      workTaskGorevSayisi: workTaskScores?.length || 0,
+      checklistGorevSayisi: scoreDetails?.checklist?.length || 0, // ✅ Düzeltildi
+      kontrolGorevSayisi: controlSummary?.genel?.kontrolSayisi || 0,
+      bonusGorevSayisi: bonusEvaluations?.length || 0,
+    };
+  };
+
+  // Task details modal
+  const [taskDetailsModal, setTaskDetailsModal] = useState({
+    open: false,
+    taskId: null,
+  });
+
+  // 🎯 TAB KONFİGÜRASYONU - SPAGETTİ KOD TEMİZLENDİ
+  const tabs = [
+    {
+      id: 0,
+      icon: <DashboardIcon />,
+      label: 'Genel Bakış',
+      color: '#4CAF50',
+      loadAction: null, // Özet veriler ilk yüklemede yüklenir
+    },
+    {
+      id: 1,
+      icon: <TrendingUpIcon />,
+      label: 'Detaylı Aktiviteler',
+      color: '#2196F3',
+      loadAction: () => loadDetailedActivities({ ...filters, type: 'monthly' }),
+    },
+    {
+      id: 2,
+      icon: <AssignmentIcon />,
+      label: 'Genel Karnem',
+      color: '#FF9800',
+      loadAction: async () => {
+        await loadScoreBreakdown({ ...filters, tip: 'all' });
+        await loadMonthlyTotals(filters);
+      },
+    },
+    {
+      id: 3,
+      icon: <ScienceIcon />,
+      label: 'Kalite Kontrol Puanlarım',
+      color: '#9C27B0',
+      loadAction: () => loadQualityScores(filters),
+    },
+    {
+      id: 4,
+      icon: <PeopleIcon />,
+      label: 'İK Puanlarım',
+      color: '#F44336',
+      loadAction: () => loadScoreDetails({ ...filters, tip: 'hr' }),
+    },
+    {
+      id: 5,
+      icon: <WorkIcon />,
+      label: 'Görev Puanlarım',
+      color: '#00BCD4',
+      loadAction: () => loadScoreDetails({ ...filters, tip: 'worktask' }),
+    },
+    {
+      id: 6,
+      icon: <ChecklistIcon />,
+      label: 'Checklist Şablonları',
+      color: '#795548',
+      loadAction: () => loadScoreDetails({ ...filters, tip: 'checklist' }),
+    },
+    {
+      id: 7,
+      icon: <AssignmentIcon />,
+      label: 'Kontrol Puanlarım',
+      color: '#673AB7',
+      loadAction: () => loadScoreDetails({ ...filters, tip: 'control_score' }),
+    },
+    {
+      id: 8,
+      icon: <CardGiftcardIcon />,
+      label: 'Bonus Puanlarım',
+      color: '#E91E63',
+      loadAction: () =>
+        loadScoreDetails({ ...filters, tip: 'bonus_evaluation' }),
+    },
+    {
+      id: 9,
+      icon: <EngineIcon />,
+      label: 'Ekipmanlarım',
+      color: '#607D8B',
+      loadAction: null, // UserEquipment kendi verilerini yükler
+    },
+    {
+      id: 10,
+      icon: <RankingIcon />,
+      label: 'Sıralama',
+      color: '#FF5722',
+      loadAction: null, // RankingBoard kendi verilerini yükler
+    },
+  ];
+
+  // 🚀 İlk yükleme - sadece özet veriler
   useEffect(() => {
-    loadData();
-  }, []);
+    loadSummaryData();
+    loadControlScores();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 🎯 TAB DEĞİŞİMİNDE VERİ YÜKLEME - TEMİZ MANTIK
   useEffect(() => {
-    if (activeTab === 1) {
-      loadDetailedActivities();
-    } else if (activeTab === 2) {
-      loadScoreDetails();
+    const currentTab = tabs.find(tab => tab.id === activeTab);
+    if (currentTab?.loadAction) {
+      console.log(`🔍 Tab ${activeTab} (${currentTab.label}) yükleniyor...`);
+      currentTab.loadAction();
     }
-  }, [activeTab, filters, scoreFilters]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError('');
+  // 🔄 FİLTRE DEĞİŞİMİNDE MEVCUT TAB'I YENİLE
+  useEffect(() => {
+    // Her filtre değişiminde kontrol puanlarını da yenile
+    loadControlScores();
 
-      // Önce test endpoint'ini deneyelim
-      console.log('🔍 Test endpoint çağırılıyor...');
-      try {
-        const testRes = await myActivityAPI.test();
-        console.log('✅ Test başarılı:', testRes.data);
-      } catch (testError) {
-        console.error('❌ Test endpoint hatası:', testError);
-        setError('Test endpoint hatası: ' + testError.message);
-        return;
+    if (activeTab > 0) {
+      // İlk tab hariç (özet veriler)
+      const currentTab = tabs.find(tab => tab.id === activeTab);
+      if (currentTab?.loadAction) {
+        console.log(
+          `🔄 Tab ${activeTab} (${currentTab.label}) filtre değişimi nedeniyle yenileniyor...`,
+        );
+        currentTab.loadAction();
       }
-
-      // Şimdi summary endpoint'ini deneyelim
-      console.log('📊 Summary endpoint çağırılıyor...');
-      try {
-        const summaryRes = await myActivityAPI.getSummary(30);
-        console.log('✅ Summary başarılı:', summaryRes.data);
-        setSummary(summaryRes.data);
-      } catch (summaryError) {
-        console.error('❌ Summary endpoint hatası:', summaryError);
-        setError('Summary endpoint hatası: ' + summaryError.message);
-        return;
-      }
-
-      // Son olarak daily performance
-      console.log('📈 Daily performance endpoint çağırılıyor...');
-      try {
-        const dailyRes = await myActivityAPI.getDailyPerformance(30);
-        console.log('✅ Daily performance başarılı:', dailyRes.data);
-        setDailyPerformance(dailyRes.data.performansVerileri || []);
-      } catch (dailyError) {
-        console.error('❌ Daily performance endpoint hatası:', dailyError);
-        setError('Daily performance endpoint hatası: ' + dailyError.message);
-        return;
-      }
-
-      console.log('📊 Kişisel aktivite verileri yüklendi');
-    } catch (error) {
-      console.error('❌ Aktivite verisi yükleme hatası:', error);
-      setError('Veriler yüklenirken hata oluştu: ' + error.message);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const loadDetailedActivities = async () => {
-    try {
-      const response = await myActivityAPI.getDetailed(filters);
-      setActivities(response.data.activities || []);
-      setPagination(response.data.sayfalama || {});
-    } catch (error) {
-      console.error('❌ Detaylı aktivite yükleme hatası:', error);
+  // 🎯 Genel Bakış için tüm score verilerini yükle
+  useEffect(() => {
+    if (activeTab === 0) {
+      // İlk tab açıldığında tüm score verilerini yükle
+      loadHRScores({
+        month: filters.month,
+        year: filters.year,
+      });
+      loadWorkTaskScores({
+        month: filters.month,
+        year: filters.year,
+      });
+      loadBonusEvaluations({
+        month: filters.month,
+        year: filters.year,
+      });
+      loadQualityScores(filters);
+      loadMonthlyTotals(filters);
     }
-  };
+  }, [activeTab, filters]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const loadScoreDetails = async () => {
-    try {
-      const response = await myActivityAPI.getScoresDetail(scoreFilters);
-      setScoreDetails(response.data.scoreDetails || []);
-      setScorePagination(response.data.sayfalama || {});
-    } catch (error) {
-      console.error('❌ Puanlama detayları yükleme hatası:', error);
-    }
-  };
-
-  const handleTabChange = (event, newValue) => {
+  const handleTabChange = (_event, newValue) => {
     setActiveTab(newValue);
   };
 
-  const handleFilterChange = (field, value) => {
+  const handleFilterChange = (filterType, value) => {
     setFilters(prev => ({
       ...prev,
-      [field]: value,
-      page: 1, // Filtre değiştiğinde ilk sayfaya dön
+      [filterType]: value,
     }));
   };
 
-  const handlePageChange = (event, page) => {
-    setFilters(prev => ({ ...prev, page }));
+  // Modal handlers
+  const handleShowTaskDetails = taskId => {
+    setTaskDetailsModal({
+      open: true,
+      taskId: taskId,
+    });
   };
 
-  // Puan kategorileri için renkler ve etiketler
-  const scoreColors = {
-    ik_sablon: '#FF6B6B',
-    ik_devamsizlik: '#4ECDC4',
-    kalite_kontrol: '#45B7D1',
-    checklist: '#96CEB4',
-    is_bagli: '#FECA57',
-    kalip_degisim: '#9B59B6',
+  const handleCloseTaskDetails = () => {
+    setTaskDetailsModal({
+      open: false,
+      taskId: null,
+    });
   };
 
-  const scoreLabels = {
-    ik_sablon: 'İK Şablon',
-    ik_devamsizlik: 'Devamsızlık',
-    kalite_kontrol: 'Kalite Kontrol',
-    checklist: 'Checklist',
-    is_bagli: 'İşe Bağlı',
-    kalip_degisim: 'Kalıp Değişimi',
-  };
-
-  // Durum renkleri
-  const getDurumColor = durum => {
-    switch (durum) {
-      case 'tamamlandi':
-        return 'success';
-      case 'onaylandi':
-        return 'primary';
-      case 'bekliyor':
-        return 'warning';
-      case 'reddedildi':
-        return 'error';
+  // 🎯 Segment'lere özel veri filtreleme - YENİ LOGIC
+  const getSegmentData = segmentType => {
+    switch (segmentType) {
+      case 'quality_control':
+        return scoreDetails.filter(s => s.tip === 'quality_control');
+      case 'hr':
+        return scoreDetails.filter(s => s.tip?.includes('hr_'));
+      case 'worktask_only':
+        // Sadece WorkTask görevleri (kendi yaptığı + buddy olduğu)
+        return scoreDetails.filter(s => s.tip === 'worktask');
+      case 'checklist_only':
+        return scoreDetails.filter(s => s.tip === 'checklist');
+      case 'control_scores':
+        // Sadece ControlScore kayıtları (puanlama yapan için)
+        return scoreDetails.filter(s => s.tip === 'control_score');
+      case 'bonus_evaluation':
+        return scoreDetails.filter(s => s.tip === 'bonus_evaluation');
       default:
-        return 'default';
+        return scoreDetails;
     }
   };
 
-  const getDurumText = durum => {
-    switch (durum) {
-      case 'tamamlandi':
-        return 'Tamamlandı';
-      case 'onaylandi':
-        return 'Onaylandı';
-      case 'bekliyor':
-        return 'Bekliyor';
-      case 'reddedildi':
-        return 'Reddedildi';
-      default:
-        return durum;
-    }
+  // Snackbar handler for UserEquipment
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
   };
 
-  if (loading) {
+  if (loading && activeTab === 0) {
     return (
       <Box
         sx={{
@@ -240,7 +437,7 @@ const MyActivity = () => {
       >
         <Box sx={{ textAlign: 'center', color: 'white' }}>
           <CircularProgress sx={{ color: 'white', mb: 2 }} size={60} />
-          <Typography variant="h5">Kişisel Performans Yükleniyor...</Typography>
+          <Typography variant='h5'>Kişisel Performans Yükleniyor...</Typography>
         </Box>
       </Box>
     );
@@ -248,9 +445,13 @@ const MyActivity = () => {
 
   if (error) {
     return (
-      <Alert severity="error" sx={{ m: 2 }}>
+      <Alert severity='error' sx={{ m: 2 }}>
         {error}
-        <Button onClick={() => window.location.reload()} sx={{ ml: 2 }} variant="outlined">
+        <Button
+          onClick={() => window.location.reload()}
+          sx={{ ml: 2 }}
+          variant='outlined'
+        >
           Yenile
         </Button>
       </Alert>
@@ -258,693 +459,840 @@ const MyActivity = () => {
   }
 
   return (
-    <Box sx={{ p: 3, background: '#f5f5f5', minHeight: '100vh' }}>
-      {/* Header */}
-      <Paper
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={tr}>
+      <Box
         sx={{
-          p: 3,
-          mb: 3,
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          borderRadius: 3,
-          color: 'white',
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+          minHeight: '100vh',
+          pb: 4,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box>
-            <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
-              Kişisel Performansım 📊
-            </Typography>
-            <Typography variant="h6" sx={{ opacity: 0.9 }}>
-              {user?.ad} {user?.soyad} - Son 30 Günlük Performans
-            </Typography>
-          </Box>
-          <AssessmentIcon sx={{ fontSize: 80, opacity: 0.7 }} />
-        </Box>
-      </Paper>
+        {/* Modern Glassmorphism Header */}
+        <Box
+          sx={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            position: 'relative',
+            overflow: 'hidden',
+            pt: 4,
+            pb: 6,
+          }}
+        >
+          {/* Animated Background Elements */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: -100,
+              right: -100,
+              width: 300,
+              height: 300,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.1)',
+              '@keyframes float1': {
+                '0%, 100%': { transform: 'translateY(0px)' },
+                '50%': { transform: 'translateY(-20px)' },
+              },
+              animation: 'float1 6s ease-in-out infinite',
+            }}
+          />
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: -50,
+              left: -50,
+              width: 200,
+              height: 200,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.05)',
+              '@keyframes float2': {
+                '0%, 100%': { transform: 'translateY(0px)' },
+                '50%': { transform: 'translateY(20px)' },
+              },
+              animation: 'float2 8s ease-in-out infinite',
+            }}
+          />
 
-      {/* Tabs */}
-      <Paper sx={{ mb: 3 }}>
-        <Tabs value={activeTab} onChange={handleTabChange} variant="fullWidth">
-          <Tab icon={<TrendingUpIcon />} label="Özet & Grafikler" />
-          <Tab icon={<TimelineIcon />} label="Detaylı Aktiviteler" />
-          <Tab icon={<TrophyIcon />} label="Aldığım Puanlar" />
-        </Tabs>
-      </Paper>
+          <Box sx={{ position: 'relative', zIndex: 1, px: 3 }}>
+            <Grid container spacing={3} alignItems='center'>
+              <Grid item xs={12} md={8}>
+                <Fade in timeout={1000}>
+                  <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Avatar
+                        sx={{
+                          width: 60,
+                          height: 60,
+                          mr: 2,
+                          background: 'rgba(255,255,255,0.2)',
+                          backdropFilter: 'blur(10px)',
+                          border: '2px solid rgba(255,255,255,0.3)',
+                        }}
+                      >
+                        <DashboardIcon sx={{ fontSize: 30, color: 'white' }} />
+                      </Avatar>
+                      <Box>
+                        <Typography
+                          variant={isMobile ? 'h4' : 'h3'}
+                          sx={{
+                            fontWeight: 'bold',
+                            color: 'white',
+                            textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                          }}
+                        >
+                          Kişisel Performans
+                        </Typography>
+                        <Typography
+                          variant='h6'
+                          sx={{
+                            opacity: 0.9,
+                            color: 'white',
+                            fontWeight: 300,
+                          }}
+                        >
+                          {user?.ad} {user?.soyad} •{' '}
+                          {user?.roller?.[0]?.ad || 'Kullanıcı'}
+                        </Typography>
+                      </Box>
+                    </Box>
 
-      {/* Tab Content */}
-      {activeTab === 0 && summary && (
-        <>
-          {/* Summary Cards */}
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            {/* Toplam Görevler */}
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                sx={{
-                  background: 'linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%)',
-                  color: 'white',
-                  borderRadius: 2,
-                }}
-              >
-                <CardContent>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      mb: 2,
-                    }}
-                  >
-                    <AssignmentIcon sx={{ fontSize: 40 }} />
-                    <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                      <CountUp end={summary.genelIstatistikler.toplamGorevSayisi} duration={1} />
-                    </Typography>
-                  </Box>
-                  <Typography variant="h6" gutterBottom>
-                    Toplam Görevler
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Son 30 günde yapılan
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Tamamlanan Görevler */}
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                sx={{
-                  background: 'linear-gradient(135deg, #2196F3 0%, #42A5F5 100%)',
-                  color: 'white',
-                  borderRadius: 2,
-                }}
-              >
-                <CardContent>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      mb: 2,
-                    }}
-                  >
-                    <WorkOutlineIcon sx={{ fontSize: 40 }} />
-                    <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                      <CountUp
-                        end={summary.genelIstatistikler.tamamlananGorevSayisi}
-                        duration={1}
+                    {/* Performance Stats */}
+                    <Box
+                      sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 3 }}
+                    >
+                      <Chip
+                        icon={<AssignmentIcon />}
+                        label={`${summary?.genelIstatistikler?.toplamGorevSayisi || 0} Görev`}
+                        sx={{
+                          backgroundColor: 'rgba(255,255,255,0.2)',
+                          backdropFilter: 'blur(10px)',
+                          color: 'white',
+                          border: '1px solid rgba(255,255,255,0.3)',
+                          fontWeight: 'bold',
+                        }}
                       />
-                    </Typography>
+                      <Chip
+                        icon={<StarIcon />}
+                        label={`${summary?.genelIstatistikler?.toplamPuan || 0} Puan`}
+                        sx={{
+                          backgroundColor: 'rgba(255,255,255,0.2)',
+                          backdropFilter: 'blur(10px)',
+                          color: 'white',
+                          border: '1px solid rgba(255,255,255,0.3)',
+                          fontWeight: 'bold',
+                        }}
+                      />
+                      <Chip
+                        icon={<TrendingUpIcon />}
+                        label={`${summary?.genelIstatistikler?.ortalamaPuan?.toFixed(1) || '0.0'} Ortalama`}
+                        sx={{
+                          backgroundColor: 'rgba(255,255,255,0.2)',
+                          backdropFilter: 'blur(10px)',
+                          color: 'white',
+                          border: '1px solid rgba(255,255,255,0.3)',
+                          fontWeight: 'bold',
+                        }}
+                      />
+                    </Box>
                   </Box>
-                  <Typography variant="h6" gutterBottom>
-                    Tamamlanan
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Başarı oranı: %
-                    {Math.round(
-                      (summary.genelIstatistikler.tamamlananGorevSayisi /
-                        summary.genelIstatistikler.toplamGorevSayisi) *
-                        100,
-                    )}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
+                </Fade>
+              </Grid>
 
-            {/* Toplam Puan */}
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                sx={{
-                  background: 'linear-gradient(135deg, #FF9800 0%, #FFB74D 100%)',
-                  color: 'white',
-                  borderRadius: 2,
-                }}
-              >
-                <CardContent>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      mb: 2,
-                    }}
-                  >
-                    <StarIcon sx={{ fontSize: 40 }} />
-                    <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                      <CountUp end={summary.genelIstatistikler.toplamPuan} duration={1} />
-                    </Typography>
-                  </Box>
-                  <Typography variant="h6" gutterBottom>
-                    Toplam Puan
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Günlük ort: {summary.genelIstatistikler.gunlukOrtalama}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* İşe Bağlı Görevler */}
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                sx={{
-                  background: 'linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%)',
-                  color: 'white',
-                  borderRadius: 2,
-                }}
-              >
-                <CardContent>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      mb: 2,
-                    }}
-                  >
-                    <BuildIcon sx={{ fontSize: 40 }} />
-                    <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                      <CountUp end={summary.iseBagliGorevleri} duration={1} />
-                    </Typography>
-                  </Box>
-                  <Typography variant="h6" gutterBottom>
-                    İşe Bağlı
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    WorkTask görevleri
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-
-          {/* Score Categories */}
-          <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-            <Typography
-              variant="h5"
-              sx={{ fontWeight: 'bold', mb: 3, display: 'flex', alignItems: 'center' }}
-            >
-              <TrophyIcon sx={{ mr: 2, color: '#ffa726' }} />
-              Kategorilere Göre Puanlarım
-            </Typography>
-
-            <Grid container spacing={2}>
-              {Object.entries(summary.kategorilerePuanlar).map(([key, data]) => (
-                <Grid item xs={6} md={4} key={key}>
+              <Grid item xs={12} md={4}>
+                <Slide direction='left' in timeout={1200}>
                   <Card
                     sx={{
-                      p: 2,
-                      textAlign: 'center',
-                      background: `linear-gradient(135deg, ${scoreColors[key]}20, ${scoreColors[key]}10)`,
-                      border: `2px solid ${scoreColors[key]}40`,
-                      borderRadius: 2,
+                      background: 'rgba(255,255,255,0.15)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      borderRadius: 3,
+                      color: 'white',
                     }}
                   >
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', color: scoreColors[key] }}>
-                      <CountUp end={data.puan} duration={1.5} />
-                    </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                      {scoreLabels[key]}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      {data.gorevSayisi} görev
-                    </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={Math.min((data.puan / 100) * 100, 100)}
+                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                      <Typography
+                        variant='h6'
+                        sx={{ mb: 1, fontWeight: 'bold' }}
+                      >
+                        Bu Ay Performansı
+                      </Typography>
+                      <Typography
+                        variant='h3'
+                        sx={{ fontWeight: 'bold', mb: 1 }}
+                      >
+                        {calculateDetailedScores().toplamPuan || 0}
+                      </Typography>
+                      <Typography variant='body2' sx={{ opacity: 0.8 }}>
+                        {calculateDetailedScores().toplamGorevSayisi || 0}{' '}
+                        görevden
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Slide>
+              </Grid>
+            </Grid>
+          </Box>
+        </Box>
+
+        {/* Modern Tab Navigation */}
+        <Box sx={{ px: 3, mt: -3, position: 'relative', zIndex: 2 }}>
+          <Card
+            sx={{
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              background: 'rgba(255,255,255,0.95)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+            }}
+          >
+            <Box sx={{ p: 2 }}>
+              {/* Filter Controls */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mb: 2,
+                  flexWrap: 'wrap',
+                  gap: 2,
+                }}
+              >
+                <Typography
+                  variant='h6'
+                  sx={{ fontWeight: 'bold', color: '#333' }}
+                >
+                  Performans Segmentleri
+                </Typography>
+
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                  <Tooltip title='Filtreleri Göster/Gizle'>
+                    <IconButton
+                      onClick={() => setShowFilters(!showFilters)}
                       sx={{
-                        height: 8,
-                        borderRadius: 4,
-                        backgroundColor: `${scoreColors[key]}30`,
-                        '& .MuiLinearProgress-bar': {
-                          backgroundColor: scoreColors[key],
+                        background: showFilters
+                          ? 'primary.main'
+                          : 'transparent',
+                        color: showFilters ? 'white' : 'primary.main',
+                        '&:hover': {
+                          background: 'primary.main',
+                          color: 'white',
                         },
                       }}
-                    />
-                    {data.ortalama > 0 && (
-                      <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                        Ortalama: {data.ortalama}
-                      </Typography>
-                    )}
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Paper>
+                    >
+                      <FilterIcon />
+                    </IconButton>
+                  </Tooltip>
 
-          {/* Daily Performance Chart */}
-          {dailyPerformance.length > 0 && (
-            <Paper sx={{ p: 3, borderRadius: 2 }}>
-              <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>
-                📈 Son 30 Günlük Performans Grafiği
-              </Typography>
+                  <Tooltip title='Yenile'>
+                    <IconButton
+                      onClick={() => {
+                        const currentTab = tabs.find(
+                          tab => tab.id === activeTab,
+                        );
+                        if (currentTab?.loadAction) {
+                          currentTab.loadAction();
+                        }
+                      }}
+                      sx={{
+                        color: 'primary.main',
+                        '&:hover': {
+                          background: 'primary.main',
+                          color: 'white',
+                        },
+                      }}
+                    >
+                      <RefreshIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
 
-              <Box sx={{ height: 400, width: '100%' }}>
-                <ResponsiveContainer>
-                  <LineChart data={dailyPerformance}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="tarihFormatli" />
-                    <YAxis />
-                    <Tooltip
-                      formatter={(value, name) => [value, scoreLabels[name] || name]}
-                      labelFormatter={label => `Tarih: ${label}`}
-                    />
-                    <Legend />
-                    {Object.entries(scoreColors).map(([key, color]) => (
-                      <Line
-                        key={key}
-                        type="monotone"
-                        dataKey={`scores.${key}`}
-                        stroke={color}
-                        strokeWidth={2}
-                        name={scoreLabels[key]}
+              {/* Filter Panel */}
+              <Slide direction='down' in={showFilters}>
+                <Box
+                  sx={{
+                    mb: 3,
+                    p: 2,
+                    background: 'rgba(0,0,0,0.02)',
+                    borderRadius: 2,
+                    border: '1px solid rgba(0,0,0,0.05)',
+                  }}
+                >
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <FormControl fullWidth size='small'>
+                        <InputLabel>Yıl</InputLabel>
+                        <Select
+                          value={filters.year}
+                          label='Yıl'
+                          onChange={e =>
+                            handleFilterChange('year', e.target.value)
+                          }
+                        >
+                          {Array.from({ length: 5 }, (_, i) => {
+                            const year = new Date().getFullYear() - i;
+                            return (
+                              <MenuItem key={year} value={year}>
+                                {year}
+                              </MenuItem>
+                            );
+                          })}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6} md={3}>
+                      <FormControl fullWidth size='small'>
+                        <InputLabel>Ay</InputLabel>
+                        <Select
+                          value={filters.month}
+                          label='Ay'
+                          onChange={e =>
+                            handleFilterChange('month', e.target.value)
+                          }
+                        >
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <MenuItem key={i + 1} value={i + 1}>
+                              {new Date(
+                                new Date().getFullYear(),
+                                i,
+                              ).toLocaleDateString('tr-TR', { month: 'long' })}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6} md={3}>
+                      <FormControl fullWidth size='small'>
+                        <InputLabel>Departman</InputLabel>
+                        <Select
+                          value={filters.department}
+                          label='Departman'
+                          onChange={e =>
+                            handleFilterChange('department', e.target.value)
+                          }
+                        >
+                          <MenuItem value='all'>Tümü</MenuItem>
+                          <MenuItem value='uretim'>Üretim</MenuItem>
+                          <MenuItem value='kalite'>Kalite</MenuItem>
+                          <MenuItem value='ik'>İnsan Kaynakları</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6} md={3}>
+                      <FormControl fullWidth size='small'>
+                        <InputLabel>Görev Tipi</InputLabel>
+                        <Select
+                          value={filters.taskType}
+                          label='Görev Tipi'
+                          onChange={e =>
+                            handleFilterChange('taskType', e.target.value)
+                          }
+                        >
+                          <MenuItem value='all'>Tümü</MenuItem>
+                          <MenuItem value='checklist'>Checklist</MenuItem>
+                          <MenuItem value='worktask'>İşe Bağlı</MenuItem>
+                          <MenuItem value='quality'>Kalite Kontrol</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  </Grid>
+                </Box>
+              </Slide>
+
+              {/* Modern Tabs */}
+              <Tabs
+                value={activeTab}
+                onChange={handleTabChange}
+                variant={isMobile ? 'scrollable' : 'fullWidth'}
+                scrollButtons={isMobile ? 'auto' : false}
+                sx={{
+                  '& .MuiTabs-indicator': {
+                    height: 3,
+                    borderRadius: '3px 3px 0 0',
+                    background:
+                      'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
+                  },
+                  '& .MuiTab-root': {
+                    minHeight: 60,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    color: '#666',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      color: '#667eea',
+                      background: 'rgba(102, 126, 234, 0.05)',
+                    },
+                    '&.Mui-selected': {
+                      color: '#667eea',
+                      background: 'rgba(102, 126, 234, 0.1)',
+                    },
+                  },
+                }}
+              >
+                {tabs.map(tab => (
+                  <Tab
+                    key={tab.id}
+                    icon={tab.icon}
+                    label={isMobile ? '' : tab.label}
+                    iconPosition='start'
+                    sx={{
+                      '& .MuiSvgIcon-root': {
+                        fontSize: '1.2rem',
+                        mr: isMobile ? 0 : 1,
+                      },
+                    }}
+                  />
+                ))}
+              </Tabs>
+            </Box>
+          </Card>
+        </Box>
+
+        {/* Tab Content - Modern Card Layout */}
+        <Box sx={{ px: 3, mt: 3 }}>
+          <Fade in timeout={500} key={activeTab}>
+            <Card
+              sx={{
+                borderRadius: 3,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                background: 'white',
+                overflow: 'hidden',
+              }}
+            >
+              <CardContent sx={{ p: 0 }}>
+                {activeTab === 0 && (
+                  <Box sx={{ p: 3 }}>
+                    <Typography
+                      variant='h5'
+                      sx={{
+                        mb: 3,
+                        fontWeight: 'bold',
+                        color: '#333',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      <DashboardIcon sx={{ color: '#667eea' }} />
+                      Genel Bakış
+                    </Typography>
+
+                    {/* Summary Cards */}
+                    <Box sx={{ mb: 4 }}>
+                      <SummaryCards
+                        summary={summary}
+                        detailedScores={calculateDetailedScores()}
                       />
-                    ))}
-                  </LineChart>
-                </ResponsiveContainer>
-              </Box>
-            </Paper>
-          )}
-        </>
-      )}
-
-      {/* Detailed Activities Tab */}
-      {activeTab === 1 && (
-        <>
-          {/* Filters */}
-          <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-            <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-              <FilterIcon sx={{ mr: 1 }} />
-              Filtreler
-            </Typography>
-
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Durum</InputLabel>
-                  <Select
-                    value={filters.durum}
-                    label="Durum"
-                    onChange={e => handleFilterChange('durum', e.target.value)}
-                  >
-                    <MenuItem value="">Tümü</MenuItem>
-                    <MenuItem value="tamamlandi">Tamamlandı</MenuItem>
-                    <MenuItem value="onaylandi">Onaylandı</MenuItem>
-                    <MenuItem value="bekliyor">Bekliyor</MenuItem>
-                    <MenuItem value="reddedildi">Reddedildi</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  fullWidth
-                  type="date"
-                  label="Tarih"
-                  value={filters.tarih}
-                  onChange={e => handleFilterChange('tarih', e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Sayfa Boyutu</InputLabel>
-                  <Select
-                    value={filters.limit}
-                    label="Sayfa Boyutu"
-                    onChange={e => handleFilterChange('limit', e.target.value)}
-                  >
-                    <MenuItem value={10}>10</MenuItem>
-                    <MenuItem value={20}>20</MenuItem>
-                    <MenuItem value={50}>50</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={3}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  sx={{ height: 56 }}
-                  onClick={() => setFilters({ page: 1, limit: 10, durum: '', tarih: '' })}
-                >
-                  Sıfırla
-                </Button>
-              </Grid>
-            </Grid>
-          </Paper>
-
-          {/* Activities List */}
-          <Paper sx={{ borderRadius: 2 }}>
-            <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }}>
-              <Typography variant="h6">Aktivitelerim ({pagination.toplamKayit || 0})</Typography>
-            </Box>
-
-            {activities.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <AssignmentIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
-                <Typography variant="h6" color="text.secondary">
-                  Seçilen kriterlere göre aktivite bulunamadı.
-                </Typography>
-              </Box>
-            ) : (
-              <>
-                {activities.map((activity, index) => (
-                  <Box key={activity._id}>
-                    <Box sx={{ p: 3 }}>
-                      <Grid container spacing={2} alignItems="center">
-                        {/* Icon & Type */}
-                        <Grid item xs={12} sm={1}>
-                          <Avatar
-                            sx={{
-                              bgcolor: activity.kategoriRengi,
-                              width: 50,
-                              height: 50,
-                            }}
-                          >
-                            {activity.tip === 'checklist' ? <AssignmentIcon /> : <BuildIcon />}
-                          </Avatar>
-                        </Grid>
-
-                        {/* Main Info */}
-                        <Grid item xs={12} sm={6}>
-                          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                            {activity.checklist?.ad || 'Görev'}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                            {activity.tip === 'checklist' ? 'Checklist Görevi' : 'İşe Bağlı Görev'}
-                          </Typography>
-                          {activity.makina && (
-                            <Typography variant="body2">
-                              Makina: {activity.makina.ad || activity.makina.envanterKodu}
-                            </Typography>
-                          )}
-                        </Grid>
-
-                        {/* Status & Score */}
-                        <Grid item xs={12} sm={3}>
-                          <Box sx={{ textAlign: 'center' }}>
-                            <Chip
-                              label={getDurumText(activity.durum)}
-                              color={getDurumColor(activity.durum)}
-                              size="small"
-                              sx={{ mb: 1 }}
-                            />
-                            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                              {activity.toplamPuan || activity.kontrolToplamPuani || 0} puan
-                            </Typography>
-                          </Box>
-                        </Grid>
-
-                        {/* Date */}
-                        <Grid item xs={12} sm={2}>
-                          <Box sx={{ textAlign: 'center' }}>
-                            <CalendarIcon sx={{ color: 'text.secondary', mb: 1 }} />
-                            <Typography variant="body2">
-                              {new Date(activity.tamamlanmaTarihi).toLocaleDateString('tr-TR')}
-                            </Typography>
-                          </Box>
-                        </Grid>
-                      </Grid>
                     </Box>
-                    {index < activities.length - 1 && <Divider />}
-                  </Box>
-                ))}
 
-                {/* Pagination */}
-                {pagination.toplamSayfa > 1 && (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                    <Pagination
-                      count={pagination.toplamSayfa}
-                      page={pagination.mevcutSayfa}
-                      onChange={handlePageChange}
-                      color="primary"
-                      size="large"
-                    />
-                  </Box>
-                )}
-              </>
-            )}
-          </Paper>
-        </>
-      )}
-
-      {/* Scores Detail Tab */}
-      {activeTab === 2 && (
-        <>
-          {/* Score Filters */}
-          <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-            <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-              <TrophyIcon sx={{ mr: 1 }} />
-              Puanlama Filtresi
-            </Typography>
-
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Gün Sayısı</InputLabel>
-                  <Select
-                    value={scoreFilters.days}
-                    label="Gün Sayısı"
-                    onChange={e =>
-                      setScoreFilters(prev => ({ ...prev, days: e.target.value, page: 1 }))
-                    }
-                  >
-                    <MenuItem value={7}>Son 7 Gün</MenuItem>
-                    <MenuItem value={15}>Son 15 Gün</MenuItem>
-                    <MenuItem value={30}>Son 30 Gün</MenuItem>
-                    <MenuItem value={60}>Son 60 Gün</MenuItem>
-                    <MenuItem value={90}>Son 90 Gün</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Sayfa Boyutu</InputLabel>
-                  <Select
-                    value={scoreFilters.limit}
-                    label="Sayfa Boyutu"
-                    onChange={e =>
-                      setScoreFilters(prev => ({ ...prev, limit: e.target.value, page: 1 }))
-                    }
-                  >
-                    <MenuItem value={10}>10</MenuItem>
-                    <MenuItem value={20}>20</MenuItem>
-                    <MenuItem value={50}>50</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={3}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  sx={{ height: 56 }}
-                  onClick={() => setScoreFilters({ page: 1, limit: 10, days: 30 })}
-                >
-                  Sıfırla
-                </Button>
-              </Grid>
-            </Grid>
-          </Paper>
-
-          {/* Scores List */}
-          <Paper sx={{ borderRadius: 2 }}>
-            <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }}>
-              <Typography variant="h6">
-                Aldığım Puanlar ({scorePagination.toplamKayit || 0})
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Son {scoreFilters.days} günde aldığınız puanlar
-              </Typography>
-            </Box>
-
-            {scoreDetails.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <TrophyIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
-                <Typography variant="h6" color="text.secondary">
-                  Seçilen dönemde puanlanmış görev bulunamadı.
-                </Typography>
-              </Box>
-            ) : (
-              <>
-                {scoreDetails.map((score, index) => (
-                  <Box key={score.id}>
-                    <Box sx={{ p: 3 }}>
-                      <Grid container spacing={3} alignItems="center">
-                        {/* Icon & Category */}
-                        <Grid item xs={12} sm={2}>
-                          <Box sx={{ textAlign: 'center' }}>
-                            <Avatar
-                              sx={{
-                                bgcolor: score.kategoriRengi,
-                                width: 60,
-                                height: 60,
-                                mx: 'auto',
-                                mb: 1,
-                              }}
+                    {/* Charts Grid */}
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} lg={8}>
+                        <Card
+                          sx={{
+                            height: '100%',
+                            background:
+                              'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+                            border: '1px solid rgba(0,0,0,0.05)',
+                          }}
+                        >
+                          <CardContent>
+                            <Typography
+                              variant='h6'
+                              sx={{ mb: 2, fontWeight: 'bold' }}
                             >
-                              {score.tip === 'checklist' ? (
-                                <AssignmentIcon sx={{ fontSize: 30 }} />
-                              ) : (
-                                <BuildIcon sx={{ fontSize: 30 }} />
-                              )}
-                            </Avatar>
-                            <Chip
-                              label={score.kategori}
-                              size="small"
-                              sx={{
-                                bgcolor: score.kategoriRengi + '20',
-                                color: score.kategoriRengi,
-                                fontWeight: 'bold',
-                              }}
-                            />
-                          </Box>
-                        </Grid>
-
-                        {/* Main Info */}
-                        <Grid item xs={12} sm={5}>
-                          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                            {score.checklistAdi}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                            {score.makina}
-                          </Typography>
-                          {score.kalip && (
-                            <Typography variant="body2" color="text.secondary">
-                              <strong>Kalıp:</strong> {score.kalip}
+                              <span role='img' aria-label='chart'>
+                                📈
+                              </span>{' '}
+                              Günlük Performans Trendi
                             </Typography>
-                          )}
-                          {score.hamade && (
-                            <Typography variant="body2" color="text.secondary">
-                              <strong>Hammadde:</strong> {score.hamade}
-                            </Typography>
-                          )}
-                          {score.aciklama && (
-                            <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
-                              {score.aciklama}
-                            </Typography>
-                          )}
-                        </Grid>
-
-                        {/* Scores Detail */}
-                        <Grid item xs={12} sm={3}>
-                          <Paper sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
-                            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                              Puanlama Detayı
-                            </Typography>
-
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                              <Typography variant="body2">Kendi Puanım:</Typography>
-                              <Typography
-                                variant="body2"
-                                sx={{ fontWeight: 'bold', color: 'primary.main' }}
-                              >
-                                {score.puanlar.kendi}
-                              </Typography>
-                            </Box>
-
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                              <Typography variant="body2">Kontrol Puanı:</Typography>
-                              <Typography
-                                variant="body2"
-                                sx={{ fontWeight: 'bold', color: 'success.main' }}
-                              >
-                                {score.puanlar.kontrol}
-                              </Typography>
-                            </Box>
-
-                            <Divider sx={{ my: 1 }} />
-
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                              <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                                Toplam:
-                              </Typography>
-                              <Typography
-                                variant="h6"
-                                sx={{
-                                  fontWeight: 'bold',
-                                  color: 'warning.main',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                }}
-                              >
-                                <StarIcon sx={{ fontSize: 20, mr: 0.5 }} />
-                                {score.puanlar.toplam}
-                              </Typography>
-                            </Box>
-                          </Paper>
-                        </Grid>
-
-                        {/* Who Scored & Date */}
-                        <Grid item xs={12} sm={2}>
-                          <Box sx={{ textAlign: 'center' }}>
-                            {/* Date */}
-                            <Box sx={{ mb: 2 }}>
-                              <CalendarIcon sx={{ color: 'text.secondary', mb: 1 }} />
-                              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                                {new Date(score.tamamlanmaTarihi).toLocaleDateString('tr-TR')}
-                              </Typography>
-                            </Box>
-
-                            {/* Status */}
-                            <Chip
-                              label={getDurumText(score.durum)}
-                              color={getDurumColor(score.durum)}
-                              size="small"
-                              sx={{ mb: 2 }}
-                            />
-
-                            {/* Who scored */}
-                            {score.puanlayanKullanici && (
-                              <Box>
-                                <Typography variant="caption" color="text.secondary">
-                                  Puanlayan:
-                                </Typography>
-                                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                                  {score.puanlayanKullanici.ad} {score.puanlayanKullanici.soyad}
-                                </Typography>
-                              </Box>
-                            )}
-
-                            {/* Who approved */}
-                            {score.onaylayan && (
-                              <Box sx={{ mt: 1 }}>
-                                <Typography variant="caption" color="text.secondary">
-                                  Onaylayan:
-                                </Typography>
-                                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                                  {score.onaylayan.ad} {score.onaylayan.soyad}
-                                </Typography>
-                              </Box>
-                            )}
-                          </Box>
-                        </Grid>
+                            <PerformanceChart data={dailyPerformance} />
+                          </CardContent>
+                        </Card>
                       </Grid>
-                    </Box>
-                    {index < scoreDetails.length - 1 && <Divider />}
-                  </Box>
-                ))}
 
-                {/* Pagination */}
-                {scorePagination.toplamSayfa > 1 && (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                    <Pagination
-                      count={scorePagination.toplamSayfa}
-                      page={scorePagination.mevcutSayfa}
-                      onChange={(event, page) => setScoreFilters(prev => ({ ...prev, page }))}
-                      color="primary"
-                      size="large"
+                      <Grid item xs={12} lg={4}>
+                        <Card
+                          sx={{
+                            height: '100%',
+                            background:
+                              'linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%)',
+                            border: '1px solid rgba(0,0,0,0.05)',
+                          }}
+                        >
+                          <CardContent>
+                            <Typography
+                              variant='h6'
+                              sx={{ mb: 2, fontWeight: 'bold' }}
+                            >
+                              <span role='img' aria-label='target'>
+                                🎯
+                              </span>{' '}
+                              Kategori Dağılımı
+                            </Typography>
+                            <CategoryChart data={summary} />
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                )}
+
+                {activeTab === 1 && (
+                  <Box sx={{ p: 3 }}>
+                    <Typography
+                      variant='h5'
+                      sx={{
+                        mb: 3,
+                        fontWeight: 'bold',
+                        color: '#333',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      <TrendingUpIcon sx={{ color: '#2196F3' }} />
+                      Detaylı Aktiviteler
+                    </Typography>
+
+                    <Card
+                      sx={{
+                        background:
+                          'linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%)',
+                        border: '1px solid rgba(33, 150, 243, 0.1)',
+                      }}
+                    >
+                      <CardContent>
+                        <ActivityList
+                          activities={activities}
+                          pagination={pagination}
+                          onShowTaskDetails={handleShowTaskDetails}
+                          loading={loading}
+                        />
+                      </CardContent>
+                    </Card>
+                  </Box>
+                )}
+
+                {activeTab === 2 && (
+                  <Box sx={{ p: 3 }}>
+                    <Typography
+                      variant='h5'
+                      sx={{
+                        mb: 3,
+                        fontWeight: 'bold',
+                        color: '#333',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      <AssignmentIcon sx={{ color: '#FF9800' }} />
+                      Genel Karnem
+                    </Typography>
+
+                    <ScoreBreakdown
+                      scoreDetails={scoreDetails}
+                      monthlyTotals={monthlyTotals}
+                      hrScores={hrScores}
+                      workTaskScores={workTaskScores}
+                      bonusEvaluations={bonusEvaluations}
+                      qualityScores={qualityScores}
+                      controlSummary={controlSummary}
+                      loading={loading}
                     />
                   </Box>
                 )}
-              </>
-            )}
-          </Paper>
-        </>
-      )}
-    </Box>
+
+                {activeTab === 3 && (
+                  <Box sx={{ p: 3 }}>
+                    <Typography
+                      variant='h5'
+                      sx={{
+                        mb: 3,
+                        fontWeight: 'bold',
+                        color: '#333',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      <ScienceIcon sx={{ color: '#9C27B0' }} />
+                      Kalite Kontrol Puanlarım
+                    </Typography>
+
+                    <Card
+                      sx={{
+                        background:
+                          'linear-gradient(135deg, #faf5ff 0%, #e9d5ff 100%)',
+                        border: '1px solid rgba(156, 39, 176, 0.1)',
+                      }}
+                    >
+                      <CardContent>
+                        <QualityScores
+                          qualityScores={qualityScores}
+                          loading={qualityScoresLoading}
+                        />
+                      </CardContent>
+                    </Card>
+                  </Box>
+                )}
+
+                {activeTab === 4 && (
+                  <Box sx={{ p: 3 }}>
+                    <Typography
+                      variant='h5'
+                      sx={{
+                        mb: 3,
+                        fontWeight: 'bold',
+                        color: '#333',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      <PeopleIcon sx={{ color: '#F44336' }} />
+                      İK Puanlarım
+                    </Typography>
+
+                    <Card
+                      sx={{
+                        background:
+                          'linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%)',
+                        border: '1px solid rgba(244, 67, 54, 0.1)',
+                      }}
+                    >
+                      <CardContent>
+                        <HRScores data={getSegmentData('hr')} />
+                      </CardContent>
+                    </Card>
+                  </Box>
+                )}
+
+                {activeTab === 5 && (
+                  <Box sx={{ p: 3 }}>
+                    <Typography
+                      variant='h5'
+                      sx={{
+                        mb: 3,
+                        fontWeight: 'bold',
+                        color: '#333',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      <WorkIcon sx={{ color: '#00BCD4' }} />
+                      Görev Puanlarım
+                    </Typography>
+
+                    <Card
+                      sx={{
+                        background:
+                          'linear-gradient(135deg, #f0fdff 0%, #cdf4ff 100%)',
+                        border: '1px solid rgba(0, 188, 212, 0.1)',
+                      }}
+                    >
+                      <CardContent>
+                        <ActivityList
+                          activities={getSegmentData('worktask_only')}
+                          onShowTaskDetails={handleShowTaskDetails}
+                          loading={loading}
+                          pagination={{ toplamSayfa: 1, mevcutSayfa: 1 }}
+                          emptyMessage='Bu ay henüz görev puanınız bulunmuyor.'
+                        />
+                      </CardContent>
+                    </Card>
+                  </Box>
+                )}
+
+                {activeTab === 6 && (
+                  <Box sx={{ p: 3 }}>
+                    <Typography
+                      variant='h5'
+                      sx={{
+                        mb: 3,
+                        fontWeight: 'bold',
+                        color: '#333',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      <ChecklistIcon sx={{ color: '#795548' }} />
+                      Checklist Puanlarım
+                    </Typography>
+
+                    <Card
+                      sx={{
+                        background:
+                          'linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%)',
+                        border: '1px solid rgba(121, 85, 72, 0.1)',
+                      }}
+                    >
+                      <CardContent>
+                        <ActivityList
+                          activities={getSegmentData('checklist_only')}
+                          onShowTaskDetails={handleShowTaskDetails}
+                          loading={loading}
+                          pagination={{ toplamSayfa: 1, mevcutSayfa: 1 }}
+                          emptyMessage='Bu ay henüz checklist puanınız bulunmuyor.'
+                        />
+                      </CardContent>
+                    </Card>
+                  </Box>
+                )}
+
+                {activeTab === 7 && (
+                  <Box sx={{ p: 3 }}>
+                    <Typography
+                      variant='h5'
+                      sx={{
+                        mb: 3,
+                        fontWeight: 'bold',
+                        color: '#333',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      <AssignmentIcon sx={{ color: '#673AB7' }} />
+                      Kontrol Puanlarım
+                    </Typography>
+
+                    <Card
+                      sx={{
+                        background:
+                          'linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%)',
+                        border: '1px solid rgba(103, 58, 183, 0.1)',
+                      }}
+                    >
+                      <CardContent>
+                        <ControlPendingScores
+                          data={getSegmentData('control_scores')}
+                        />
+                      </CardContent>
+                    </Card>
+                  </Box>
+                )}
+
+                {activeTab === 8 && (
+                  <Box sx={{ p: 3 }}>
+                    <Typography
+                      variant='h5'
+                      sx={{
+                        mb: 3,
+                        fontWeight: 'bold',
+                        color: '#333',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      <CardGiftcardIcon sx={{ color: '#E91E63' }} />
+                      Değerlendirme Puanlarım
+                    </Typography>
+
+                    <Card
+                      sx={{
+                        background:
+                          'linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%)',
+                        border: '1px solid rgba(233, 30, 99, 0.1)',
+                      }}
+                    >
+                      <CardContent>
+                        <BonusScores
+                          data={getSegmentData('bonus_evaluation')}
+                        />
+                      </CardContent>
+                    </Card>
+                  </Box>
+                )}
+
+                {activeTab === 9 && (
+                  <Box sx={{ p: 3 }}>
+                    <Typography
+                      variant='h5'
+                      sx={{
+                        mb: 3,
+                        fontWeight: 'bold',
+                        color: '#333',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      <EngineIcon sx={{ color: '#607D8B' }} />
+                      Ekipmanlarım
+                    </Typography>
+
+                    <Card
+                      sx={{
+                        background:
+                          'linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%)',
+                        border: '1px solid rgba(96, 125, 139, 0.1)',
+                      }}
+                    >
+                      <CardContent>
+                        <UserEquipment onShowSnackbar={showSnackbar} />
+                      </CardContent>
+                    </Card>
+                  </Box>
+                )}
+
+                {activeTab === 10 && (
+                  <Box sx={{ p: 3 }}>
+                    <Typography
+                      variant='h5'
+                      sx={{
+                        mb: 3,
+                        fontWeight: 'bold',
+                        color: '#333',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      <RankingIcon sx={{ color: '#FF5722' }} />
+                      Sıralama Tablosu
+                    </Typography>
+
+                    <Card
+                      sx={{
+                        background:
+                          'linear-gradient(135deg, #fff3e0 0%, #ffcc02 100%)',
+                        border: '1px solid rgba(255, 87, 34, 0.1)',
+                      }}
+                    >
+                      <CardContent>
+                        <RankingBoard />
+                      </CardContent>
+                    </Card>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Fade>
+        </Box>
+
+        {/* Task Details Modal */}
+        <TaskDetailsModal
+          open={taskDetailsModal.open}
+          taskId={taskDetailsModal.taskId}
+          onClose={handleCloseTaskDetails}
+        />
+
+        {/* Snackbar for UserEquipment */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          message={snackbar.message}
+        />
+      </Box>
+    </LocalizationProvider>
   );
 };
 

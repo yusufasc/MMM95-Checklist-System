@@ -2,42 +2,54 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const { auth, checkModulePermission } = require('../middleware/auth');
+// const { usersListCache, invalidateCache, cacheService } = require('../middleware/cache');
 const router = express.Router();
 
 // @route   GET /api/users
 // @desc    Tüm kullanıcıları listele
 // @access  Private (Kullanıcı Yönetimi modülü erişim yetkisi)
-router.get('/', auth, checkModulePermission('Kullanıcı Yönetimi'), async (req, res) => {
-  try {
-    const users = await User.find()
-      .populate('roller', 'ad')
-      .populate('departmanlar', 'ad')
-      .select('-sifreHash');
+router.get(
+  '/',
+  auth,
+  checkModulePermission('Kullanıcı Yönetimi'),
+  // usersListCache(), // 🚀 CACHE: 30 dakika
+  async (req, res) => {
+    try {
+      const users = await User.find()
+        .populate('roller', 'ad')
+        .populate('departmanlar', 'ad')
+        .select('-sifreHash');
 
-    res.json(users);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send('Sunucu hatası');
-  }
-});
+      res.json(users);
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send('Sunucu hatası');
+    }
+  },
+);
 
 // @route   GET /api/users/active-workers
 // @desc    Aktif çalışanları listele (kalite kontrol için)
 // @access  Private (Kalite Kontrol modülü erişim yetkisi)
-router.get('/active-workers', auth, checkModulePermission('Kalite Kontrol'), async (req, res) => {
-  try {
-    const workers = await User.find({ durum: 'aktif' })
-      .populate('roller', 'ad')
-      .populate('departmanlar', 'ad')
-      .select('-sifreHash')
-      .sort('ad soyad');
+router.get(
+  '/active-workers',
+  auth,
+  checkModulePermission('Kalite Kontrol'),
+  async (req, res) => {
+    try {
+      const workers = await User.find({ durum: 'aktif' })
+        .populate('roller', 'ad')
+        .populate('departmanlar', 'ad')
+        .select('-sifreHash')
+        .sort('ad soyad');
 
-    res.json(workers);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send('Sunucu hatası');
-  }
-});
+      res.json(workers);
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send('Sunucu hatası');
+    }
+  },
+);
 
 // @route   POST /api/users
 // @desc    Yeni kullanıcı ekle
@@ -46,6 +58,10 @@ router.post(
   '/',
   auth,
   checkModulePermission('Kullanıcı Yönetimi', 'duzenleyebilir'),
+  // invalidateCache([
+  //   () => cacheService.invalidateUser(), // 🗑️ CACHE: Kullanıcı cache'lerini temizle
+  //   'users:*',
+  // ]),
   async (req, res) => {
     try {
       console.log('👤 Kullanıcı ekleme isteği alındı:', {
@@ -54,17 +70,22 @@ router.post(
         userRoles: req.user?.roller?.map(r => r.ad),
       });
 
-      const { ad, soyad, kullaniciAdi, sifre, roller, departmanlar, durum } = req.body;
+      const { ad, soyad, kullaniciAdi, sifre, roller, departmanlar, durum } =
+        req.body;
 
       // Şifre uzunluk kontrolü
       if (sifre.length < 6) {
-        return res.status(400).json({ message: 'Şifre en az 6 karakter olmalıdır' });
+        return res
+          .status(400)
+          .json({ message: 'Şifre en az 6 karakter olmalıdır' });
       }
 
       // Kullanıcı adı benzersizlik kontrolü
       let user = await User.findOne({ kullaniciAdi });
       if (user) {
-        return res.status(400).json({ message: 'Bu kullanıcı adı zaten kullanılıyor' });
+        return res
+          .status(400)
+          .json({ message: 'Bu kullanıcı adı zaten kullanılıyor' });
       }
 
       // Şifreyi hashle
@@ -120,9 +141,14 @@ router.put(
   '/:id',
   auth,
   checkModulePermission('Kullanıcı Yönetimi', 'duzenleyebilir'),
+  // invalidateCache([
+  //   (req) => cacheService.invalidateUser(req.params.id), // 🗑️ CACHE: Belirli kullanıcı cache'ini temizle
+  //   'users:*',
+  // ]),
   async (req, res) => {
     try {
-      const { ad, soyad, kullaniciAdi, sifre, roller, departmanlar, durum } = req.body;
+      const { ad, soyad, kullaniciAdi, sifre, roller, departmanlar, durum } =
+        req.body;
 
       // Kullanıcıyı bul
       let user = await User.findById(req.params.id);
@@ -134,7 +160,9 @@ router.put(
       if (kullaniciAdi && kullaniciAdi !== user.kullaniciAdi) {
         const existingUser = await User.findOne({ kullaniciAdi });
         if (existingUser) {
-          return res.status(400).json({ message: 'Bu kullanıcı adı zaten kullanılıyor' });
+          return res
+            .status(400)
+            .json({ message: 'Bu kullanıcı adı zaten kullanılıyor' });
         }
       }
 
@@ -152,19 +180,62 @@ router.put(
       // Şifre değiştirilecekse hashle
       if (sifre) {
         if (sifre.length < 6) {
-          return res.status(400).json({ message: 'Şifre en az 6 karakter olmalıdır' });
+          return res
+            .status(400)
+            .json({ message: 'Şifre en az 6 karakter olmalıdır' });
         }
         const salt = await bcrypt.genSalt(10);
         updateData.sifreHash = await bcrypt.hash(sifre, salt);
       }
 
       // Kullanıcıyı güncelle
-      user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true })
+      user = await User.findByIdAndUpdate(req.params.id, updateData, {
+        new: true,
+      })
         .populate('roller', 'ad')
         .populate('departmanlar', 'ad')
         .select('-sifreHash');
 
       res.json(user);
+    } catch (error) {
+      console.error(error.message);
+      if (error.kind === 'ObjectId') {
+        return res.status(400).json({ message: 'Geçersiz kullanıcı ID' });
+      }
+      res.status(500).json({ message: 'Sunucu hatası' });
+    }
+  },
+);
+
+// @route   DELETE /api/users/:id
+// @desc    Kullanıcı sil (soft delete)
+// @access  Private (Kullanıcı Yönetimi modülü düzenleme yetkisi)
+router.delete(
+  '/:id',
+  auth,
+  checkModulePermission('Kullanıcı Yönetimi', 'duzenleyebilir'),
+  // invalidateCache([
+  //   (req) => cacheService.invalidateUser(req.params.id), // 🗑️ CACHE: Belirli kullanıcı cache'ini temizle
+  //   'users:*',
+  // ]),
+  async (req, res) => {
+    try {
+      const user = await User.findById(req.params.id);
+      if (!user) {
+        return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+      }
+
+      // Admin kendini silemesin
+      if (user._id.toString() === req.user.id) {
+        return res.status(400).json({ message: 'Kendinizi silemezsiniz' });
+      }
+
+      // Soft delete - durumu pasif yap
+      user.durum = 'pasif';
+      user.guncellemeTarihi = Date.now();
+      await user.save();
+
+      res.json({ message: 'Kullanıcı başarıyla silindi' });
     } catch (error) {
       console.error(error.message);
       if (error.kind === 'ObjectId') {

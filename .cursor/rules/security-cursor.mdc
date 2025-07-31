@@ -1,0 +1,183 @@
+---
+description:  Authentication, authorization, JWT, input validation, password hashing. File paths: auth routes, middleware. Triggers: auth, JWT, bcrypt, security, validation, login, password, token, middleware.
+globs: 
+alwaysApply: false
+---
+# 🔐 MMM Checklist - Security Kuralları
+
+## Authentication & Authorization (Zorunlu)
+```javascript
+// ✅ Frontend yetki kontrolü
+const { hasModulePermission } = useAuth();
+if (!hasModulePermission("TaskManagement")) {
+  return <Alert severity="error">Bu modüle erişim yetkiniz yok</Alert>;
+}
+
+// ✅ Backend route koruması
+router.post("/", 
+  auth,                                    // Authentication
+  checkModulePermission("Tasks", "write"), // Authorization
+  validateInput,                           // Input validation
+  handler
+);
+```
+
+## Input Validation & Sanitization
+```javascript
+// ✅ Backend validation pattern
+const { body, validationResult } = require('express-validator');
+
+router.post('/', [
+  body('email').isEmail().normalizeEmail(),
+  body('password').isLength({ min: 6 }).escape(),
+  body('name').trim().escape()
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  
+  // Process validated input
+});
+```
+
+## File Upload Security
+```javascript
+// ✅ Fotoğraf upload güvenlik pattern
+const validateImageUpload = (file) => {
+  // Size check: Max 5MB
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error("Dosya boyutu 5MB'dan büyük olamaz");
+  }
+  
+  // Type check: Only images
+  if (!file.type.startsWith('image/')) {
+    throw new Error("Sadece resim dosyaları kabul edilir");
+  }
+  
+  // Format: Base64 encode
+  return file; // Base64 format'ta
+};
+
+// ✅ Mobile camera input
+<input 
+  type="file" 
+  accept="image/*" 
+  capture="environment"  // Rear camera
+  onChange={handleImageUpload}
+/>
+```
+
+## MongoDB Security
+```javascript
+// ✅ ObjectId validation
+const mongoose = require('mongoose');
+
+const validateObjectId = (id) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error("Geçersiz ID formatı");
+  }
+};
+
+// ✅ Query injection prevention
+const user = await User.findById(req.params.id); // Safe
+// ❌ const user = await User.find(req.query); // Dangerous
+```
+
+## JWT Token Security
+```javascript
+// ✅ JWT middleware pattern
+const jwt = require('jsonwebtoken');
+
+const auth = (req, res, next) => {
+  const token = req.header('Authorization')?.replace('Bearer ', '');
+  
+  if (!token) {
+    return res.status(401).json({ message: 'Token bulunamadı' });
+  }
+  
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: 'Geçersiz token' });
+  }
+};
+```
+
+## Environment Variables
+```bash
+# ✅ .env güvenlik pattern
+JWT_SECRET=your-super-secret-key-here
+MONGODB_URI=mongodb://localhost:27017/mmm-checklist
+NODE_ENV=development
+
+# ❌ YASAKLI: Secrets'ları code'a yazmak
+const JWT_SECRET = "hardcoded-secret"; // YASAKLI
+```
+
+## CORS & Rate Limiting
+```javascript
+// ✅ CORS configuration
+const cors = require('cors');
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}));
+
+// ✅ Rate limiting
+const rateLimit = require('express-rate-limit');
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use('/api/', limiter);
+```
+
+## Frontend Security
+```javascript
+// ✅ XSS Prevention
+const sanitizeInput = (input) => {
+  return input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+};
+
+// ✅ Secure localStorage usage
+const secureStorage = {
+  setItem: (key, value) => {
+    const encrypted = btoa(JSON.stringify(value));
+    localStorage.setItem(key, encrypted);
+  },
+  
+  getItem: (key) => {
+    const encrypted = localStorage.getItem(key);
+    return encrypted ? JSON.parse(atob(encrypted)) : null;
+  }
+};
+```
+
+## Security Headers
+```javascript
+// ✅ Express security headers
+const helmet = require('helmet');
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"]
+    }
+  }
+}));
+```
+
+## API Security Checklist
+- [ ] Authentication middleware tüm protected routes'da
+- [ ] Input validation her endpoint'te
+- [ ] Rate limiting aktif
+- [ ] CORS konfigüre edildi
+- [ ] Security headers aktif
+- [ ] Environment variables secure
+- [ ] File upload validation
+- [ ] MongoDB injection koruması 

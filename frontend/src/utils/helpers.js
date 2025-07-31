@@ -73,7 +73,10 @@ export const formatDate = (date, options = {}) => {
     minute: '2-digit',
   };
 
-  return new Date(date).toLocaleString('tr-TR', { ...defaultOptions, ...options });
+  return new Date(date).toLocaleString('tr-TR', {
+    ...defaultOptions,
+    ...options,
+  });
 };
 
 /**
@@ -163,7 +166,11 @@ export const getUserFullName = user => {
   if (!user) {
     return 'Bilinmeyen Kullanıcı';
   }
-  return `${user.ad || ''} ${user.soyad || ''}`.trim() || user.kullaniciAdi || 'Bilinmeyen';
+  return (
+    `${user.ad || ''} ${user.soyad || ''}`.trim() ||
+    user.kullaniciAdi ||
+    'Bilinmeyen'
+  );
 };
 
 /**
@@ -301,7 +308,10 @@ export const getErrorMessage = error => {
  * @param {Error} error - Hata objesi
  */
 const logStorageError = (operation, key, error) => {
-  if (process.env.NODE_ENV === 'development') {
+  if (
+    typeof process !== 'undefined' &&
+    process.env?.NODE_ENV === 'development'
+  ) {
     // Burada ileride bir logger servisine geçiş yapılabilir
 
     console.error(`Storage ${operation} hatası (${key}):`, error);

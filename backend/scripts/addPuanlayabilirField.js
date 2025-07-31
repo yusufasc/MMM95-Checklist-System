@@ -13,7 +13,10 @@ async function addPuanlayabilirField() {
     }
 
     console.log('🔍 Ortacı rolünü güncelleniyor...');
-    console.log('📋 Mevcut checklistYetkileri sayısı:', ortaciRole.checklistYetkileri.length);
+    console.log(
+      '📋 Mevcut checklistYetkileri sayısı:',
+      ortaciRole.checklistYetkileri.length,
+    );
 
     // Her checklistYetkisi için puanlayabilir field'ını ekle
     let updated = false;
@@ -22,7 +25,9 @@ async function addPuanlayabilirField() {
         // Eğer onaylayabilir true ise puanlayabilir'i de true yap
         yetki.puanlayabilir = yetki.onaylayabilir === true;
         updated = true;
-        console.log(`✅ ${yetki.hedefRol} için puanlayabilir=${yetki.puanlayabilir} eklendi`);
+        console.log(
+          `✅ ${yetki.hedefRol} için puanlayabilir=${yetki.puanlayabilir} eklendi`,
+        );
       }
     });
 

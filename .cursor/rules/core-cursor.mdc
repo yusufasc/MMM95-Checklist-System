@@ -1,0 +1,62 @@
+---
+description: Project setup, file naming, folder structure, ESLint configuration, coding standards. Triggers: setup, naming, eslint, standards, structure, PascalCase, camelCase, Turkish, English, organization, conventions.
+globs: 
+alwaysApply: false
+---
+# 🎯 MMM Checklist - Genel Proje Kuralları
+
+## Ana Dil Standartları
+- **UI Metinleri**: SADECE Türkçe
+- **Kod (değişken/fonksiyon/class)**: SADECE İngilizce  
+- **Yorumlar**: SADECE Türkçe
+- **API Endpoints**: SADECE İngilizce
+- **Database Fields**: Türkçe (mevcut yapı korunacak)
+
+## Dosya Adlandırma Kuralları (Zorunlu)
+- **Components**: PascalCase (`UserManagement.js`, `TaskCard.js`)
+- **Utilities**: camelCase (`apiHelpers.js`, `dateUtils.js`)
+- **Folders**: lowercase (`components`, `pages`, `utils`)
+- **Routes**: lowercase (`users.js`, `tasks.js`, `inventory.js`)
+
+## Proje Yapısı
+- **Frontend**: `/frontend/src/` altında React yapısı
+- **Backend**: `/backend/` altında Express yapısı
+- **Shared**: `/shared/` ortak utilities (gerekirse)
+
+## Modül Bağımsızlığı
+- Auth, User, Checklist, Inventory modülleri birbirinden bağımsız
+- Cross-module dependencies YASAKLI (service layer üzerinden)
+
+## Yasaklı Kullanımlar
+- `any` type YASAKLI (TypeScript varsa)
+- `var` YASAKLI - sadece `const` ve `let`
+- Inline styles YASAKLI - Material-UI `sx` prop kullan
+- Class components YASAKLI - sadece functional components
+
+## ESLint Zero-Tolerance Policy
+- **0 errors, 0 warnings** zorunlu
+- Commit öncesi `npm run lint:fix` zorunlu
+- Trailing comma kuralı mutlaka uygulanacak
+- **Kullanılmayan import'lar** anında temizlenecek (no-unused-vars)
+- **Kullanılmayan state değişkenleri** kaldırılacak
+
+## 🎯 Bugünkü Güncellemeler (2025-01-20)
+
+### Task Lifecycle Management
+- **Görev Durumları**: bekliyor → baslatildi → tamamlandi
+- **Makina Ataması**: Sadece "Başlat" butonuna basıldığında
+- **Template State**: Görevler başlangıçta makina olmadan template olarak saklanır
+
+### Modern UI Patterns
+- **Star Rating**: Material-UI Rating component (1-10 yıldız)
+- **Gradient Design**: Modern purple-blue gradients
+- **Interactive Cards**: Hover animations ve transitions
+- **Loading States**: CircularProgress ile smooth geçişler
+
+### ESLint Compliance
+- **Trailing Comma**: Tüm array/object literal'lerde zorunlu
+- **String Escaping**: Single quote içinde apostrophe → \'
+- **useCallback**: Event handler'lar için performance optimization
+- **Dependency Arrays**: React Hook dependency'leri mutlaka doğru
+
+## Örnek Kullanım

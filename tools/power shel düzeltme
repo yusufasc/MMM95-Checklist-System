@@ -1,0 +1,11 @@
+# ESLint otomatik düzeltme
+powershell -ExecutionPolicy Bypass -File tools/fix-eslint.ps1
+
+# Kapsamlı test ve güvenlik taraması  
+powershell -ExecutionPolicy Bypass -File tools/auto-fix-test-simple.ps1
+
+# Pre-commit hook
+powershell -ExecutionPolicy Bypass -File tools/pre-commit-hook-simple.ps1
+
+# Sağlık kontrolü
+powershell -ExecutionPolicy Bypass -File tools/health-check.ps1

@@ -1,0 +1,159 @@
+{
+  "project": "MMM Checklist System",
+  "version": "1.0.0",
+  "lastUpdated": "2025-01-21",
+  "toolsDirectory": "tools/",
+  "projectRoot": "../",
+
+  "tools": {
+    "powershell": {
+      "health-check.ps1": {
+        "description": "Sistem sağlık kontrolü ve ESLint durumu",
+        "usage": "powershell -ExecutionPolicy Bypass -File tools/health-check.ps1",
+        "frequency": "daily",
+        "status": "active"
+      },
+      "auto-fix-simple.ps1": {
+        "description": "Frontend ve Backend ESLint otomatik düzeltme",
+        "usage": "powershell -ExecutionPolicy Bypass -File tools/auto-fix-simple.ps1",
+        "frequency": "as-needed",
+        "status": "active"
+      },
+      "fix-eslint.ps1": {
+        "description": "Hızlı ESLint düzeltme",
+        "usage": "powershell -ExecutionPolicy Bypass -File tools/fix-eslint.ps1",
+        "frequency": "as-needed",
+        "status": "active"
+      },
+      "pre-commit-hook-simple.ps1": {
+        "description": "Git commit öncesi otomatik düzeltme",
+        "usage": "powershell -ExecutionPolicy Bypass -File tools/pre-commit-hook-simple.ps1",
+        "frequency": "pre-commit",
+        "status": "active"
+      }
+    },
+    "javascript": {
+      "visualize-architecture.js": {
+        "description": "Proje mimarisi analizi ve görselleştirme",
+        "usage": "node tools/visualize-architecture.js",
+        "frequency": "weekly",
+        "status": "active",
+        "lastRun": "2025-01-21"
+      },
+      "refactor-large-files.js": {
+        "description": "Büyük dosyaları tespit etme ve refactoring önerileri",
+        "usage": "node tools/refactor-large-files.js",
+        "frequency": "weekly",
+        "status": "active",
+        "lastRun": "2025-01-21"
+      },
+      "refactoring-dashboard.js": {
+        "description": "Refactoring durumu dashboard'u",
+        "usage": "node tools/refactoring-dashboard.js",
+        "frequency": "weekly",
+        "status": "active",
+        "lastRun": "2025-01-21"
+      },
+      "add-smart-comments.js": {
+        "description": "Otomatik smart comment ekleme sistemi",
+        "usage": "node tools/add-smart-comments.js",
+        "frequency": "monthly",
+        "status": "active",
+        "lastRun": "2025-01-21"
+      },
+      "split-inventory-routes.js": {
+        "description": "Inventory.js route dosyasını modüllere bölme",
+        "usage": "node tools/split-inventory-routes.js",
+        "frequency": "as-needed",
+        "status": "available"
+      },
+      "split-worktasks-component.js": {
+        "description": "WorkTasks.js component'ini modüllere bölme",
+        "usage": "node tools/split-worktasks-component.js",
+        "frequency": "as-needed",
+        "status": "available"
+      }
+    }
+  },
+
+  "projectPaths": {
+    "backend": "../backend",
+    "frontend": "../frontend",
+    "backendRoutes": "../backend/routes",
+    "backendModels": "../backend/models",
+    "frontendComponents": "../frontend/src/components",
+    "frontendPages": "../frontend/src/pages"
+  },
+
+  "eslintStatus": {
+    "frontend": {
+      "errors": 0,
+      "warnings": 23,
+      "lastCheck": "2025-01-21",
+      "status": "clean"
+    },
+    "backend": {
+      "errors": 0,
+      "warnings": 18,
+      "lastCheck": "2025-01-21",
+      "status": "clean"
+    }
+  },
+
+  "refactoringStatus": {
+    "largeFiles": 0,
+    "criticalFiles": 0,
+    "completedRefactorings": 0,
+    "progress": "100%",
+    "lastAnalysis": "2025-01-21"
+  },
+
+  "smartComments": {
+    "routeFiles": 31,
+    "componentFiles": 8,
+    "modelFiles": 25,
+    "totalComments": 64,
+    "lastGenerated": "2025-01-21"
+  },
+
+  "automationSchedule": {
+    "daily": ["health-check.ps1"],
+    "weekly": [
+      "visualize-architecture.js",
+      "refactor-large-files.js",
+      "refactoring-dashboard.js"
+    ],
+    "monthly": ["add-smart-comments.js"],
+    "preCommit": ["pre-commit-hook-simple.ps1"]
+  },
+
+  "quickCommands": {
+    "healthCheck": "powershell -ExecutionPolicy Bypass -File tools/health-check.ps1",
+    "fixESLint": "powershell -ExecutionPolicy Bypass -File tools/fix-eslint.ps1",
+    "analyzeArchitecture": "node tools/visualize-architecture.js",
+    "refactorAnalysis": "node tools/refactor-large-files.js",
+    "dashboard": "node tools/refactoring-dashboard.js",
+    "smartComments": "node tools/add-smart-comments.js"
+  },
+
+  "integrations": {
+    "cursorRules": {
+      "frontend": "../.cursor/rules/frontend-cursor.mdc",
+      "backend": "../.cursor/rules/backend-cursor.mdc",
+      "debugging": "../.cursor/rules/debugging-troubleshooting-cursor.mdc"
+    },
+    "reports": {
+      "bonusEvaluationFix": "../BONUS_EVALUATION_FIX_REPORT.md",
+      "eslintReports": "../ESLINT_*.md",
+      "refactoringReports": "./*-refactor-plan.json"
+    }
+  },
+
+  "qualityMetrics": {
+    "bundleSize": "506KB",
+    "performanceScore": "95+",
+    "eslintCompliance": "100%",
+    "codeQuality": "enterprise-grade",
+    "lastUpdated": "2025-01-21"
+  }
+}

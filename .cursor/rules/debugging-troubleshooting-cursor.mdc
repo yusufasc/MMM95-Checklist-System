@@ -1,0 +1,1547 @@
+---
+description: Checklist - Debugging & Troubleshooting globs:
+globs: 
+alwaysApply: false
+---
+---
+# 🐛 MMM Checklist - Debugging & Troubleshooting
+
+## 🚨 Common Production Errors & Solutions (2025-02-06)
+
+### CORS Error
+```javascript
+// ❌ Problem: Access to fetch at 'http://localhost:5000/api/...' from origin 'http://localhost:3000' has been blocked by CORS policy
+
+// ✅ Solution 1: server.js'de CORS middleware doğru sırada olmalı
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:3001'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// ✅ Solution 2: OPTIONS request handler (CORS middleware'den önce)
+app.options('*', cors());
+```
+
+### 431 Request Header Fields Too Large
+```javascript
+// ❌ Problem: Server Error 431 - Request header too large
+
+// ✅ Solution: server.js'de header size limitlerini artır
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+// Header size limitlerini artır
+server.maxHeaderSize = 32768; // 32KB
+server.headersTimeout = 60000; // 60 saniye
+server.keepAliveTimeout = 65000; // 65 saniye
+```
+
+### DOM Validation Warning
+```javascript
+// ❌ Problem: Warning: validateDOMNesting(...): <div> cannot appear as a descendant of <p>
+
+// ✅ Solution: Material-UI Box component kullan
+// Hatalı:
+<p><div>İçerik</div></p>
+
+// Doğru:
+<Box><Box>İçerik</Box></Box>
+```
+
+### PropTypes Validation Errors
+```javascript
+// ❌ Problem: Failed prop type: The prop `items[11].sorumluKisi.ad` is marked as required in `InventoryTable`, but its value is `undefined`
+
+// ✅ Solution 1: PropTypes tanımını düzelt
+// Hatalı:
+sorumluKisi: PropTypes.shape({
+  ad: PropTypes.string.isRequired,
+  soyad: PropTypes.string.isRequired,
+})
+
+// Doğru:
+sorumluKisi: PropTypes.shape({
+  ad: PropTypes.string,
+  soyad: PropTypes.string,
+})
+
+// ✅ Solution 2: Backend populate düzeltmesi
+// Model field'ları kontrol et ve doğru populate yap:
+.populate('sorumluKisi', 'ad soyad username') // User modelindeki doğru field'lar
+
+// ✅ Solution 3: Frontend-Backend uyumsuzluğu
+// Frontend bekliyor: pagination.totalItems
+// Backend gönderiyor: pagination.total
+// Backend response'u düzelt:
+pagination: {
+  currentPage: page,
+  totalPages: Math.ceil(total / limit),
+  totalItems: total, // 'total' yerine 'totalItems'
+}
+
+// ✅ Solution 4: Component'e default props ekle
+ComponentName.defaultProps = {
+  items: [],
+  pagination: { totalItems: 0 },
+  selectedItems: [],
+};
+```
+
+### Type Coercion PropTypes Errors
+```javascript
+// ❌ Problem: Invalid prop `isFormValid` of type `string` supplied to `Component`, expected `boolean`
+
+// ✅ Solution 1: Logical AND hatası - ilk truthy değeri döndürür
+// Hatalı:
+const isFormValid = () => {
+  return formData.ad.trim() && formData.rol && items.length > 0;
+};
+// formData.ad.trim() = "text" döndürürse, logical AND "text" döndürür
+
+// Doğru - Double negation:
+const isFormValid = () => {
+  return !!(formData.ad.trim() && formData.rol && items.length > 0);
+};
+
+// ✅ Solution 2: Boolean constructor kullan
+const isFormValid = () => {
+  return Boolean(formData.ad.trim() && formData.rol && items.length > 0);
+};
+
+// ✅ Solution 3: Ternary operator
+const isFormValid = () => {
+  return formData.ad.trim() && formData.rol && items.length > 0 ? true : false;
+};
+
+// ✅ Solution 4: Hook/Component'te kullanırken type conversion
+// Hook'ta:
+return {
+  isFormValid: isFormValid(), // fonksiyonu çağırmayı unutma
+  // veya
+  isFormValid: !!someValue,
+};
+
+// Component'te:
+<Component 
+  isFormValid={!!stringValue}
+  // veya
+  isFormValid={Boolean(stringValue)}
+/>
+```
+
+### React Key Prop & Material-UI Select Errors
+```javascript
+// ❌ Problem: Each child in a list should have a unique "key" prop
+// ❌ Problem: Cannot read properties of undefined (reading '_id')
+
+// ✅ Solution 1: Material-UI Multi-Select value handling
+// Hatalı:
+<Select
+  multiple
+  value={selectedItems} // Object array
+  onChange={(e) => setSelectedItems(e.target.value)} // Crash! e.target.value is string[]
+>
+  renderValue={(selected) => (
+    {selected.map((item) => ( // item is string, not object!
+      <Chip label={item.name} /> // Undefined error!
+    ))}
+  )}
+
+// Doğru:
+<Select
+  multiple
+  value={selectedItems.map(item => item._id)} // ID array
+  onChange={(e) => {
+    const ids = e.target.value;
+    const objects = ids.map(id => 
+      allItems.find(item => item._id === id)
+    ).filter(Boolean);
+    setSelectedItems(objects);
+  }}
+  renderValue={(selected) => ( // selected is ID array
+    {selected.map((id) => {
+      const item = allItems.find(i => i._id === id);
+      return item ? (
+        <Chip key={id} label={item.name} />
+      ) : null;
+    })}
+  )}
+>
+
+// ✅ Solution 2: Always add key prop to mapped elements
+// Hatalı:
+{items.map(item => <Chip label={item.name} />)}
+
+// Doğru:
+{items.map(item => <Chip key={item._id} label={item.name} />)}
+
+// ✅ Solution 3: Defensive programming with null checks
+// Hatalı:
+const machine = machines.find(m => m._id === id);
+return <Chip label={machine.name} />; // Crash if machine is undefined
+
+// Doğru:
+const machine = machines.find(m => m._id === id);
+return machine ? <Chip key={machine._id} label={machine.name} /> : null;
+
+// ✅ Solution 4: Empty array fallback
+tempSelectedMachines.map(m => m._id) // Crash if tempSelectedMachines is undefined
+
+// Doğru:
+(tempSelectedMachines || []).map(m => m?._id).filter(Boolean)
+```
+
+### Browser Cache & Hot Reload Issues
+```javascript
+// ❌ Problem: Kod değişiklikleri browser'da görünmüyor, eski hatalar devam ediyor
+
+// ✅ Solution 1: Hard Refresh (Windows)
+// Ctrl + Shift + R veya Ctrl + F5
+
+// ✅ Solution 2: Developer Tools'dan cache temizleme
+// 1. F12 ile Developer Tools aç
+// 2. Network tab'ına git
+// 3. "Disable cache" checkbox'ını işaretle
+// 4. Sayfayı yenile
+
+// ✅ Solution 3: React development server'ı restart et
+// Terminal'de:
+// Ctrl + C (durdurmak için)
+// npm start (yeniden başlatmak için)
+
+// ✅ Solution 4: Browser cache'i tamamen temizle
+// Chrome: Settings → Privacy → Clear browsing data → Cached images and files
+
+// ✅ Solution 5: .env dosyasına ekleme (development için)
+// FAST_REFRESH=false
+
+// ✅ Solution 6: Webpack dev server cache'i temizle
+rm -rf node_modules/.cache
+npm start
+
+// ✅ Solution 7: Port değiştirerek başlat
+PORT=3001 npm start
+
+// Common cache-related errors:
+// - "setSelectedMachines is not a function" → Eski kod cached
+// - Line numbers don't match → Source map cache issue
+// - Changes not reflected → Hot reload failure
+```
+
+## Port Çakışması & Cache Sorunları
+
+### Backend Port Değiştirme & Cache Temizleme
+```javascript
+// server.js
+const PORT = process.env.PORT || 5001; // 5000 yerine 5001 kullan
+
+// frontend/package.json
+"proxy": "http://localhost:5001"
+```
+
+### Port Çakışması Kontrolü
+```bash
+# Windows'ta port kontrolü
+netstat -ano | findstr :5000
+tasklist /FI "PID eq 5000" /FO TABLE
+
+# Port'u serbest bırakma
+taskkill /PID [PID_NUMBER] /F
+
+# Nodemon cache temizleme
+rm -rf node_modules/.cache
+npx nodemon --clean
+```
+
+### Nodemon Cache Sorunları
+```bash
+# Nodemon restart'ı zorla
+rs  # Nodemon console'da
+
+# Cache temizleme
+rm -rf backend/node_modules/.cache
+rm -rf backend/.nodemonignore.cache
+
+# Environment variable override kontrolü
+echo $PORT  # Linux/Mac
+echo %PORT%  # Windows
+
+# .env dosyası kontrol et
+cat backend/.env | grep PORT
+```
+
+### Environment Variable Priority
+```bash
+# Öncelik sırası:
+# 1. System environment variables
+# 2. .env dosyası
+# 3. Default value (kod içinde)
+
+# .env dosyasını override etme
+PORT=5001 npm run start:backend
+```
+
+## Browser Compatibility & Polyfills
+
+### Process Polyfill (Zorunlu)
+```html
+<!-- public/index.html içine ekle -->
+<script>
+  window.process = window.process || { 
+    env: { 
+      NODE_ENV: 'development',
+      REACT_APP_VERSION: '1.0.0'
+    } 
+  };
+</script>
+```
+
+### Node.js Core Modules Polyfills
+```javascript
+// webpack.config.js fallback (React Scripts v5+)
+module.exports = {
+  resolve: {
+    fallback: {
+      "process": require.resolve("process/browser"),
+      "buffer": require.resolve("buffer"),
+      "crypto": require.resolve("crypto-browserify"),
+      "stream": require.resolve("stream-browserify"),
+      "util": require.resolve("util/"),
+      "url": require.resolve("url/"),
+      "assert": require.resolve("assert/"),
+    }
+  },
+  plugins: [
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer'],
+    }),
+  ],
+};
+```
+
+### Browser-Specific Fixes
+```javascript
+// IE11 desteği (gerekirse)
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
+
+// Safari date parsing fix
+const parseDate = (dateString) => {
+  // Safari ISO date parsing sorunu
+  return new Date(dateString.replace(/-/g, '/'));
+};
+
+// Chrome memory leak prevention
+const clearIntervals = () => {
+  const highestTimeoutId = setTimeout(() => {}, 0);
+  for (let i = 0; i < highestTimeoutId; i++) {
+    clearTimeout(i);
+  }
+};
+```
+
+### Mobile Browser Compatibility
+```javascript
+// iOS Safari viewport fix
+const fixIOSViewport = () => {
+  const viewport = document.querySelector('meta[name="viewport"]');
+  if (viewport && /iPad|iPhone|iPod/.test(navigator.userAgent)) {
+    viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+  }
+};
+
+// Touch event polyfill
+const addTouchSupport = () => {
+  if (!('ontouchstart' in window)) {
+    // Mouse events'i touch events'e çevir
+    document.addEventListener('mousedown', (e) => {
+      e.target.dispatchEvent(new TouchEvent('touchstart', {
+        touches: [{ clientX: e.clientX, clientY: e.clientY }]
+      }));
+    });
+  }
+};
+```
+
+## React Router Future Flags
+
+### v7 Hazırlığı
+```javascript
+// App.js
+<BrowserRouter
+  future={{
+    v7_startTransition: true,
+    v7_relativeSplatPath: true,
+  }}
+>
+```
+
+## ESLint Auto-Fix Workflows & Common Patterns
+
+### Automated Fix Commands
+```bash
+# Tam proje ESLint fix
+npx eslint src/ --fix --ext .js,.jsx,.ts,.tsx
+
+# Belirli dosya pattern'ları
+npx eslint "src/**/*.{js,jsx}" --fix
+npx eslint src/pages/ --fix --max-warnings 0
+
+# Cache ile hızlı fix
+npx eslint src/ --fix --cache --cache-location .eslintcache
+
+# Sadece belirli kuralları fix et
+npx eslint src/ --fix --rule "comma-dangle: error"
+```
+
+### ESLint Rule Categories & Fixes
+
+#### 🎯 Syntax & Formatting
+```javascript
+// ❌ Missing trailing comma
+const obj = { a: 1, b: 2 };
+const arr = [1, 2, 3];
+
+// ✅ Correct (auto-fixable)
+const obj = { a: 1, b: 2, };
+const arr = [1, 2, 3, ];
+
+// ❌ Semicolon missing/extra
+const name = "value"
+const name2 = "value";;
+
+// ✅ Correct
+const name = "value";
+const name2 = "value";
+
+// ❌ Quotes inconsistency
+const str1 = "hello";
+const str2 = 'world';
+
+// ✅ Correct (double quotes preferred)
+const str1 = "hello";
+const str2 = "world";
+```
+
+#### 🎯 React Hooks Dependencies
+```javascript
+// ❌ Missing dependencies
+useEffect(() => {
+  loadData(userId);
+  updateStatus();
+}, []); // userId, loadData, updateStatus eksik
+
+// ✅ Correct
+useEffect(() => {
+  loadData(userId);
+  updateStatus();
+}, [userId, loadData, updateStatus]);
+
+// ❌ Unnecessary dependencies
+useEffect(() => {
+  setCount(0);
+}, [count]); // count dependency gereksiz
+
+// ✅ Correct
+useEffect(() => {
+  setCount(0);
+}, []);
+```
+
+#### 🎯 Variable Declarations
+```javascript
+// ❌ var usage
+var name = "value";
+var items = [];
+
+// ✅ Correct
+const name = "value";
+const items = [];
+
+// ❌ Unused variables
+const unusedVar = "value";
+const { usedProp, unusedProp } = props;
+
+// ✅ Correct
+const { usedProp, unusedProp: _unusedProp } = props;
+// veya sadece kullanılanları al
+const { usedProp } = props;
+```
+
+#### 🎯 Import/Export Organization
+```javascript
+// ❌ Unorganized imports
+import Component from './Component';
+import React, { useState } from 'react';
+import { Button } from '@mui/material';
+import axios from 'axios';
+
+// ✅ Correct (auto-sortable)
+import React, { useState } from 'react';
+import axios from 'axios';
+import { Button } from '@mui/material';
+import Component from './Component';
+
+// ❌ Unused imports
+import React, { useState, useEffect } from 'react';
+// useEffect kullanılmıyor
+
+// ✅ Correct
+import React, { useState } from 'react';
+```
+
+### Custom ESLint Rules for MMM Project
+```json
+// .eslintrc.js custom rules
+{
+  "rules": {
+    // Zorunlu kurallar
+    "comma-dangle": ["error", "always-multiline"],
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "react-hooks/exhaustive-deps": "error",
+    
+    // MMM specific rules
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "prefer-const": "error",
+    "no-var": "error",
+    
+    // Performance rules
+    "import/no-anonymous-default-export": "error",
+    "react/jsx-key": "error"
+  }
+}
+```
+
+### Batch Fixing Strategies
+```bash
+# Fix belirli hata tiplerini
+npx eslint src/ --fix --rule "comma-dangle: error, no-unused-vars: error"
+
+# Sadece auto-fixable kuralları çalıştır
+npx eslint src/ --fix-dry-run  # Önce test et
+npx eslint src/ --fix          # Sonra uygula
+
+# Git hook ile otomatik fix
+# .husky/pre-commit
+npx eslint --fix "src/**/*.{js,jsx}" && git add .
+```
+
+### VSCode Integration
+```json
+// .vscode/settings.json
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "eslint.autoFixOnSave": true,
+  "eslint.run": "onSave",
+  "eslint.format.enable": true
+}
+```
+
+### Common Error Patterns & Quick Fixes
+```javascript
+// ❌ Promise not awaited
+const fetchData = () => {
+  api.getData(); // Promise return edilmiyor
+};
+
+// ✅ Correct
+const fetchData = async () => {
+  return await api.getData();
+};
+
+// ❌ Missing key prop
+items.map(item => <div>{item.name}</div>);
+
+// ✅ Correct
+items.map(item => <div key={item.id}>{item.name}</div>);
+
+// ❌ Inline object in JSX (performance issue)
+<Component style={{ marginTop: 10 }} />
+
+// ✅ Correct
+const componentStyle = { marginTop: 10 };
+<Component style={componentStyle} />
+```
+
+## Node.js Deprecation Warnings
+
+### util._extend Uyarısı
+```javascript
+// ❌ Deprecated
+const util = require('util');
+const extended = util._extend(target, source);
+
+// ✅ Modern
+const extended = Object.assign(target, source);
+```
+
+### Legacy OpenSSL Provider
+```json
+// package.json scripts
+{
+  "start": "set NODE_OPTIONS=--openssl-legacy-provider && react-scripts start",
+  "build": "set NODE_OPTIONS=--openssl-legacy-provider && react-scripts build"
+}
+```
+
+## Development vs Production Environment
+
+### Environment Detection & Configuration
+```javascript
+// Environment detection
+const isDevelopment = process.env.NODE_ENV === 'development';
+const isProduction = process.env.NODE_ENV === 'production';
+const isTest = process.env.NODE_ENV === 'test';
+
+// Configuration based on environment
+const config = {
+  development: {
+    apiUrl: 'http://localhost:5001',
+    debug: true,
+    logLevel: 'debug',
+    hotReload: true,
+    sourceMaps: true,
+  },
+  production: {
+    apiUrl: process.env.REACT_APP_API_URL || 'https://api.example.com',
+    debug: false,
+    logLevel: 'error',
+    hotReload: false,
+    sourceMaps: false,
+  }
+};
+```
+
+### Development-Only Features
+```javascript
+// Development-only middleware
+if (process.env.NODE_ENV === 'development') {
+  // Hot reload enabler
+  app.use(require('webpack-hot-middleware')(compiler));
+  
+  // Development error handler
+  app.use((err, req, res, next) => {
+    res.status(err.status || 500).json({
+      message: err.message,
+      stack: err.stack, // Stack trace sadece development'ta
+      error: err
+    });
+  });
+  
+  // Development logging
+  const morgan = require('morgan');
+  app.use(morgan('dev'));
+}
+```
+
+### Production Optimizations
+```javascript
+// Production-only settings
+if (process.env.NODE_ENV === 'production') {
+  // Compression middleware
+  const compression = require('compression');
+  app.use(compression());
+  
+  // Security headers
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+      },
+    },
+  }));
+  
+  // Production error handler (sanitized)
+  app.use((err, req, res, next) => {
+    res.status(err.status || 500).json({
+      message: 'Bir hata oluştu',
+      // Stack trace ve detaylar production'da gizli
+    });
+  });
+}
+```
+
+### Environment Variables Management
+```bash
+# .env.development (sadece development)
+NODE_ENV=development
+PORT=5001
+DEBUG=app:*
+MONGODB_URI=mongodb://localhost:27017/mmm-checklist-dev
+SEED_DATA=true
+
+# .env.production (sadece production)
+NODE_ENV=production
+PORT=80
+MONGODB_URI=mongodb://cluster.mongodb.net/mmm-checklist
+SEED_DATA=false
+LOG_LEVEL=error
+
+# .env.local (git ignore'da, local overrides)
+DATABASE_URL=postgresql://localhost:5432/local_db
+API_KEY=local-development-key
+```
+
+### Build & Bundle Differences
+```javascript
+// webpack.config.js
+module.exports = (env, argv) => {
+  const isDevelopment = argv.mode === 'development';
+  
+  return {
+    mode: isDevelopment ? 'development' : 'production',
+    devtool: isDevelopment ? 'eval-source-map' : 'source-map',
+    
+    optimization: {
+      minimize: !isDevelopment,
+      splitChunks: isDevelopment ? false : {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+        },
+      },
+    },
+    
+    plugins: [
+      ...(isDevelopment ? [
+        new webpack.HotModuleReplacementPlugin(),
+      ] : [
+        new MiniCssExtractPlugin({
+          filename: '[name].[contenthash].css',
+        }),
+      ]),
+    ],
+  };
+};
+```
+
+### Development Port Configuration
+```bash
+# Port hierarchy
+# Backend: 5001 (development), 80/443 (production)
+# Frontend: 3000 (development), served by backend (production)
+# MongoDB: 27017 (local), cluster (production)
+# Redis: 6379 (local), cluster (production)
+
+# Development proxy setup
+"proxy": "http://localhost:5001"
+
+# Production reverse proxy (nginx)
+location /api {
+  proxy_pass http://localhost:5001;
+  proxy_set_header Host $host;
+  proxy_set_header X-Real-IP $remote_addr;
+}
+```
+
+### Debug Mode Management
+```javascript
+// Backend debug logger
+const debug = require('debug')('app');
+const isDev = process.env.NODE_ENV === 'development';
+
+// Conditional debugging
+if (isDev) {
+  debug('Development mode - verbose logging enabled');
+  console.log('All API requests will be logged');
+}
+
+// Frontend debug mode
+const isDebugMode = process.env.NODE_ENV === 'development' || 
+                   localStorage.getItem('debug') === 'true';
+
+if (isDebugMode) {
+  window.debugMode = true;
+  console.log('Debug mode enabled - performance metrics visible');
+}
+```
+
+## API Connection Debugging
+
+### Network Errors
+```javascript
+// API service error handling
+const api = axios.create({
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5001',
+  timeout: 10000,
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.code === 'ECONNREFUSED') {
+      console.error('Backend bağlantısı kurulamıyor. Port 5001 çalışıyor mu?');
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+## Memory & Performance Debugging
+
+### Bundle Size Analysis
+```bash
+# Bundle analizi
+npm run build:analyze
+npx webpack-bundle-analyzer build/static/js/*.js
+
+# Source map explorer
+npm run analyze:size
+```
+
+### Memory Leaks
+```javascript
+// useEffect cleanup
+useEffect(() => {
+  const timer = setInterval(() => {
+    // ...
+  }, 1000);
+
+  return () => clearInterval(timer); // Cleanup zorunlu
+}, []);
+```
+
+## Database Connection Issues
+
+### MongoDB Bağlantı Hataları
+```javascript
+// backend/config/db.js
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    console.log('✅ MongoDB bağlandı');
+  } catch (error) {
+    console.error('❌ MongoDB bağlantı hatası:', error.message);
+    process.exit(1);
+  }
+};
+```
+
+## HTTP Header Size Issues
+
+### 431 Request Header Fields Too Large
+```javascript
+// server.js
+const server = require('http').createServer(app);
+server.maxHeadersCount = 0; // Unlimited headers
+server.headersTimeout = 60000; // 60 saniye
+server.requestTimeout = 120000; // 2 dakika
+
+// Process başlangıcında
+process.env.NODE_OPTIONS = '--max-http-header-size=32768';
+```
+
+## Quick Fix Commands
+
+### Development Reset
+```bash
+# Tüm cache'leri temizle
+npm run lint:cache-clear
+rm -rf node_modules package-lock.json
+npm install
+
+# Port'ları kontrol et
+netstat -ano | findstr :3000
+netstat -ano | findstr :5001
+```
+
+### Emergency Debugging
+```bash
+# ESLint problems
+npm run lint:fix
+
+# Bundle problems  
+npm run build:analyze
+
+# Port conflicts
+npm run start:backend:different-port
+npm run start:frontend:different-port
+```
+
+## Production Debugging
+
+### Build Errors
+```bash
+# Production build test
+NODE_ENV=production npm run build
+
+# Bundle size check
+npm run performance:test
+```
+
+### Deployment Issues
+```javascript
+// Process environment check
+console.log('Environment:', process.env.NODE_ENV);
+console.log('Port:', process.env.PORT);
+console.log('MongoDB URI:', process.env.MONGODB_URI ? 'SET' : 'NOT SET');
+```
+
+## 🆕 Mongoose Populate Errors (2025-02-06) ✅ GÜNCEL
+```javascript
+// ❌ Problem: StrictPopulateError: Cannot populate path `departman` because it is not in your schema
+
+// 📋 Root Cause Analysis:
+// 1. Backend route'unda yanlış field adı kullanılıyor
+// 2. User schema'sında field adı farklı
+// 3. Frontend'de eski field adı bekleniyor
+
+// ✅ Solution 1: Backend Schema Kontrol
+// User.js model'ini kontrol et:
+const UserSchema = new mongoose.Schema({
+  departmanlar: [{ // 'departman' değil, 'departmanlar' (array)
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Department',
+  }],
+});
+
+// ✅ Solution 2: Backend Route Düzeltmesi
+// ❌ Hatalı populate:
+.populate('departman', 'ad') // Bu field yok
+
+// ✅ Doğru populate:
+.populate('departmanlar', 'ad') // Schema'daki gerçek field
+
+// ✅ Solution 3: Query Condition Düzeltmesi
+// ❌ Hatalı query field:
+const users = await User.find({ aktif: true }); // 'aktif' field yok
+
+// ✅ Doğru query field:
+const users = await User.find({ durum: 'aktif' }); // Schema'daki gerçek field
+
+// ✅ Solution 4: Frontend Data Mapping
+// Backend'den dönen veri yapısı:
+personData = {
+  departmanlar: ['Üretim', 'Kalite'], // Array of strings
+  guncellemeTarihi: '2025-02-06',
+  roller: ['Usta', 'Kalite Kontrol'],
+};
+
+// ✅ Frontend'de kullanım:
+{person.departmanlar?.join(', ') || 'Atanmamış'}
+{person.guncellemeTarihi ? new Date(person.guncellemeTarihi).toLocaleDateString('tr-TR') : 'N/A'}
+
+// ✅ Solution 5: Populate Strategy
+// Çoklu populate:
+.populate('roller', 'ad')
+.populate('departmanlar', 'ad')
+.populate('secilenMakinalar', 'envanterKodu ad kategori')
+
+// ✅ Solution 6: Schema Field Verification Script
+const verifySchema = async () => {
+  const User = require('./models/User');
+  console.log('User schema fields:', Object.keys(User.schema.paths));
+  // Output: ['ad', 'soyad', 'roller', 'departmanlar', 'secilenMakinalar', ...]
+};
+
+// ✅ Solution 7: Error Prevention Pattern
+// Populate öncesi field varlığı kontrol:
+const populateFields = [];
+if (User.schema.paths.departmanlar) {
+  populateFields.push({ path: 'departmanlar', select: 'ad' });
+}
+if (User.schema.paths.roller) {
+  populateFields.push({ path: 'roller', select: 'ad' });
+}
+
+const users = await User.find(query).populate(populateFields);
+```
+
+## 🆕 Array vs Single Field Schema Mismatches (2025-02-06)
+```javascript
+// ❌ Common Schema/Code Mismatch:
+
+// Schema definition:
+departmanlar: [{ type: ObjectId, ref: 'Department' }] // Array field
+
+// Backend route (wrong):
+.populate('departman', 'ad') // Single field name
+
+// Frontend expectation (wrong):
+{person.departman} // Single field access
+
+// ✅ Correct Full Stack Implementation:
+
+// 1. Schema (User.js):
+departmanlar: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Department' }]
+
+// 2. Backend populate (personnel-tracking.js):
+.populate('departmanlar', 'ad')
+
+// 3. Backend data mapping:
+const personData = {
+  departmanlar: person.departmanlar?.map(d => d.ad) || ['Atanmamış'],
+};
+
+// 4. Frontend display:
+{person.departmanlar?.join(', ') || 'Atanmamış'}
+
+// ✅ Multi-Department Support Pattern:
+// Backend grouping strategy:
+departmanAdlari.forEach(deptAd => {
+  if (!departmentPersonnel[deptAd]) {
+    departmentPersonnel[deptAd] = [];
+  }
+  departmentPersonnel[deptAd].push(personData);
+});
+
+// Frontend chip display:
+{person.departmanlar?.map((dept, index) => (
+  <Chip key={index} label={dept} size="small" />
+))}
+```
+
+## 🚨 GÜNCEL SORUN ÇÖZÜMLERİ (2025-02-06)
+
+### 🔧 Inventory Field Templates Debug Süreci ✅
+
+#### Problem Tanımı
+```bash
+# SORUN: Frontend'de field templates görünmüyor (categoryFieldTemplates: 0)
+# Backend'de 25 template var ama frontend'e ulaşmıyor
+
+# Console Log Pattern:
+useInventoryData.js:45 🔄 Categories API çağrılıyor...
+useInventoryData.js:47 ✅ Categories API yanıt: 3 kategori
+useInventoryData.js:83 🔄 Items API çağrılıyor...
+useInventoryData.js:85 ✅ Items API yanıt: 13 item
+Inventory.js:121 🔧 Field templates yükleniyor, categoryId: 68380aa8b945226655fd3a9b
+ItemDynamicFields.js:186 categoryFieldTemplates: 0 ❌ SORUN BURADA!
+```
+
+#### Debug Methodology ✅
+```javascript
+// ✅ 1. BACKEND VERİFİCATION - Database test script
+const testFieldTemplates = async () => {
+  try {
+    await connectDB();
+    
+    const categoryId = '68380aa8b945226655fd3a9b';
+    const templates = await InventoryFieldTemplate.find({kategoriId: categoryId});
+    
+    console.log(`📊 Kategori ${categoryId} için ${templates.length} template bulundu:`);
+    
+    templates.forEach((template, index) => {
+      console.log(`${index + 1}. ${template.alanAdi} (${template.alanTipi})`);
+      console.log(`   Zorunlu: ${template.zorunlu}`);
+      console.log(`   Grup: ${template.grup || 'Belirtilmemiş'}`);
+    });
+  } catch (error) {
+    console.error('❌ Test error:', error);
+  }
+};
+
+// Sonuç: ✅ 25 template confirmed in database
+```
+
+```javascript
+// ✅ 2. API ENDPOINT VERİFİCATION
+// Problem: GET /api/inventory/categories/:id/fields 404 Not Found
+// Çözüm: Eksik endpoint eklendi
+
+router.get('/categories/:id/fields', auth, checkModulePermission('Envanter Yönetimi'), async (req, res) => {
+  try {
+    console.log('🔍 Field templates request for categoryId:', req.params.id);
+    
+    const templates = await InventoryFieldTemplate.find({kategoriId: req.params.id}).sort({siraNo: 1});
+    console.log(`📊 Found ${templates.length} templates`);
+    
+    // ✅ Critical: Field mapping (database → frontend)
+    const mappedTemplates = templates.map((template) => ({
+      _id: template._id,
+      kategoriId: template.kategoriId,
+      alan: template.alanAdi,        // alanAdi → alan (backward compatibility)
+      ad: template.alanAdi,          // alanAdi → ad (frontend expected)
+      tip: template.alanTipi,        // alanTipi → tip (frontend expected)
+      gerekli: template.zorunlu,     // zorunlu → gerekli (frontend expected)
+      siraNo: template.siraNo,
+      grup: template.grup,
+      varsayilanDeger: template.varsayilanDeger,
+      secenekler: template.secenekler,
+      aciklama: template.aciklama,
+      aktif: template.aktif
+    }));
+    
+    res.json(mappedTemplates);
+  } catch (error) {
+    console.error('❌ Field templates error:', error);
+    res.status(500).json({ 
+      message: 'Field templates loading error',
+      error: error.message 
+    });
+  }
+});
+```
+
+```javascript
+// ✅ 3. FRONTEND API CALL VERİFİCATION
+// Problem: loadFieldTemplates function çağrılmıyor
+// Debug strategy: Comprehensive logging
+
+const loadFieldTemplates = useCallback(async (categoryId) => {
+  console.log('🚀 ENTERED loadFieldTemplates function with categoryId:', categoryId);
+  console.log('🔍 CategoryId type:', typeof categoryId);
+  console.log('🔍 CategoryId value:', categoryId);
+  
+  if (!categoryId) {
+    console.log('❌ No categoryId provided to loadFieldTemplates');
+    setFieldTemplates([]);
+    return;
+  }
+
+  try {
+    console.log('🔧 Loading field templates for categoryId:', categoryId);
+    console.log('🌐 Making API call to:', `/api/inventory/categories/${categoryId}/fields`);
+    
+    const response = await inventoryAPI.getCategoryFields(categoryId);
+    
+    console.log('✅ Field templates response received');
+    console.log('📊 Response status:', response.status);
+    console.log('📦 Response data:', response.data);
+    console.log('🔢 Templates count:', response.data?.length || 0);
+    
+    if (response.data && response.data.length > 0) {
+      console.log('✅ Field templates başarıyla yüklendi:', response.data.length);
+      setFieldTemplates(response.data);
+    } else {
+      console.log('⚠️ Field templates boş veya yok');
+      setFieldTemplates([]);
+    }
+  } catch (error) {
+    console.error('❌ Field template yükleme hatası:', error);
+    setFieldTemplates([]);
+  }
+}, []);
+```
+
+```javascript
+// ✅ 4. COMPONENT DEBUG PATTERN
+// Problem: useItemForm hook'unda categoryFieldTemplates boş kalıyor
+// Root cause: fieldTemplates prop boş geliyor
+
+// Debug strategy:
+const handleItemEdit = async (item) => {
+  console.log('🎯 handleItemEdit called with item:', item);
+  
+  try {
+    setSelectedItem(item);
+    
+    if (item.kategoriId) {
+      const categoryId = typeof item.kategoriId === 'object' 
+        ? item.kategoriId._id 
+        : item.kategoriId;
+        
+      console.log('🔧 Field templates yükleniyor, categoryId:', categoryId);
+      console.log('🔍 loadFieldTemplates function type:', typeof loadFieldTemplates);
+      console.log('⏳ About to call loadFieldTemplates...');
+      
+      await loadFieldTemplates(categoryId);
+      
+      console.log('✅ loadFieldTemplates completed successfully');
+    }
+    
+    setItemDialog(true);
+  } catch (error) {
+    console.error('❌ handleItemEdit error:', error);
+  }
+};
+```
+
+#### Debug Log Patterns ✅
+```javascript
+// ✅ SUCCESSFUL DEBUG LOG SEQUENCE (After fix):
+// 🔄 Categories API çağrılıyor...
+// ✅ Categories API yanıt: 3 kategori
+// 🔄 Items API çağrılıyor...
+// ✅ Items API yanıt: 13 item
+// 🎯 handleItemEdit called with item: {kategoriId: "68380aa8b945226655fd3a9b", ...}
+// 🔧 Field templates yükleniyor, categoryId: 68380aa8b945226655fd3a9b
+// 🚀 ENTERED loadFieldTemplates function with categoryId: 68380aa8b945226655fd3a9b
+// 🔍 CategoryId type: string
+// 🌐 Making API call to: /api/inventory/categories/68380aa8b945226655fd3a9b/fields
+// ✅ Field templates response received
+// 📦 Response data: [25 template objects]
+// 🔢 Templates count: 25
+// ✅ Field templates başarıyla yüklendi: 25
+// 🔍 ItemDynamicFields Debug: categoryFieldTemplates: 25 ✅ ÇÖZÜLDÜ!
+```
+
+### 🐛 MyActivity API Debug Patterns ✅
+
+#### Task Details Multi-Type Error Handling
+```javascript
+// ✅ Enhanced error handling for task details
+const debugTaskDetails = async (taskId) => {
+  console.log(`🔍 Task details debugging for ID: ${taskId}`);
+  
+  // Type detection
+  if (taskId.startsWith('hr_checklist_')) {
+    console.log('📋 Detected: HR Checklist evaluation');
+  } else if (taskId.startsWith('hr_mesai_')) {
+    console.log('⏰ Detected: HR Mesai evaluation');
+  } else if (taskId.startsWith('hr_devamsizlik_')) {
+    console.log('📅 Detected: HR Devamsızlık evaluation');
+  } else if (taskId.length === 24 && !taskId.startsWith('hr_')) {
+    console.log('🆔 Detected: MongoDB ObjectId (Task/WorkTask/QualityControl)');
+    
+    // Try WorkTask first
+    const workTask = await WorkTask.findById(taskId);
+    if (workTask) {
+      console.log('✅ Found WorkTask:', workTask.checklist?.ad);
+      return 'worktask';
+    }
+    
+    // Then Quality Control
+    const qualityEvaluation = await QualityControlEvaluation.findById(taskId);
+    if (qualityEvaluation) {
+      console.log('✅ Found Quality Control evaluation');
+      return 'quality_control';
+    }
+    
+    // Finally normal Task
+    const task = await Task.findById(taskId);
+    if (task) {
+      console.log('✅ Found normal Task:', task.checklist?.ad);
+      return 'task';
+    }
+    
+    console.log('❌ No matching document found for ID');
+    return null;
+  } else {
+    console.log('❓ Unknown ID format');
+    return null;
+  }
+};
+```
+
+### 🔧 Component Debug Utilities ✅
+
+#### React Hook Debug Pattern
+```javascript
+// ✅ useCallback dependency debug
+const useDebugCallback = (callback, dependencies, name) => {
+  const [prevDeps, setPrevDeps] = useState(dependencies);
+  
+  const memoizedCallback = useCallback((...args) => {
+    console.log(`🔄 ${name} callback triggered with args:`, args);
+    return callback(...args);
+  }, dependencies);
+  
+  useEffect(() => {
+    if (prevDeps) {
+      dependencies.forEach((dep, index) => {
+        if (dep !== prevDeps[index]) {
+          console.log(`🔄 ${name} dependency ${index} changed:`, {
+            from: prevDeps[index],
+            to: dep
+          });
+        }
+      });
+    }
+    setPrevDeps(dependencies);
+  }, dependencies);
+  
+  return memoizedCallback;
+};
+
+// Usage:
+const loadFieldTemplates = useDebugCallback(async (categoryId) => {
+  // Callback logic
+}, [inventoryAPI], 'loadFieldTemplates');
+```
+
+#### API Response Debug Helper
+```javascript
+// ✅ API response validation and debug
+const debugAPIResponse = (response, expectedFields = []) => {
+  console.log('📡 API Response Debug:');
+  console.log('  Status:', response.status);
+  console.log('  Data type:', typeof response.data);
+  console.log('  Data length:', Array.isArray(response.data) ? response.data.length : 'Not array');
+  
+  if (Array.isArray(response.data) && response.data.length > 0) {
+    const firstItem = response.data[0];
+    console.log('  First item keys:', Object.keys(firstItem));
+    
+    expectedFields.forEach(field => {
+      if (firstItem.hasOwnProperty(field)) {
+        console.log(`  ✅ Has expected field: ${field}`);
+      } else {
+        console.log(`  ❌ Missing expected field: ${field}`);
+      }
+    });
+  }
+  
+  return response;
+};
+
+// Usage:
+const response = await inventoryAPI.getCategoryFields(categoryId);
+debugAPIResponse(response, ['ad', 'tip', 'gerekli', 'siraNo']);
+```
+
+#### State Change Debug Pattern
+```javascript
+// ✅ State change tracker
+const useStateDebug = (stateName, state) => {
+  const prevState = useRef(state);
+  
+  useEffect(() => {
+    if (prevState.current !== state) {
+      console.log(`🔄 ${stateName} changed:`, {
+        from: prevState.current,
+        to: state,
+        type: typeof state,
+        length: Array.isArray(state) ? state.length : undefined
+      });
+      prevState.current = state;
+    }
+  }, [state, stateName]);
+};
+
+// Usage:
+useStateDebug('fieldTemplates', fieldTemplates);
+useStateDebug('categoryFieldTemplates', categoryFieldTemplates);
+```
+
+### 🔍 Database Query Debug Utilities ✅
+
+#### Query Performance Tracker
+```javascript
+// ✅ Database query debug wrapper
+const debugQuery = async (queryName, queryPromise) => {
+  const startTime = Date.now();
+  console.log(`🔍 Query started: ${queryName}`);
+  
+  try {
+    const result = await queryPromise;
+    const duration = Date.now() - startTime;
+    
+    console.log(`✅ Query completed: ${queryName}`, {
+      duration: `${duration}ms`,
+      resultCount: Array.isArray(result) ? result.length : 'single',
+      resultType: typeof result
+    });
+    
+    if (duration > 100) {
+      console.warn(`⚠️ Slow query detected: ${queryName} took ${duration}ms`);
+    }
+    
+    return result;
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`❌ Query failed: ${queryName} after ${duration}ms`, error);
+    throw error;
+  }
+};
+
+// Usage:
+const templates = await debugQuery(
+  'InventoryFieldTemplate.find',
+  InventoryFieldTemplate.find({kategoriId: categoryId}).sort({siraNo: 1})
+);
+```
+
+### 🔧 Network Debug Utilities ✅
+
+#### Request Interceptor Debug
+```javascript
+// ✅ Enhanced request/response interceptor
+api.interceptors.request.use(
+  (config) => {
+    console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
+      params: config.params,
+      data: config.data,
+      headers: Object.keys(config.headers || {}),
+      timestamp: new Date().toISOString()
+    });
+    return config;
+  },
+  (error) => {
+    console.error('❌ API Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+api.interceptors.response.use(
+  (response) => {
+    const responseSize = JSON.stringify(response.data).length;
+    console.log(`📥 API Response: ${response.status} ${response.config.url}`, {
+      dataType: typeof response.data,
+      dataLength: Array.isArray(response.data) ? response.data.length : undefined,
+      responseSize: `${responseSize} bytes`,
+      timestamp: new Date().toISOString()
+    });
+    return response;
+  },
+  (error) => {
+    console.error('❌ API Response Error:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      message: error.message
+    });
+    return Promise.reject(error);
+  }
+);
+```
+
+### 📊 Memory Debug Utilities ✅
+
+#### Memory Leak Detection
+```javascript
+// ✅ Memory usage tracker for debugging
+const useMemoryDebug = (componentName) => {
+  useEffect(() => {
+    if (performance.memory) {
+      const memoryInfo = {
+        used: Math.round(performance.memory.usedJSHeapSize / 1048576),
+        total: Math.round(performance.memory.totalJSHeapSize / 1048576),
+        limit: Math.round(performance.memory.jsHeapSizeLimit / 1048576)
+      };
+      
+      console.log(`💾 ${componentName} memory usage:`, memoryInfo);
+      
+      if (memoryInfo.used > memoryInfo.limit * 0.9) {
+        console.warn(`⚠️ ${componentName} high memory usage detected!`);
+      }
+    }
+  }, [componentName]);
+};
+
+// Usage in components:
+useMemoryDebug('Inventory');
+```
+
+## 🔧 Port Conflict Resolution (Updated 2025-02-06)
+
+### Backend Port Değiştirme & Cache Temizleme
+```javascript
+// server.js
+const PORT = process.env.PORT || 5001; // 5000 yerine 5001 kullan
+
+// frontend/package.json
+"proxy": "http://localhost:5001"
+```
+
+### Port Çakışması Kontrolü
+```bash
+# Windows'ta port kontrolü
+netstat -ano | findstr :5000
+tasklist /FI "PID eq 5000" /FO TABLE
+
+# Port'u serbest bırakma
+taskkill /PID [PID_NUMBER] /F
+
+# Nodemon cache temizleme
+rm -rf node_modules/.cache
+npx nodemon --clean
+```
+
+### Nodemon Cache Sorunları
+```bash
+# Nodemon restart'ı zorla
+rs  # Nodemon console'da
+
+# Cache temizleme
+rm -rf backend/node_modules/.cache
+rm -rf backend/.nodemonignore.cache
+
+# Environment variable override kontrolü
+echo $PORT  # Linux/Mac
+echo %PORT%  # Windows
+
+# .env dosyası kontrol et
+cat backend/.env | grep PORT
+```
+
+### Environment Variable Priority
+```bash
+# Öncelik sırası:
+# 1. System environment variables
+# 2. .env dosyası
+# 3. Default value (kod içinde)
+
+# .env dosyasını override etme
+PORT=5001 npm run start:backend
+```
+
+### Backend Port Değiştirme & Cache Temizleme
+```javascript
+// server.js
+const PORT = process.env.PORT || 5001; // 5000 yerine 5001 kullan
+
+// frontend/package.json
+"proxy": "http://localhost:5001"
+```
+
+### Port Çakışması Kontrolü
+```bash
+# Windows'ta port kontrolü
+netstat -ano | findstr :5000
+tasklist /FI "PID eq 5000" /FO TABLE
+
+# Port'u serbest bırakma
+taskkill /PID [PID_NUMBER] /F
+
+# Nodemon cache temizleme
+rm -rf node_modules/.cache
+npx nodemon --clean
+```
+
+### Nodemon Cache Sorunları
+```bash
+# Nodemon restart'ı zorla
+rs  # Nodemon console'da
+
+# Cache temizleme
+rm -rf backend/node_modules/.cache
+rm -rf backend/.nodemonignore.cache
+
+# Environment variable override kontrolü
+echo $PORT  # Linux/Mac
+echo %PORT%  # Windows
+
+# .env dosyası kontrol et
+cat backend/.env | grep PORT
+```
+
+### Environment Variable Priority
+```bash
+# Öncelik sırası:
+# 1. System environment variables
+# 2. .env dosyası
+# 3. Default value (kod içinde)
+
+# .env dosyasını override etme
+PORT=5001 npm run start:backend
+```
+
+---
+
+**Quick Reference**: Bu modül development sırasında karşılaşılan tüm teknik sorunları çözmek için hazırlanmıştır. Her hata mesajı için hızlı çözüm adımları içerir.
+
+
+
+
+
+
+
+

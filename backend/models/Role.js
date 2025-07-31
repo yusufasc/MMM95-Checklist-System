@@ -23,23 +23,6 @@ const RoleSchema = new mongoose.Schema({
       },
     },
   ],
-  // Modern modulePermissions - String bazlı
-  modulePermissions: [
-    {
-      moduleName: {
-        type: String,
-        required: true,
-      },
-      gorebilir: {
-        type: Boolean,
-        default: false,
-      },
-      duzenleyebilir: {
-        type: Boolean,
-        default: false,
-      },
-    },
-  ],
   checklistYetkileri: [
     {
       hedefRol: {
@@ -56,6 +39,22 @@ const RoleSchema = new mongoose.Schema({
         default: false,
       },
       onaylayabilir: {
+        type: Boolean,
+        default: false,
+      },
+    },
+  ],
+  modulePermissions: [
+    {
+      moduleName: {
+        type: String,
+        required: true,
+      },
+      gorebilir: {
+        type: Boolean,
+        default: false,
+      },
+      duzenleyebilir: {
         type: Boolean,
         default: false,
       },

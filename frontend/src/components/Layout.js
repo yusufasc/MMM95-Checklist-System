@@ -1,78 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
+  AppBar,
   Box,
   Drawer,
-  AppBar,
-  Toolbar,
-  List,
-  Typography,
-  Divider,
   IconButton,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
+  Toolbar,
+  Typography,
   Button,
+  Badge,
+  Avatar,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  Alert,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
+  Chip,
   OutlinedInput,
   Checkbox,
-  Chip,
-  Alert,
-  useMediaQuery,
-  useTheme,
-  Tooltip,
-  Avatar,
-  Badge,
+  ListItemText,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import {
   Menu as MenuIcon,
-  Dashboard as DashboardIcon,
-  People as PeopleIcon,
-  Security as SecurityIcon,
-  Business as BusinessIcon,
-  Assignment as AssignmentIcon,
-  Task as TaskIcon,
-  Build as BuildIcon,
-  PendingActions as PendingActionsIcon,
-  BarChart as BarChartIcon,
-  Logout as LogoutIcon,
   Settings as SettingsIcon,
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon,
-  Inventory as InventoryIcon,
-  Engineering as EngineeringIcon,
-  AdminPanelSettings as AdminPanelSettingsIcon,
-  Assessment as AssessmentIcon,
+  Logout as LogoutIcon,
+  Build as BuildIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import { inventoryAPI } from '../services/api';
 
-const drawerWidth = 240;
-const collapsedDrawerWidth = 60;
+// Import unified sidebar components - spageti kod çözümü
+import Sidebar from './Layout/Sidebar';
+import MobileSidebar from './Layout/MobileSidebar';
 
-// İkon mapping
-const iconMap = {
-  DashboardIcon: <DashboardIcon />,
-  PeopleIcon: <PeopleIcon />,
-  SecurityIcon: <SecurityIcon />,
-  BusinessIcon: <BusinessIcon />,
-  AssignmentIcon: <AssignmentIcon />,
-  TaskIcon: <TaskIcon />,
-  BuildIcon: <BuildIcon />,
-  PendingActionsIcon: <PendingActionsIcon />,
-  BarChartIcon: <BarChartIcon />,
-  InventoryIcon: <InventoryIcon />,
-  EngineeringIcon: <EngineeringIcon />,
-  AdminPanelSettingsIcon: <AdminPanelSettingsIcon />,
-  AssessmentIcon: <AssessmentIcon />,
-};
+const drawerWidth = 280;
+const collapsedDrawerWidth = 70;
 
 const Layout = () => {
   const theme = useTheme();
@@ -80,7 +48,9 @@ const Layout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [machineSelectionDialog, setMachineSelectionDialog] = useState(false);
+  const [machines, setMachines] = useState([]);
   const [tempSelectedMachines, setTempSelectedMachines] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -91,19 +61,31 @@ const Layout = () => {
     getAccessibleMenuItems,
     user,
     selectedMachines,
-    accessibleMachines,
     updateSelectedMachines,
     loadMachineData,
+    currentShift,
+    endCurrentShift,
   } = useAuth();
 
   const menuItems = getAccessibleMenuItems();
 
+  // Load accessible machines
+  const loadAccessibleMachines = useCallback(async () => {
+    try {
+      const response = await inventoryAPI.getMachines('all');
+      setMachines(response.data);
+    } catch (error) {
+      console.error('Makina listesi yüklenirken hata:', error);
+      setMachines([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAccessibleMachines();
+  }, [loadAccessibleMachines]);
+
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
-  };
-
-  const handleSidebarToggle = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
   };
 
   const handleLogout = () => {
@@ -123,11 +105,14 @@ const Layout = () => {
     setSuccess('');
 
     // Debug için
-    if (process.env.NODE_ENV === 'development') {
+    if (
+      typeof process !== 'undefined' &&
+      process.env?.NODE_ENV === 'development'
+    ) {
       console.log('Makina seçimi açıldı:', {
-        accessibleMachines: accessibleMachines.length,
+        accessibleMachines: machines.length,
         selectedMachines: selectedMachines.length,
-        accessibleMachinesData: accessibleMachines,
+        accessibleMachinesData: machines,
       });
     }
   };
@@ -139,24 +124,26 @@ const Layout = () => {
     setSuccess('');
   };
 
-  const handleMachineChange = event => {
-    const value = event.target.value;
-    const selectedIds = typeof value === 'string' ? value.split(',') : value;
-    const selectedMachineObjects = accessibleMachines.filter(machine =>
-      selectedIds.includes(machine._id),
-    );
-    setTempSelectedMachines(selectedMachineObjects);
-  };
-
   const handleMachineSelectionSave = async () => {
-    const result = await updateSelectedMachines(tempSelectedMachines);
-    if (result.success) {
-      setSuccess('Makina seçimi başarıyla güncellendi');
-      setTimeout(() => {
-        handleMachineSelectionClose();
-      }, 1000);
-    } else {
-      setError(result.error);
+    try {
+      setLoading(true);
+      setError('');
+
+      const result = await updateSelectedMachines(tempSelectedMachines);
+
+      if (result.success) {
+        setSuccess('Makina seçimi başarıyla kaydedildi');
+        setTimeout(() => {
+          handleMachineSelectionClose();
+        }, 1500);
+      } else {
+        setError(result.error || 'Makina seçimi kaydedilemedi');
+      }
+    } catch (error) {
+      console.error('Makina seçimi kaydedilirken hata:', error);
+      setError('Makina seçimi kaydedilemedi');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -166,244 +153,27 @@ const Layout = () => {
       ? collapsedDrawerWidth
       : drawerWidth;
 
-  // Desktop Sidebar Content
-  const desktopDrawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
-      <Box
-        sx={{
-          p: sidebarCollapsed ? 1 : 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: sidebarCollapsed ? 'center' : 'space-between',
-          minHeight: 64,
-        }}
-      >
-        {!sidebarCollapsed && (
-          <Typography variant="h6" noWrap component="div" fontWeight="bold">
-            Serinova 360
-          </Typography>
-        )}
-        <IconButton onClick={handleSidebarToggle} size="small">
-          {sidebarCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-        </IconButton>
-      </Box>
-
-      <Divider />
-
-      {/* Menu Items */}
-      <List sx={{ flexGrow: 1, py: 1 }}>
-        {menuItems.map((item, index) => {
-          // Divider (ayırıcı çizgi) kontrolü
-          if (item.isDivider) {
-            return (
-              <Box key={`divider-${index}`} sx={{ mx: 2, my: 1 }}>
-                <Divider />
-                {!sidebarCollapsed && (
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      display: 'block',
-                      textAlign: 'center',
-                      mt: 1,
-                      mb: 0.5,
-                      color: 'text.secondary',
-                      fontSize: '0.7rem',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    KULLANICI SAYFALAR
-                  </Typography>
-                )}
-              </Box>
-            );
-          }
-
-          return (
-            <Tooltip
-              key={item.text}
-              title={sidebarCollapsed ? item.text : ''}
-              placement="right"
-              arrow
-            >
-              <ListItem disablePadding sx={{ mb: 0.5 }}>
-                <ListItemButton
-                  selected={location.pathname === item.path}
-                  onClick={() => handleMenuClick(item.path)}
-                  sx={{
-                    mx: 1,
-                    borderRadius: 2,
-                    minHeight: 48,
-                    justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                    px: sidebarCollapsed ? 0 : 2,
-                    '&.Mui-selected': {
-                      bgcolor: 'primary.main',
-                      color: 'white',
-                      '&:hover': {
-                        bgcolor: 'primary.dark',
-                      },
-                    },
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: sidebarCollapsed ? 0 : 2,
-                      justifyContent: 'center',
-                      color: location.pathname === item.path ? 'inherit' : 'inherit',
-                    }}
-                  >
-                    {iconMap[item.icon]}
-                  </ListItemIcon>
-                  {!sidebarCollapsed && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                      <ListItemText
-                        primary={item.text}
-                        primaryTypographyProps={{
-                          fontSize: '0.875rem',
-                          fontWeight: location.pathname === item.path ? 'bold' : 'normal',
-                        }}
-                      />
-                    </Box>
-                  )}
-                </ListItemButton>
-              </ListItem>
-            </Tooltip>
-          );
-        })}
-      </List>
-
-      {/* User Info */}
-      {!sidebarCollapsed && (
-        <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <Avatar
-              sx={{ width: 32, height: 32, mr: 1, bgcolor: 'primary.main', fontSize: '0.875rem' }}
-            >
-              {user?.ad?.charAt(0)}
-              {user?.soyad?.charAt(0)}
-            </Avatar>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="body2" fontWeight="bold" noWrap>
-                {user?.ad} {user?.soyad}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
-                {user?.roller?.[0]?.ad}
-              </Typography>
-            </Box>
-          </Box>
-          <Button
-            fullWidth
-            variant="outlined"
-            size="small"
-            startIcon={<LogoutIcon />}
-            onClick={handleLogout}
-            sx={{ fontSize: '0.75rem' }}
-          >
-            Çıkış Yap
-          </Button>
-        </Box>
-      )}
-    </Box>
-  );
-
-  // Mobile Sidebar Content
-  const mobileDrawer = (
-    <Box>
-      <Toolbar>
-        <Typography variant="h6" noWrap component="div" fontWeight="bold">
-          Serinova 360
-        </Typography>
-      </Toolbar>
-      <Divider />
-      <List>
-        {menuItems.map((item, index) => {
-          // Divider (ayırıcı çizgi) kontrolü
-          if (item.isDivider) {
-            return (
-              <Box key={`mobile-divider-${index}`} sx={{ mx: 2, my: 1 }}>
-                <Divider />
-                <Typography
-                  variant="caption"
-                  sx={{
-                    display: 'block',
-                    textAlign: 'center',
-                    mt: 1,
-                    mb: 0.5,
-                    color: 'text.secondary',
-                    fontSize: '0.7rem',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  KULLANICI SAYFALAR
-                </Typography>
-              </Box>
-            );
-          }
-
-          return (
-            <ListItem key={item.text} disablePadding>
-              <ListItemButton
-                selected={location.pathname === item.path}
-                onClick={() => handleMenuClick(item.path)}
-                sx={{
-                  '&.Mui-selected': {
-                    bgcolor: 'primary.main',
-                    color: 'white',
-                    '&:hover': {
-                      bgcolor: 'primary.dark',
-                    },
-                  },
-                }}
-              >
-                <ListItemIcon
-                  sx={{ color: location.pathname === item.path ? 'inherit' : 'inherit' }}
-                >
-                  {iconMap[item.icon]}
-                </ListItemIcon>
-                <ListItemText primary={item.text} />
-              </ListItemButton>
-            </ListItem>
-          );
-        })}
-      </List>
-
-      <Divider sx={{ mt: 2 }} />
-
-      {/* Mobile User Info */}
-      <Box sx={{ p: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Avatar sx={{ width: 40, height: 40, mr: 2, bgcolor: 'primary.main' }}>
-            {user?.ad?.charAt(0)}
-            {user?.soyad?.charAt(0)}
-          </Avatar>
-          <Box>
-            <Typography variant="body1" fontWeight="bold">
-              {user?.ad} {user?.soyad}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {user?.roller?.[0]?.ad}
-            </Typography>
-          </Box>
-        </Box>
-        <Button fullWidth variant="contained" startIcon={<LogoutIcon />} onClick={handleLogout}>
-          Çıkış Yap
-        </Button>
-      </Box>
-    </Box>
-  );
-
   const currentPageTitle =
-    menuItems.find(item => item.path === location.pathname)?.text || 'MMM Checklist Sistemi';
+    menuItems.find(item => item.path === location.pathname)?.text ||
+    'MMM Checklist Sistemi';
 
-  // Makina seçimi gereken sayfalar
-  const needsMachineSelection = ['/tasks', '/control-pending'].includes(location.pathname);
+  // Makina seçimi gereken roller - sadece bu rollerdeki kullanıcılar için göster
+  const needsMachineSelection = user?.roller?.some(role =>
+    [
+      'Ortacı',
+      'Usta',
+      'Paketlemeci',
+      'Kalite Kontrol',
+      'VARDİYA AMİRİ',
+      'Admin',
+    ].includes(role.ad || role),
+  );
 
   return (
     <Box sx={{ display: 'flex' }}>
       {/* AppBar - Mobile Optimized */}
       <AppBar
-        position="fixed"
+        position='fixed'
         sx={{
           width: {
             xs: '100%',
@@ -419,9 +189,9 @@ const Layout = () => {
         <Toolbar sx={{ minHeight: { xs: 56, md: 64 } }}>
           {/* Mobile Menu Button */}
           <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
+            color='inherit'
+            aria-label='open drawer'
+            edge='start'
             onClick={handleDrawerToggle}
             sx={{ mr: 2, display: { md: 'none' } }}
           >
@@ -432,7 +202,7 @@ const Layout = () => {
           <Typography
             variant={isMobile ? 'body1' : 'h6'}
             noWrap
-            component="div"
+            component='div'
             sx={{ flexGrow: 1, fontWeight: 'bold' }}
           >
             {currentPageTitle}
@@ -442,11 +212,11 @@ const Layout = () => {
           {needsMachineSelection && (
             <Badge
               badgeContent={selectedMachines.length}
-              color="secondary"
+              color='secondary'
               sx={{ mr: { xs: 1, md: 2 } }}
             >
               <Button
-                color="inherit"
+                color='inherit'
                 startIcon={!isMobile && <SettingsIcon />}
                 onClick={handleMachineSelectionOpen}
                 size={isMobile ? 'small' : 'medium'}
@@ -463,19 +233,40 @@ const Layout = () => {
           {/* User Info - Desktop Only */}
           {!isMobile && (
             <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-              <Avatar sx={{ width: 32, height: 32, mr: 1, bgcolor: 'rgba(255,255,255,0.2)' }}>
+              <Avatar
+                sx={{
+                  width: 32,
+                  height: 32,
+                  mr: 1,
+                  bgcolor: 'rgba(255,255,255,0.2)',
+                }}
+              >
                 {user?.ad?.charAt(0)}
                 {user?.soyad?.charAt(0)}
               </Avatar>
-              <Typography variant="body2">
-                {user?.ad} {user?.soyad}
-              </Typography>
+              <Box>
+                <Typography variant='body2'>
+                  {user?.ad} {user?.soyad}
+                </Typography>
+                {currentShift && (
+                  <Typography
+                    variant='caption'
+                    sx={{ color: 'rgba(255,255,255,0.8)' }}
+                  >
+                    {currentShift.type} Vardiyası
+                  </Typography>
+                )}
+              </Box>
             </Box>
           )}
 
           {/* Desktop Logout Button */}
           {!isMobile && (
-            <Button color="inherit" onClick={handleLogout} startIcon={<LogoutIcon />}>
+            <Button
+              color='inherit'
+              onClick={handleLogout}
+              startIcon={<LogoutIcon />}
+            >
               Çıkış
             </Button>
           )}
@@ -484,7 +275,7 @@ const Layout = () => {
 
       {/* Sidebar Navigation */}
       <Box
-        component="nav"
+        component='nav'
         sx={{
           width: { md: currentDrawerWidth },
           flexShrink: { md: 0 },
@@ -492,7 +283,7 @@ const Layout = () => {
       >
         {/* Mobile Drawer */}
         <Drawer
-          variant="temporary"
+          variant='temporary'
           open={mobileOpen}
           onClose={handleDrawerToggle}
           ModalProps={{
@@ -503,17 +294,23 @@ const Layout = () => {
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: drawerWidth,
-              backgroundImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              backgroundImage:
+                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               color: 'white',
             },
           }}
         >
-          {mobileDrawer}
+          <MobileSidebar
+            menuItems={menuItems}
+            user={user}
+            onMenuClick={handleMenuClick}
+            onLogout={handleLogout}
+          />
         </Drawer>
 
         {/* Desktop Drawer */}
         <Drawer
-          variant="permanent"
+          variant='permanent'
           sx={{
             display: { xs: 'none', md: 'block' },
             '& .MuiDrawer-paper': {
@@ -530,13 +327,20 @@ const Layout = () => {
           }}
           open
         >
-          {desktopDrawer}
+          <Sidebar
+            sidebarCollapsed={sidebarCollapsed}
+            setSidebarCollapsed={setSidebarCollapsed}
+            menuItems={menuItems}
+            user={user}
+            onMenuClick={handleMenuClick}
+            onLogout={handleLogout}
+          />
         </Drawer>
       </Box>
 
       {/* Main Content Area */}
       <Box
-        component="main"
+        component='main'
         sx={{
           flexGrow: 1,
           p: { xs: 1, sm: 2, md: 3 },
@@ -553,6 +357,68 @@ const Layout = () => {
         }}
       >
         <Toolbar sx={{ minHeight: { xs: 56, md: 64 } }} />
+
+        {/* Global Makina Seçimi Info Bar - Tüm sayfalarda göster */}
+        {needsMachineSelection && selectedMachines.length > 0 && (
+          <Alert
+            severity='info'
+            sx={{
+              mb: 2,
+              bgcolor: 'primary.50',
+              border: '1px solid',
+              borderColor: 'primary.200',
+            }}
+            icon={<BuildIcon />}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 1,
+              }}
+            >
+              <Typography variant='body2' sx={{ fontWeight: 'bold' }}>
+                Aktif Makinalar:
+              </Typography>
+              {selectedMachines.map(machine => (
+                <Chip
+                  key={machine._id}
+                  label={`${machine.kod} - ${machine.ad}`}
+                  color='primary'
+                  variant='outlined'
+                  size='small'
+                  sx={{ fontSize: '0.75rem' }}
+                />
+              ))}
+              <Button
+                size='small'
+                variant='outlined'
+                onClick={handleMachineSelectionOpen}
+                sx={{ ml: 'auto' }}
+              >
+                Değiştir
+              </Button>
+            </Box>
+          </Alert>
+        )}
+
+        {/* Makina Seçimi Gerekli Uyarısı */}
+        {needsMachineSelection && selectedMachines.length === 0 && (
+          <Alert severity='warning' sx={{ mb: 2 }} icon={<BuildIcon />}>
+            <Typography variant='body2' fontWeight='bold'>
+              <span role='img' aria-label='alet'>
+                🔧
+              </span>{' '}
+              Makina Seçimi Gerekli
+            </Typography>
+            <Typography variant='caption'>
+              Sağ üstteki "Makina Seçimi" butonunu kullanarak çalıştığınız
+              makinaları seçin.
+            </Typography>
+          </Alert>
+        )}
+
         <Outlet />
       </Box>
 
@@ -560,71 +426,62 @@ const Layout = () => {
       <Dialog
         open={machineSelectionDialog}
         onClose={handleMachineSelectionClose}
-        maxWidth="md"
+        maxWidth='md'
         fullWidth
         fullScreen={isMobile}
         PaperProps={{
           sx: { borderRadius: isMobile ? 0 : 2 },
         }}
       >
-        <DialogTitle
-          sx={{
-            bgcolor: 'primary.main',
-            color: 'white',
-            py: { xs: 1.5, md: 2 },
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <BuildIcon sx={{ mr: 1 }} />
-            <Typography variant={isMobile ? 'body1' : 'h6'} fontWeight="bold">
-              Çalıştığınız Makinaları Seçin
-            </Typography>
-          </Box>
+        <DialogTitle sx={{ pb: 1 }}>
+          <Typography variant='h6' component='div' sx={{ fontWeight: 'bold' }}>
+            Makina Seçimi
+          </Typography>
+          <Typography variant='caption' color='text.secondary'>
+            Çalıştığınız makinaları seçin (Vardiya boyunca aktif kalacak)
+          </Typography>
         </DialogTitle>
-        <DialogContent sx={{ p: { xs: 2, md: 3 } }}>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
+        <DialogContent>
+          {/* Mevcut Vardiya Bilgisi */}
+          {currentShift && (
+            <Alert severity='info' sx={{ mb: 2 }} icon={<BuildIcon />}>
+              <Typography variant='body2' fontWeight='bold'>
+                <span role='img' aria-label='saat'>
+                  🕒
+                </span>{' '}
+                Aktif Vardiya: {currentShift.type}
+              </Typography>
+              <Typography variant='caption' display='block'>
+                Başlangıç:{' '}
+                {new Date(currentShift.start).toLocaleString('tr-TR')}
+              </Typography>
+              <Typography variant='caption' display='block'>
+                Bitiş: {new Date(currentShift.end).toLocaleString('tr-TR')}
+              </Typography>
+              <Typography variant='caption' display='block'>
+                Seçili Makina: {selectedMachines.length} adet
+              </Typography>
             </Alert>
           )}
 
+          {error && (
+            <Alert severity='error' sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
           {success && (
-            <Alert severity="success" sx={{ mb: 2 }}>
+            <Alert severity='success' sx={{ mb: 2 }}>
               {success}
             </Alert>
           )}
 
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Bu vardiyada çalıştığınız makinaları seçin. Bu seçim tüm sayfalarda geçerli olacak.
-          </Typography>
-
-          {process.env.NODE_ENV === 'development' && (
-            <Alert severity="info" sx={{ mb: 2, fontSize: '0.75rem' }}>
-              <strong>Debug:</strong> Erişilebilir makina sayısı: {accessibleMachines.length}
-              <br />
-              Seçili makina sayısı: {selectedMachines.length}
-              <br />
-              Kullanıcı rolü: {user?.roller?.map(r => r.ad).join(', ')}
-              <br />
-              Kullanıcı ID: {user?._id}
-              <br />
-              Makina verisi yüklendi mi: {accessibleMachines.length > 0 ? 'Evet' : 'Hayır'}
-              <br />
-              {accessibleMachines.length > 0 && (
-                <>
-                  İlk makina: {accessibleMachines[0]?.kod} - {accessibleMachines[0]?.ad}
-                </>
-              )}
-            </Alert>
-          )}
-
-          {accessibleMachines.length === 0 ? (
-            <Alert severity="warning" sx={{ mb: 2 }}>
+          {machines.length === 0 ? (
+            <Alert severity='warning' sx={{ mb: 2 }}>
               Makina listesi yükleniyor veya erişilebilir makina bulunamadı.
               <br />
               <Button
-                variant="outlined"
-                size="small"
+                variant='outlined'
+                size='small'
                 sx={{ mt: 1 }}
                 onClick={() => loadMachineData(user?.roller)}
               >
@@ -633,37 +490,60 @@ const Layout = () => {
             </Alert>
           ) : (
             <FormControl fullWidth>
-              <InputLabel>Makinalar ({accessibleMachines.length} adet)</InputLabel>
+              <InputLabel>Makinalar ({machines.length} adet)</InputLabel>
               <Select
                 multiple
                 value={tempSelectedMachines.map(m => m._id)}
-                onChange={handleMachineChange}
-                input={<OutlinedInput label={`Makinalar (${accessibleMachines.length} adet)`} />}
+                onChange={e => {
+                  const selectedIds = e.target.value;
+
+                  // Paketlemeci rolü için makina seçim limiti kontrolü
+                  const isPaketlemeci = user?.roller?.some(
+                    rol => rol.ad === 'Paketlemeci',
+                  );
+                  if (isPaketlemeci && selectedIds.length > 1) {
+                    setError('Paketlemeci rolü maksimum 1 makina seçebilir.');
+                    return;
+                  }
+
+                  const selectedMachineObjects = selectedIds
+                    .map(id => machines.find(m => m._id === id))
+                    .filter(Boolean);
+                  setTempSelectedMachines(selectedMachineObjects);
+                  setError(''); // Hata varsa temizle
+                }}
+                input={
+                  <OutlinedInput
+                    label={`Makinalar (${machines.length} adet)`}
+                  />
+                }
                 renderValue={selected => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {selected.map(value => {
-                      const machine = accessibleMachines.find(m => m._id === value);
-                      return (
+                      const machine = machines.find(m => m._id === value);
+                      return machine ? (
                         <Chip
-                          key={value}
-                          label={
-                            machine
-                              ? `${machine.kod || machine.makinaNo || machine.envanterKodu} - ${machine.ad}`
-                              : value
-                          }
-                          size="small"
+                          key={machine._id}
+                          label={`${machine.kod} - ${machine.ad}`}
+                          size='small'
                         />
-                      );
+                      ) : null;
                     })}
                   </Box>
                 )}
               >
-                {accessibleMachines.map(machine => (
+                {machines.map(machine => (
                   <MenuItem key={machine._id} value={machine._id}>
-                    <Checkbox checked={tempSelectedMachines.some(m => m._id === machine._id)} />
+                    <Checkbox
+                      checked={tempSelectedMachines.some(
+                        m => m._id === machine._id,
+                      )}
+                    />
                     <ListItemText
-                      primary={`${machine.kod || machine.makinaNo || machine.envanterKodu} - ${machine.ad}`}
-                      secondary={machine.lokasyon ? `Lokasyon: ${machine.lokasyon}` : ''}
+                      primary={`${machine.kod} - ${machine.ad}`}
+                      secondary={
+                        machine.lokasyon ? `Lokasyon: ${machine.lokasyon}` : ''
+                      }
                     />
                   </MenuItem>
                 ))}
@@ -672,15 +552,48 @@ const Layout = () => {
           )}
         </DialogContent>
         <DialogActions sx={{ p: { xs: 2, md: 3 } }}>
-          <Button onClick={handleMachineSelectionClose} size={isMobile ? 'medium' : 'large'}>
+          {/* Vardiya Sonlandır Butonu */}
+          {currentShift && (
+            <Button
+              color='warning'
+              variant='outlined'
+              onClick={async () => {
+                try {
+                  const result = await endCurrentShift();
+                  if (result.success) {
+                    setSuccess('Vardiya başarıyla sonlandırıldı!');
+                    setError(null);
+                    setTempSelectedMachines([]);
+                    setTimeout(() => {
+                      handleMachineSelectionClose();
+                    }, 1500);
+                  } else {
+                    setError(result.error || 'Vardiya sonlandırılamadı');
+                  }
+                } catch (err) {
+                  setError('Vardiya sonlandırılırken bir hata oluştu');
+                }
+              }}
+              size={isMobile ? 'medium' : 'large'}
+              sx={{ mr: 'auto' }}
+            >
+              Vardiyayı Sonlandır
+            </Button>
+          )}
+
+          <Button
+            onClick={handleMachineSelectionClose}
+            size={isMobile ? 'medium' : 'large'}
+          >
             İptal
           </Button>
           <Button
-            variant="contained"
+            variant='contained'
             onClick={handleMachineSelectionSave}
             size={isMobile ? 'medium' : 'large'}
+            disabled={loading}
           >
-            Kaydet
+            {loading ? 'Kaydediliyor...' : 'Kaydet'}
           </Button>
         </DialogActions>
       </Dialog>

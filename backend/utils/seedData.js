@@ -33,14 +33,44 @@ const seedData = async () => {
     // Modülleri oluştur
     const modules = [
       { ad: 'Dashboard', ikon: 'Dashboard', route: '/', aktif: true },
-      { ad: 'Kullanıcı Yönetimi', ikon: 'People', route: '/users', aktif: true },
+      {
+        ad: 'Kullanıcı Yönetimi',
+        ikon: 'People',
+        route: '/users',
+        aktif: true,
+      },
       { ad: 'Rol Yönetimi', ikon: 'Security', route: '/roles', aktif: true },
-      { ad: 'Departman Yönetimi', ikon: 'Business', route: '/departments', aktif: true },
-      { ad: 'Checklist Yönetimi', ikon: 'PlaylistAddCheck', route: '/checklists', aktif: true },
-      { ad: 'Görev Yönetimi', ikon: 'Assignment', route: '/tasks', aktif: true },
+      {
+        ad: 'Departman Yönetimi',
+        ikon: 'Business',
+        route: '/departments',
+        aktif: true,
+      },
+      {
+        ad: 'Checklist Yönetimi',
+        ikon: 'PlaylistAddCheck',
+        route: '/checklists',
+        aktif: true,
+      },
+      {
+        ad: 'Görev Yönetimi',
+        ikon: 'Assignment',
+        route: '/tasks',
+        aktif: true,
+      },
       { ad: 'Yaptım', ikon: 'Build', route: '/worktasks', aktif: true },
-      { ad: 'Envanter Yönetimi', ikon: 'Inventory2', route: '/inventory', aktif: true },
-      { ad: 'Kalite Kontrol', ikon: 'FactCheck', route: '/quality-control', aktif: true },
+      {
+        ad: 'Envanter Yönetimi',
+        ikon: 'Inventory2',
+        route: '/inventory',
+        aktif: true,
+      },
+      {
+        ad: 'Kalite Kontrol',
+        ikon: 'FactCheck',
+        route: '/quality-control',
+        aktif: true,
+      },
       {
         ad: 'Kalite Kontrol Yönetimi',
         ikon: 'AdminPanelSettings',
@@ -54,9 +84,24 @@ const seedData = async () => {
         route: '/hr-management',
         aktif: true,
       },
-      { ad: 'Kontrol Bekleyenler', ikon: 'HourglassEmpty', route: '/control-pending', aktif: true },
-      { ad: 'Performans', ikon: 'Analytics', route: '/performance', aktif: true },
-      { ad: 'Kişisel Aktivite', ikon: 'Timeline', route: '/my-activity', aktif: true },
+      {
+        ad: 'Kontrol Bekleyenler',
+        ikon: 'HourglassEmpty',
+        route: '/control-pending',
+        aktif: true,
+      },
+      {
+        ad: 'Performans',
+        ikon: 'Analytics',
+        route: '/performance',
+        aktif: true,
+      },
+      {
+        ad: 'Kişisel Aktivite',
+        ikon: 'Timeline',
+        route: '/my-activity',
+        aktif: true,
+      },
     ];
 
     const modulePromises = modules.map(moduleData => {
@@ -95,11 +140,23 @@ const seedData = async () => {
       ad: 'Ortacı',
       modulePermissions: [
         { moduleName: 'Dashboard', gorebilir: true, duzenleyebilir: false },
-        { moduleName: 'Görev Yönetimi', gorebilir: true, duzenleyebilir: false },
+        {
+          moduleName: 'Görev Yönetimi',
+          gorebilir: true,
+          duzenleyebilir: false,
+        },
         { moduleName: 'Yaptım', gorebilir: true, duzenleyebilir: false },
-        { moduleName: 'Kontrol Bekleyenler', gorebilir: true, duzenleyebilir: false },
+        {
+          moduleName: 'Kontrol Bekleyenler',
+          gorebilir: true,
+          duzenleyebilir: false,
+        },
         { moduleName: 'Performans', gorebilir: true, duzenleyebilir: false },
-        { moduleName: 'Kişisel Aktivite', gorebilir: true, duzenleyebilir: false },
+        {
+          moduleName: 'Kişisel Aktivite',
+          gorebilir: true,
+          duzenleyebilir: false,
+        },
       ],
       checklistYetkileri: [],
     });
@@ -108,12 +165,28 @@ const seedData = async () => {
       ad: 'Usta',
       modulePermissions: [
         { moduleName: 'Dashboard', gorebilir: true, duzenleyebilir: false },
-        { moduleName: 'Görev Yönetimi', gorebilir: true, duzenleyebilir: false },
+        {
+          moduleName: 'Görev Yönetimi',
+          gorebilir: true,
+          duzenleyebilir: false,
+        },
         { moduleName: 'Yaptım', gorebilir: true, duzenleyebilir: false },
-        { moduleName: 'Kontrol Bekleyenler', gorebilir: true, duzenleyebilir: false },
+        {
+          moduleName: 'Kontrol Bekleyenler',
+          gorebilir: true,
+          duzenleyebilir: false,
+        },
         { moduleName: 'Performans', gorebilir: true, duzenleyebilir: false },
-        { moduleName: 'Envanter Yönetimi', gorebilir: true, duzenleyebilir: false },
-        { moduleName: 'Kişisel Aktivite', gorebilir: true, duzenleyebilir: false },
+        {
+          moduleName: 'Envanter Yönetimi',
+          gorebilir: true,
+          duzenleyebilir: false,
+        },
+        {
+          moduleName: 'Kişisel Aktivite',
+          gorebilir: true,
+          duzenleyebilir: false,
+        },
       ],
       checklistYetkileri: [],
     });
@@ -122,11 +195,23 @@ const seedData = async () => {
       ad: 'Paketlemeci',
       modulePermissions: [
         { moduleName: 'Dashboard', gorebilir: true, duzenleyebilir: false },
-        { moduleName: 'Görev Yönetimi', gorebilir: true, duzenleyebilir: false },
+        {
+          moduleName: 'Görev Yönetimi',
+          gorebilir: true,
+          duzenleyebilir: false,
+        },
         { moduleName: 'Yaptım', gorebilir: true, duzenleyebilir: false },
-        { moduleName: 'Kontrol Bekleyenler', gorebilir: true, duzenleyebilir: false },
+        {
+          moduleName: 'Kontrol Bekleyenler',
+          gorebilir: true,
+          duzenleyebilir: false,
+        },
         { moduleName: 'Performans', gorebilir: true, duzenleyebilir: false },
-        { moduleName: 'Kişisel Aktivite', gorebilir: true, duzenleyebilir: false },
+        {
+          moduleName: 'Kişisel Aktivite',
+          gorebilir: true,
+          duzenleyebilir: false,
+        },
       ],
       checklistYetkileri: [],
     });
@@ -136,10 +221,22 @@ const seedData = async () => {
       modulePermissions: [
         { moduleName: 'Dashboard', gorebilir: true, duzenleyebilir: false },
         { moduleName: 'Kalite Kontrol', gorebilir: true, duzenleyebilir: true },
-        { moduleName: 'Kalite Kontrol Yönetimi', gorebilir: true, duzenleyebilir: true },
-        { moduleName: 'Kontrol Bekleyenler', gorebilir: true, duzenleyebilir: false },
+        {
+          moduleName: 'Kalite Kontrol Yönetimi',
+          gorebilir: true,
+          duzenleyebilir: true,
+        },
+        {
+          moduleName: 'Kontrol Bekleyenler',
+          gorebilir: true,
+          duzenleyebilir: false,
+        },
         { moduleName: 'Performans', gorebilir: true, duzenleyebilir: false },
-        { moduleName: 'Kişisel Aktivite', gorebilir: true, duzenleyebilir: false },
+        {
+          moduleName: 'Kişisel Aktivite',
+          gorebilir: true,
+          duzenleyebilir: false,
+        },
       ],
       checklistYetkileri: [],
     });
@@ -172,27 +269,30 @@ const seedData = async () => {
     });
 
     // Kalite Kontrol rolü tüm rolleri görebilir ve puanlayabilir
-    await Role.findByIdAndUpdate(roles.find(r => r.ad === 'Kalite Kontrol')._id, {
-      $push: {
-        checklistYetkileri: [
-          {
-            hedefRol: roles.find(r => r.ad === 'Ortacı')._id,
-            gorebilir: true,
-            onaylayabilir: true,
-          },
-          {
-            hedefRol: roles.find(r => r.ad === 'Usta')._id,
-            gorebilir: true,
-            onaylayabilir: true,
-          },
-          {
-            hedefRol: roles.find(r => r.ad === 'Paketlemeci')._id,
-            gorebilir: true,
-            onaylayabilir: true,
-          },
-        ],
+    await Role.findByIdAndUpdate(
+      roles.find(r => r.ad === 'Kalite Kontrol')._id,
+      {
+        $push: {
+          checklistYetkileri: [
+            {
+              hedefRol: roles.find(r => r.ad === 'Ortacı')._id,
+              gorebilir: true,
+              onaylayabilir: true,
+            },
+            {
+              hedefRol: roles.find(r => r.ad === 'Usta')._id,
+              gorebilir: true,
+              onaylayabilir: true,
+            },
+            {
+              hedefRol: roles.find(r => r.ad === 'Paketlemeci')._id,
+              gorebilir: true,
+              onaylayabilir: true,
+            },
+          ],
+        },
       },
-    });
+    );
 
     console.log('Roller oluşturuldu:', roles.length);
 
@@ -249,7 +349,13 @@ const seedData = async () => {
       durum: 'aktif',
     });
 
-    const users = await User.insertMany([adminUser, aliVeli, ayseYilmaz, mehmetKaya, fatmaDemir]);
+    const users = await User.insertMany([
+      adminUser,
+      aliVeli,
+      ayseYilmaz,
+      mehmetKaya,
+      fatmaDemir,
+    ]);
 
     console.log('Kullanıcılar oluşturuldu:', users.length);
 
@@ -435,8 +541,12 @@ const seedData = async () => {
     console.log('📋 Giriş bilgileri:');
     console.log('Admin: admin / 123456 (Tüm modüllere erişim)');
     console.log('Ali Veli: ali.veli / 123456 (Ortacı - Sınırlı erişim)');
-    console.log('Ayşe Yılmaz: ayse.yilmaz / 123456 (Usta - Orta seviye erişim)');
-    console.log('Mehmet Kaya: mehmet.kaya / 123456 (Kalite Kontrol - Özel erişim)');
+    console.log(
+      'Ayşe Yılmaz: ayse.yilmaz / 123456 (Usta - Orta seviye erişim)',
+    );
+    console.log(
+      'Mehmet Kaya: mehmet.kaya / 123456 (Kalite Kontrol - Özel erişim)',
+    );
   } catch (error) {
     console.error('Test verileri oluşturulurken hata:', error);
   }

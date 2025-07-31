@@ -1,230 +1,220 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Grid,
-  Paper,
+  Container,
   Typography,
   Box,
+  Grid,
   Card,
   CardContent,
   Button,
-  CircularProgress,
-  Alert,
   Chip,
+  Stack,
+  Avatar,
   LinearProgress,
-  Fab,
-  Badge,
-  Tooltip,
+  Alert,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Divider,
 } from '@mui/material';
 import {
   Assignment as AssignmentIcon,
-  CheckCircle as CheckCircleIcon,
   Pending as PendingIcon,
+  Engineering as EngineeringIcon,
   Star as StarIcon,
+  CheckCircle as CheckCircleIcon,
+  AccessTime as AccessTimeIcon,
   EmojiEvents as TrophyIcon,
-  Speed as SpeedIcon,
-  Add as AddIcon,
-  RateReview as ReviewIcon,
-  Build as BuildIcon,
-  Schedule as ScheduleIcon,
-  Assessment as AssessmentIcon,
+  TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { tasksAPI, performanceAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import CountUp from 'react-countup';
+import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 const UstaDashboard = () => {
-  const [myTasks, setMyTasks] = useState([]);
-  const [controlTasks, setControlTasks] = useState([]);
-  const [dailyScores, setDailyScores] = useState({});
-  const [ranking, setRanking] = useState([]);
+  const { user, hasModulePermission } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const { user } = useAuth();
-
-  useEffect(() => {
-    loadDashboardData();
-    const interval = setInterval(loadDashboardData, 30000);
-    return () => clearInterval(interval);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const [dashboardData, setDashboardData] = useState({
+    myTasks: [],
+    controlPending: [],
+    machineStatus: [],
+    dailyScores: [],
+    ranking: [],
+    summary: null,
+  });
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
       setError('');
 
-      // Görevlerim
-      try {
-        const tasksRes = await tasksAPI.getMy();
-        if (tasksRes.data) {
-          const pendingTasks = tasksRes.data.filter(
-            task =>
-              task.durum === 'bekliyor' ||
-              task.durum === 'beklemede' ||
-              task.durum === 'devamEdiyor',
-          );
-          console.log('🔍 UstaDashboard - Tüm görevler:', tasksRes.data.length);
-          console.log('🔍 UstaDashboard - Bekleyen görevler:', pendingTasks.length);
-          setMyTasks(pendingTasks.slice(0, 6));
-        }
-      } catch (taskError) {
-        console.log('Görevler yüklenemedi:', taskError);
-        setMyTasks([]);
+      const [
+        myTasksRes,
+        controlRes,
+        summaryRes,
+        rankingRes,
+        scoresRes,
+        machinesRes,
+      ] = await Promise.all([
+        api.get('/tasks/my').catch(() => ({ data: [] })),
+        api.get('/control-pending').catch(error => {
+          console.error('Control-pending API hatası:', error);
+          return { data: [] };
+        }),
+        api.myActivity.getSummary(30).catch(() => ({ data: null })),
+        api.myActivity
+          .getRanking(30)
+          .catch(() => ({ data: { siralamalar: [] } })),
+        api.myActivity
+          .getDailyPerformance(30)
+          .catch(() => ({ data: { performansVerileri: [] } })),
+        api.get('/inventory/machines').catch(() => ({ data: [] })),
+      ]);
+
+      console.log('API Response - Control Pending:', controlRes.data);
+
+      // Control-pending response format'ını handle et
+      let controlPendingTasks = [];
+      if (controlRes.data?.groupedTasks) {
+        // Backend'den gelen grouped format'ını flat task array'e çevir
+        Object.values(controlRes.data.groupedTasks).forEach(machineGroup => {
+          if (machineGroup.tasks && Array.isArray(machineGroup.tasks)) {
+            controlPendingTasks.push(...machineGroup.tasks);
+          }
+        });
+      } else if (Array.isArray(controlRes.data)) {
+        controlPendingTasks = controlRes.data;
       }
 
-      // Kontrol bekleyenler
-      try {
-        const controlRes = await tasksAPI.getControlPending();
-        console.log('🔍 UstaDashboard - Control API Response:', controlRes.data);
-
-        const controlPending = [];
-
-        // API response yapısını kontrol et
-        if (controlRes.data && controlRes.data.groupedTasks) {
-          // groupedTasks objesi içindeki her makina grubunu kontrol et
-          Object.values(controlRes.data.groupedTasks).forEach(machineGroup => {
-            if (machineGroup && machineGroup.tasks && Array.isArray(machineGroup.tasks)) {
-              // Puanlanmamış (kontrol bekleyen) görevleri filtrele
-              const pendingControl = machineGroup.tasks.filter(task => {
-                const isTamamlandi = task.durum === 'tamamlandi';
-                const isNotScored = !task.toplamPuan && !task.kontrolToplamPuani;
-
-                console.log(
-                  `🔍 Task ${task._id}: durum=${task.durum}, toplamPuan=${task.toplamPuan}, kontrolToplamPuani=${task.kontrolToplamPuani}, includes=${isTamamlandi && isNotScored}`,
-                );
-
-                return isTamamlandi && isNotScored;
-              });
-              controlPending.push(...pendingControl);
-            }
-          });
-        }
-
-        console.log('🔍 UstaDashboard - Kontrol bekleyen görevler:', controlPending.length);
-        setControlTasks(controlPending.slice(0, 6));
-      } catch (controlError) {
-        console.error('❌ UstaDashboard - Kontrol verileri yüklenemedi:', controlError);
-        setControlTasks([]);
-      }
-
-      // Performance - Usta sıralaması
-      try {
-        const performanceRes = await performanceAPI.getScores();
-        if (performanceRes.data.Usta) {
-          setRanking(performanceRes.data.Usta.slice(0, 5));
-        }
-      } catch (perfError) {
-        console.log('Performance verileri yüklenemedi:', perfError);
-        setRanking([]);
-      }
-
-      // Günlük puanlar
-      if (user?._id) {
-        try {
-          const userPerformance = await performanceAPI.getUserPerformance(user._id);
-          const todayScore = userPerformance.data[0] || {};
-          setDailyScores(todayScore);
-        } catch (userPerfError) {
-          console.log('Kullanıcı performance verileri yüklenemedi:', userPerfError);
-          setDailyScores({});
-        }
-      }
+      setDashboardData({
+        myTasks: Array.isArray(myTasksRes.data) ? myTasksRes.data : [],
+        controlPending: controlPendingTasks,
+        dailyScores: Array.isArray(scoresRes.data?.performansVerileri)
+          ? scoresRes.data.performansVerileri
+          : [],
+        machineStatus: Array.isArray(machinesRes.data)
+          ? machinesRes.data.slice(0, 5)
+          : [],
+        summary: summaryRes.data || null,
+        ranking: Array.isArray(rankingRes.data?.siralamalar)
+          ? rankingRes.data.siralamalar
+          : [],
+      });
     } catch (error) {
-      console.error('Dashboard yükleme hatası:', error);
-      setError('Dashboard verileri yüklenirken hata oluştu');
+      console.error('Dashboard verisi yüklenirken hata:', error);
+      setError('Dashboard verisi yüklenirken hata oluştu');
     } finally {
       setLoading(false);
     }
   };
 
-  // Puan kategorileri
-  const scoreColors = {
-    ik_sablon: '#FF6B6B',
-    ik_devamsizlik: '#4ECDC4',
-    kalite_kontrol: '#45B7D1',
-    checklist: '#96CEB4',
-    is_bagli: '#FECA57',
-    kalip_degisim: '#9B59B6',
-  };
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
 
-  const scoreLabels = {
-    ik_sablon: 'İK Şablon',
-    ik_devamsizlik: 'Devamsızlık',
-    kalite_kontrol: 'Kalite Kontrol',
-    checklist: 'Checklist',
-    is_bagli: 'İşe Bağlı',
-    kalip_degisim: 'Kalıp Değişimi',
-  };
+  // Dashboard yetkisi kontrolü kaldırıldı - her rol kendi dashboard'una erişebilir
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '70vh',
-          background: 'linear-gradient(135deg, #2196f3 0%, #21cbf3 100%)',
-          borderRadius: 2,
-          m: 2,
-        }}
-      >
-        <Box sx={{ textAlign: 'center', color: 'white' }}>
-          <CircularProgress sx={{ color: 'white', mb: 2 }} size={60} />
-          <Typography variant="h5">Usta Dashboard Yükleniyor...</Typography>
+      <Container>
+        <Box sx={{ py: 4, textAlign: 'center' }}>
+          <LinearProgress sx={{ mb: 2 }} />
+          <Typography>Dashboard yükleniyor...</Typography>
         </Box>
-      </Box>
+      </Container>
     );
   }
 
-  if (error) {
-    return (
-      <Alert severity="error" sx={{ m: 2 }}>
-        {error}
-        <Button onClick={() => window.location.reload()} sx={{ ml: 2 }} variant="outlined">
-          Yenile
-        </Button>
-      </Alert>
-    );
-  }
+  const currentUserRanking = dashboardData.ranking.find(
+    r => r.kullanici.isCurrentUser,
+  );
+  const topRankings = dashboardData.ranking.slice(0, 5);
 
   return (
-    <Box sx={{ p: 3, background: '#f5f5f5', minHeight: '100vh' }}>
-      {/* Header */}
-      <Paper
-        sx={{
-          p: 3,
-          mb: 3,
-          background: 'linear-gradient(135deg, #2196f3 0%, #21cbf3 100%)',
-          borderRadius: 3,
-          color: 'white',
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box>
-            <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
-              Hoş Geldiniz, {user?.ad} {user?.soyad}! 👋
-            </Typography>
-            <Typography variant="h6" sx={{ opacity: 0.9 }}>
-              Usta Dashboard
-            </Typography>
-          </Box>
-          <BuildIcon sx={{ fontSize: 80, opacity: 0.7 }} />
-        </Box>
-      </Paper>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant='h4' component='h1' gutterBottom>
+          Usta Dashboard
+        </Typography>
+        <Typography variant='body1' color='text.secondary'>
+          Hoş geldiniz {user?.ad} {user?.soyad} - Usta seviye yönetim paneli
+        </Typography>
+      </Box>
 
-      {/* Summary Cards */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        {/* Bekleyen Görevlerim */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card
-            sx={{
-              background: 'linear-gradient(135deg, #1976d2 0%, #1976d2 100%)',
-              color: 'white',
-              borderRadius: 2,
-            }}
-          >
+      {error && (
+        <Alert severity='error' sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      <Grid container spacing={3}>
+        {/* Özet Kartları */}
+        <Grid item xs={12}>
+          <Grid container spacing={2}>
+            <Grid item xs={6} md={3}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <Avatar sx={{ bgcolor: 'primary.main', mx: 'auto', mb: 1 }}>
+                  <AssignmentIcon />
+                </Avatar>
+                <Typography variant='h6' fontWeight='bold'>
+                  {dashboardData.myTasks.length}
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  Aktif Görevlerim
+                </Typography>
+              </Card>
+            </Grid>
+
+            <Grid item xs={6} md={3}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <Avatar sx={{ bgcolor: 'warning.main', mx: 'auto', mb: 1 }}>
+                  <PendingIcon />
+                </Avatar>
+                <Typography variant='h6' fontWeight='bold'>
+                  {dashboardData.controlPending.length}
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  Kontrol Bekleyenler
+                </Typography>
+              </Card>
+            </Grid>
+
+            <Grid item xs={6} md={3}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <Avatar sx={{ bgcolor: 'success.main', mx: 'auto', mb: 1 }}>
+                  <TrophyIcon />
+                </Avatar>
+                <Typography variant='h6' fontWeight='bold'>
+                  {currentUserRanking?.sira || '-'}
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  Sıralamamda
+                </Typography>
+              </Card>
+            </Grid>
+
+            <Grid item xs={6} md={3}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <Avatar sx={{ bgcolor: 'info.main', mx: 'auto', mb: 1 }}>
+                  <StarIcon />
+                </Avatar>
+                <Typography variant='h6' fontWeight='bold'>
+                  {dashboardData.summary?.genelIstatistikler?.toplamPuan || 0}
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  Toplam Puanım
+                </Typography>
+              </Card>
+            </Grid>
+          </Grid>
+        </Grid>
+
+        {/* Görevlerim */}
+        <Grid item xs={12} md={4}>
+          <Card>
             <CardContent>
               <Box
                 sx={{
@@ -234,30 +224,64 @@ const UstaDashboard = () => {
                   mb: 2,
                 }}
               >
-                <AssignmentIcon sx={{ fontSize: 40 }} />
-                <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                  <CountUp end={myTasks.length} duration={1} />
+                <Typography
+                  variant='h6'
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                >
+                  <AssignmentIcon color='primary' />
+                  Aktif Görevlerim ({dashboardData.myTasks.length})
                 </Typography>
+                <Button
+                  size='small'
+                  onClick={() => navigate('/tasks')}
+                  variant='outlined'
+                >
+                  Tümünü Gör
+                </Button>
               </Box>
-              <Typography variant="h6" gutterBottom>
-                Bekleyen Görevlerim
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                Tamamlanması gereken görevler
-              </Typography>
+
+              {dashboardData.myTasks.length === 0 ? (
+                <Alert severity='info'>
+                  Şu anda aktif göreviniz bulunmamaktadır.
+                </Alert>
+              ) : (
+                <Stack spacing={2}>
+                  {dashboardData.myTasks.slice(0, 5).map((task, index) => (
+                    <Card key={index} variant='outlined' sx={{ p: 2 }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <Box>
+                          <Typography variant='subtitle2' fontWeight='bold'>
+                            {task.checklist?.ad || 'Görev'}
+                          </Typography>
+                          <Typography variant='body2' color='text.secondary'>
+                            {task.makina?.ad || 'Makina bilgisi yok'}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          label={task.durum || 'Bekliyor'}
+                          size='small'
+                          color={
+                            task.durum === 'tamamlandi' ? 'success' : 'warning'
+                          }
+                        />
+                      </Box>
+                    </Card>
+                  ))}
+                </Stack>
+              )}
             </CardContent>
           </Card>
         </Grid>
 
         {/* Kontrol Bekleyenler */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card
-            sx={{
-              background: 'linear-gradient(135deg, #f57c00 0%, #f57c00 100%)',
-              color: 'white',
-              borderRadius: 2,
-            }}
-          >
+        <Grid item xs={12} md={4}>
+          <Card>
             <CardContent>
               <Box
                 sx={{
@@ -267,136 +291,33 @@ const UstaDashboard = () => {
                   mb: 2,
                 }}
               >
-                <ReviewIcon sx={{ fontSize: 40 }} />
-                <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                  <CountUp end={controlTasks.length} duration={1} />
+                <Typography
+                  variant='h6'
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                >
+                  <PendingIcon color='warning' />
+                  Kontrol Bekleyenler ({dashboardData.controlPending.length})
                 </Typography>
+                <Button
+                  size='small'
+                  onClick={() => navigate('/control-pending')}
+                  variant='outlined'
+                >
+                  Kontrol Et
+                </Button>
               </Box>
-              <Typography variant="h6" gutterBottom>
-                Kontrol Bekleyenler
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                Puanlanması gereken görevler
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
 
-        {/* Günün Ortalama Puanım */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card
-            sx={{
-              background: 'linear-gradient(135deg, #4caf50 0%, #4caf50 100%)',
-              color: 'white',
-              borderRadius: 2,
-            }}
-          >
-            <CardContent>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  mb: 2,
-                }}
-              >
-                <StarIcon sx={{ fontSize: 40 }} />
-                <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                  <CountUp end={dailyScores.toplamPuan || 85} duration={1} />
-                </Typography>
-              </Box>
-              <Typography variant="h6" gutterBottom>
-                Günlük Ortalama
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                Bugünkü performans puanı
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Sıralamdaki Pozisyon */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card
-            sx={{
-              background: 'linear-gradient(135deg, #9c27b0 0%, #9c27b0 100%)',
-              color: 'white',
-              borderRadius: 2,
-            }}
-          >
-            <CardContent>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  mb: 2,
-                }}
-              >
-                <TrophyIcon sx={{ fontSize: 40 }} />
-                <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                  <CountUp
-                    end={ranking.findIndex(r => r.user._id === user?._id) + 1 || 0}
-                    duration={1}
-                  />
-                </Typography>
-              </Box>
-              <Typography variant="h6" gutterBottom>
-                Sıralama
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                Usta sıralamasındaki pozisyon
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      <Grid container spacing={3}>
-        {/* Sol Kolon */}
-        <Grid size={{ xs: 12, lg: 8 }}>
-          {/* Bekleyen Görevlerim */}
-          <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <AssignmentIcon sx={{ fontSize: 30, color: '#1976d2', mr: 2 }} />
-              <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                Bekleyen Görevlerim ({myTasks.length})
-              </Typography>
-            </Box>
-
-            {myTasks.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <CheckCircleIcon sx={{ fontSize: 60, color: '#4caf50', mb: 2 }} />
-                <Typography variant="h6" color="text.secondary">
-                  Tebrikler! Tüm görevleriniz tamamlandı.
-                </Typography>
-              </Box>
-            ) : (
-              <Grid container spacing={2}>
-                {myTasks.map(task => (
-                  <Grid size={{ xs: 12, md: 6 }} key={task._id}>
-                    <Card
-                      sx={{
-                        borderRadius: 2,
-                        transition: 'all 0.3s',
-                        '&:hover': {
-                          transform: 'translateY(-4px)',
-                          boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
-                        },
-                      }}
-                    >
-                      <CardContent sx={{ p: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                          <PendingIcon sx={{ color: '#ff9800', mr: 1 }} />
-                          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                            {task.checklist?.ad || 'Görev'}
-                          </Typography>
-                        </Box>
-
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          {task.checklist?.aciklama || 'Görev açıklaması'}
-                        </Typography>
-
+              {dashboardData.controlPending.length === 0 ? (
+                <Alert severity='success'>
+                  <CheckCircleIcon sx={{ mr: 1 }} />
+                  Tüm görevler kontrol edilmiş!
+                </Alert>
+              ) : (
+                <Stack spacing={2}>
+                  {dashboardData.controlPending
+                    .slice(0, 5)
+                    .map((task, index) => (
+                      <Card key={index} variant='outlined' sx={{ p: 2 }}>
                         <Box
                           sx={{
                             display: 'flex',
@@ -404,304 +325,433 @@ const UstaDashboard = () => {
                             justifyContent: 'space-between',
                           }}
                         >
-                          <Chip
-                            label={task.durum === 'beklemede' ? 'Beklemede' : 'Devam Ediyor'}
-                            color={task.durum === 'beklemede' ? 'warning' : 'info'}
-                            size="small"
-                          />
-                          <Button
-                            variant="contained"
-                            size="small"
-                            onClick={() => navigate(`/tasks/${task._id}`)}
-                          >
-                            Başla
-                          </Button>
+                          <Box>
+                            <Typography variant='subtitle2' fontWeight='bold'>
+                              {task.kullanici?.ad} {task.kullanici?.soyad}
+                            </Typography>
+                            <Typography variant='body2' color='text.secondary'>
+                              {task.checklist?.ad || 'Görev'}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ textAlign: 'right' }}>
+                            <Chip
+                              label='Bekliyor'
+                              size='small'
+                              color='warning'
+                            />
+                            <Typography
+                              variant='caption'
+                              display='block'
+                              color='text.secondary'
+                            >
+                              <AccessTimeIcon sx={{ fontSize: 12, mr: 0.5 }} />
+                              {task.tamamlanmaTarihi
+                                ? new Date(
+                                    task.tamamlanmaTarihi,
+                                  ).toLocaleDateString('tr-TR')
+                                : 'Tarih yok'}
+                            </Typography>
+                          </Box>
                         </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            )}
-
-            <Box sx={{ textAlign: 'center', mt: 3 }}>
-              <Button
-                variant="outlined"
-                size="large"
-                onClick={() => navigate('/tasks')}
-                startIcon={<AssignmentIcon />}
-              >
-                Tüm Görevlerim
-              </Button>
-            </Box>
-          </Paper>
-
-          {/* Kontrol Bekleyenler */}
-          <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <Badge badgeContent={controlTasks.length} color="error">
-                <ReviewIcon sx={{ fontSize: 30, color: '#f57c00', mr: 2 }} />
-              </Badge>
-              <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                Kontrol Bekleyen Görevler ({controlTasks.length})
-              </Typography>
-            </Box>
-
-            {controlTasks.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <CheckCircleIcon sx={{ fontSize: 60, color: '#4caf50', mb: 2 }} />
-                <Typography variant="h6" color="text.secondary">
-                  Kontrol bekleyen görev bulunmuyor.
-                </Typography>
-              </Box>
-            ) : (
-              <Grid container spacing={2}>
-                {controlTasks.map(task => (
-                  <Grid size={{ xs: 12, md: 6 }} key={task._id}>
-                    <Card
-                      sx={{
-                        borderRadius: 2,
-                        border: '2px solid #ff9800',
-                        transition: 'all 0.3s',
-                        '&:hover': {
-                          transform: 'translateY(-4px)',
-                          boxShadow: '0 8px 25px rgba(255,152,0,0.3)',
-                        },
-                      }}
-                    >
-                      <CardContent sx={{ p: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                          <ScheduleIcon sx={{ color: '#ff9800', mr: 1 }} />
-                          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                            {task.checklist?.ad || 'Kontrol Görevi'}
-                          </Typography>
-                        </Box>
-
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          Kullanıcı: {task.kullanici?.ad} {task.kullanici?.soyad}
-                        </Typography>
-
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          Makina: {task.makina?.makinaNo || task.makina?.ad}
-                        </Typography>
-
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                          }}
-                        >
-                          <Chip
-                            label="Puanlama Bekliyor"
-                            color="warning"
-                            size="small"
-                            icon={<AssessmentIcon />}
-                          />
-                          <Button
-                            variant="contained"
-                            size="small"
-                            color="warning"
-                            onClick={() => navigate('/control-pending')}
-                          >
-                            Puanla
-                          </Button>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            )}
-
-            <Box sx={{ textAlign: 'center', mt: 3 }}>
-              <Button
-                variant="outlined"
-                size="large"
-                color="warning"
-                onClick={() => navigate('/control-pending')}
-                startIcon={<ReviewIcon />}
-              >
-                Tüm Kontroller
-              </Button>
-            </Box>
-          </Paper>
-
-          {/* Günlük Puanlarım */}
-          <Paper sx={{ p: 3, borderRadius: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <StarIcon sx={{ fontSize: 30, color: '#ffa726', mr: 2 }} />
-              <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                Bugünkü Puanlarım
-              </Typography>
-            </Box>
-
-            <Grid container spacing={2}>
-              {Object.entries(scoreColors).map(([key, color]) => {
-                const score = dailyScores.scores?.[key] || Math.floor(Math.random() * 30) + 70;
-                return (
-                  <Grid size={{ xs: 6, md: 4 }} key={key}>
-                    <Card
-                      sx={{
-                        p: 2,
-                        textAlign: 'center',
-                        background: `linear-gradient(135deg, ${color}20, ${color}10)`,
-                        border: `2px solid ${color}40`,
-                      }}
-                    >
-                      <Typography variant="h4" sx={{ fontWeight: 'bold', color }}>
-                        <CountUp end={score} duration={1.5} />
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                        {scoreLabels[key]}
-                      </Typography>
-                      <LinearProgress
-                        variant="determinate"
-                        value={(score / 100) * 100}
-                        sx={{
-                          mt: 1,
-                          height: 6,
-                          borderRadius: 3,
-                          backgroundColor: `${color}30`,
-                          '& .MuiLinearProgress-bar': {
-                            backgroundColor: color,
-                          },
-                        }}
-                      />
-                    </Card>
-                  </Grid>
-                );
-              })}
-            </Grid>
-          </Paper>
+                      </Card>
+                    ))}
+                </Stack>
+              )}
+            </CardContent>
+          </Card>
         </Grid>
 
-        {/* Sağ Kolon - Usta Sıralaması */}
-        <Grid size={{ xs: 12, lg: 4 }}>
-          <Paper sx={{ p: 3, borderRadius: 2, position: 'sticky', top: 20 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <TrophyIcon sx={{ fontSize: 30, color: '#f57c00', mr: 2 }} />
-              <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                Usta Sıralaması
-              </Typography>
-            </Box>
+        {/* Sıralama */}
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  mb: 2,
+                }}
+              >
+                <Typography
+                  variant='h6'
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                >
+                  <TrophyIcon color='warning' />
+                  Puan Sıralaması
+                </Typography>
+                <Button
+                  size='small'
+                  onClick={() => navigate('/my-activity')}
+                  variant='outlined'
+                >
+                  Detaylar
+                </Button>
+              </Box>
 
-            {ranking.length === 0 ? (
-              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-                Sıralama bilgisi yükleniyor...
-              </Typography>
-            ) : (
-              <Box>
-                {ranking.map((person, index) => {
-                  const isMe = person.user._id === user?._id;
-                  return (
+              {topRankings.length === 0 ? (
+                <Alert severity='info'>
+                  Henüz sıralama verisi bulunmamaktadır.
+                </Alert>
+              ) : (
+                <>
+                  {/* Benim Durumum */}
+                  {currentUserRanking && (
                     <Card
-                      key={person.user._id}
+                      variant='outlined'
                       sx={{
                         mb: 2,
-                        p: 2,
-                        background: isMe
-                          ? 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)'
-                          : index === 0
-                            ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)'
-                            : index === 1
-                              ? 'linear-gradient(135deg, #C0C0C0 0%, #808080 100%)'
-                              : index === 2
-                                ? 'linear-gradient(135deg, #CD7F32 0%, #8B4513 100%)'
-                                : 'white',
-                        color: isMe || index <= 2 ? 'white' : 'inherit',
-                        border: isMe ? '2px solid #4caf50' : 'none',
+                        bgcolor: 'primary.50',
+                        border: '2px solid',
+                        borderColor: 'primary.main',
                       }}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                         <Box
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center',
-                            width: 40,
-                            height: 40,
-                            borderRadius: '50%',
-                            backgroundColor:
-                              isMe || index <= 2 ? 'rgba(255,255,255,0.2)' : '#f5f5f5',
-                            mr: 2,
+                            justifyContent: 'space-between',
                           }}
                         >
-                          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                            #{index + 1}
-                          </Typography>
-                        </Box>
-
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                            {person.user.ad} {person.user.soyad}
-                            {isMe && ' (Sen)'}
-                          </Typography>
-                          <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                            {person.totalScore} puan
-                          </Typography>
-                        </Box>
-
-                        {index <= 2 && (
-                          <TrophyIcon
+                          <Box
                             sx={{
-                              fontSize: index === 0 ? 30 : 25,
-                              color: 'rgba(255,255,255,0.9)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
                             }}
+                          >
+                            <Avatar
+                              sx={{
+                                bgcolor: 'primary.main',
+                                width: 32,
+                                height: 32,
+                              }}
+                            >
+                              <Typography variant='subtitle2' fontWeight='bold'>
+                                {currentUserRanking.sira}
+                              </Typography>
+                            </Avatar>
+                            <Box>
+                              <Typography variant='subtitle2' fontWeight='bold'>
+                                Siz ({currentUserRanking.kullanici.ad})
+                              </Typography>
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                              >
+                                {currentUserRanking.toplamGorev} görev
+                              </Typography>
+                            </Box>
+                          </Box>
+                          <Box sx={{ textAlign: 'right' }}>
+                            <Typography
+                              variant='h6'
+                              fontWeight='bold'
+                              color='primary.main'
+                            >
+                              {currentUserRanking.toplamPuan}
+                            </Typography>
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                            >
+                              puan
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  <List dense>
+                    {topRankings.slice(0, 3).map((ranking, index) => (
+                      <React.Fragment key={ranking.kullanici.id}>
+                        <ListItem>
+                          <ListItemAvatar>
+                            <Avatar
+                              sx={{
+                                bgcolor:
+                                  index < 3 ? 'warning.main' : 'grey.400',
+                                color: 'white',
+                                width: 32,
+                                height: 32,
+                              }}
+                            >
+                              <Typography variant='caption' fontWeight='bold'>
+                                {ranking.sira}
+                              </Typography>
+                            </Avatar>
+                          </ListItemAvatar>
+                          <ListItemText
+                            primary={
+                              <Typography variant='subtitle2' fontWeight='bold'>
+                                {ranking.kullanici.ad} {ranking.kullanici.soyad}
+                              </Typography>
+                            }
+                            secondary={`${ranking.toplamGorev} görev`}
                           />
-                        )}
+                          <Typography variant='subtitle2' fontWeight='bold'>
+                            {ranking.toplamPuan}
+                          </Typography>
+                        </ListItem>
+                        {index < 2 && <Divider />}
+                      </React.Fragment>
+                    ))}
+                  </List>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Makina Durumu */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  mb: 2,
+                }}
+              >
+                <Typography
+                  variant='h6'
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                >
+                  <EngineeringIcon color='primary' />
+                  Makina Durumu ({dashboardData.machineStatus.length})
+                </Typography>
+                <Button
+                  size='small'
+                  onClick={() => navigate('/inventory')}
+                  variant='outlined'
+                >
+                  Tümünü Gör
+                </Button>
+              </Box>
+
+              {dashboardData.machineStatus.length === 0 ? (
+                <Alert severity='info'>
+                  Makina durumu bilgisi yüklenemedi.
+                </Alert>
+              ) : (
+                <Stack spacing={2}>
+                  {dashboardData.machineStatus.map((machine, index) => (
+                    <Card key={index} variant='outlined' sx={{ p: 2 }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <Box>
+                          <Typography variant='subtitle2' fontWeight='bold'>
+                            {machine.ad || machine.envanterKodu || 'Makina'}
+                          </Typography>
+                          <Typography variant='body2' color='text.secondary'>
+                            {machine.makinaNo ||
+                              machine.envanterKodu ||
+                              'Kod yok'}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          label={machine.durum || 'Aktif'}
+                          size='small'
+                          color={
+                            machine.durum === 'aktif' || !machine.durum
+                              ? 'success'
+                              : 'warning'
+                          }
+                        />
                       </Box>
                     </Card>
-                  );
-                })}
-              </Box>
-            )}
+                  ))}
+                </Stack>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
 
-            <Button
-              variant="outlined"
-              fullWidth
-              sx={{ mt: 2 }}
-              onClick={() => navigate('/performance')}
-              startIcon={<SpeedIcon />}
-            >
-              Detaylı Performans
-            </Button>
-          </Paper>
+        {/* Günlük Performans */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  mb: 2,
+                }}
+              >
+                <Typography
+                  variant='h6'
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                >
+                  <TrendingUpIcon color='success' />
+                  Son Performans
+                </Typography>
+                <Button
+                  size='small'
+                  onClick={() => navigate('/my-activity')}
+                  variant='outlined'
+                >
+                  Detaylar
+                </Button>
+              </Box>
+
+              {dashboardData.dailyScores.length === 0 ? (
+                <Alert severity='info'>
+                  Henüz performans verisi bulunmamaktadır.
+                </Alert>
+              ) : (
+                <Stack spacing={2}>
+                  {dashboardData.dailyScores.slice(0, 5).map((score, index) => (
+                    <Card key={index} variant='outlined' sx={{ p: 2 }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <Box>
+                          <Typography variant='subtitle2' fontWeight='bold'>
+                            {score.tarih
+                              ? new Date(score.tarih).toLocaleDateString(
+                                  'tr-TR',
+                                )
+                              : 'Tarih yok'}
+                          </Typography>
+                          <Typography variant='body2' color='text.secondary'>
+                            {score.gorevSayisi || 0} görev tamamlandı
+                          </Typography>
+                        </Box>
+                        <Box sx={{ textAlign: 'right' }}>
+                          <Typography
+                            variant='h6'
+                            fontWeight='bold'
+                            color='primary.main'
+                          >
+                            {score.toplamPuan || 0}
+                          </Typography>
+                          <Typography variant='caption' color='text.secondary'>
+                            puan
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Card>
+                  ))}
+                </Stack>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Hızlı Erişim */}
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <Typography variant='h6' sx={{ mb: 3 }}>
+                Hızlı Erişim
+              </Typography>
+
+              <Grid container spacing={2}>
+                {hasModulePermission('Görev Yönetimi') && (
+                  <Grid item xs={6} sm={4} md={2}>
+                    <Button
+                      fullWidth
+                      variant='outlined'
+                      onClick={() => navigate('/tasks')}
+                      sx={{ p: 2, flexDirection: 'column', height: 80 }}
+                    >
+                      <AssignmentIcon sx={{ mb: 1 }} />
+                      <Typography variant='caption'>Görevlerim</Typography>
+                    </Button>
+                  </Grid>
+                )}
+
+                {hasModulePermission('Kontrol Bekleyenler') && (
+                  <Grid item xs={6} sm={4} md={2}>
+                    <Button
+                      fullWidth
+                      variant='outlined'
+                      onClick={() => navigate('/control-pending')}
+                      sx={{ p: 2, flexDirection: 'column', height: 80 }}
+                    >
+                      <PendingIcon sx={{ mb: 1 }} />
+                      <Typography variant='caption'>Kontrol Et</Typography>
+                    </Button>
+                  </Grid>
+                )}
+
+                {hasModulePermission('Yaptım') && (
+                  <Grid item xs={6} sm={4} md={2}>
+                    <Button
+                      fullWidth
+                      variant='outlined'
+                      onClick={() => navigate('/worktasks')}
+                      sx={{ p: 2, flexDirection: 'column', height: 80 }}
+                    >
+                      <EngineeringIcon sx={{ mb: 1 }} />
+                      <Typography variant='caption'>İş Görevleri</Typography>
+                    </Button>
+                  </Grid>
+                )}
+
+                {hasModulePermission('İnsan Kaynakları') && (
+                  <Grid item xs={6} sm={4} md={2}>
+                    <Button
+                      fullWidth
+                      variant='outlined'
+                      onClick={() => navigate('/hr')}
+                      sx={{ p: 2, flexDirection: 'column', height: 80 }}
+                    >
+                      <StarIcon sx={{ mb: 1 }} />
+                      <Typography variant='caption'>
+                        İnsan Kaynakları
+                      </Typography>
+                    </Button>
+                  </Grid>
+                )}
+
+                {hasModulePermission('Performans') && (
+                  <Grid item xs={6} sm={4} md={2}>
+                    <Button
+                      fullWidth
+                      variant='outlined'
+                      onClick={() => navigate('/my-activity')}
+                      sx={{ p: 2, flexDirection: 'column', height: 80 }}
+                    >
+                      <TrendingUpIcon sx={{ mb: 1 }} />
+                      <Typography variant='caption'>Performansım</Typography>
+                    </Button>
+                  </Grid>
+                )}
+
+                {hasModulePermission('Envanter Yönetimi') && (
+                  <Grid item xs={6} sm={4} md={2}>
+                    <Button
+                      fullWidth
+                      variant='outlined'
+                      onClick={() => navigate('/inventory')}
+                      sx={{ p: 2, flexDirection: 'column', height: 80 }}
+                    >
+                      <EngineeringIcon sx={{ mb: 1 }} />
+                      <Typography variant='caption'>Envanter</Typography>
+                    </Button>
+                  </Grid>
+                )}
+              </Grid>
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
-
-      {/* Floating Action Buttons */}
-      <Tooltip title="Yeni Görev">
-        <Fab
-          color="primary"
-          sx={{
-            position: 'fixed',
-            bottom: 94,
-            right: 24,
-            background: 'linear-gradient(135deg, #2196f3 0%, #21cbf3 100%)',
-          }}
-          onClick={() => navigate('/tasks')}
-        >
-          <AddIcon />
-        </Fab>
-      </Tooltip>
-
-      <Tooltip title="Kontrol Bekleyenler">
-        <Fab
-          color="warning"
-          sx={{
-            position: 'fixed',
-            bottom: 24,
-            right: 24,
-          }}
-          onClick={() => navigate('/control-pending')}
-        >
-          <Badge badgeContent={controlTasks.length} color="error">
-            <ReviewIcon />
-          </Badge>
-        </Fab>
-      </Tooltip>
-    </Box>
+    </Container>
   );
 };
 

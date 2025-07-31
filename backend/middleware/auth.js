@@ -4,10 +4,18 @@ const User = require('../models/User');
 // Token doğrulama middleware'i
 const auth = async (req, res, next) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    // Token'ı hem Authorization hem x-auth-token header'larından al
+    let token = req.header('Authorization')?.replace('Bearer ', '');
+
+    // Eğer Authorization header'ı yoksa x-auth-token'ı kontrol et
+    if (!token) {
+      token = req.header('x-auth-token');
+    }
 
     if (!token) {
-      return res.status(401).json({ message: 'Token bulunamadı, erişim reddedildi' });
+      return res
+        .status(401)
+        .json({ message: 'Token bulunamadı, erişim reddedildi' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -39,8 +47,8 @@ const auth = async (req, res, next) => {
   }
 };
 
-// Modül yetkisi kontrolü - Modern modulePermissions yapısı ile
-const checkModulePermission = (moduleName, permission = 'gorebilir') => {
+// Modül yetkisi kontrolü - Modern modulePermissions yapısı ile (Array desteği)
+const checkModulePermission = (moduleNames, permission = 'gorebilir') => {
   return (req, res, next) => {
     try {
       const user = req.user;
@@ -51,41 +59,59 @@ const checkModulePermission = (moduleName, permission = 'gorebilir') => {
         return next();
       }
 
+      // moduleNames'i array'e çevir (string veya array olabilir)
+      const moduleNamesArray = Array.isArray(moduleNames)
+        ? moduleNames
+        : [moduleNames];
+
       // Kullanıcının rollerini kontrol et
       let hasPermission = false;
 
       for (const rol of user.roller) {
-        // Modern modulePermissions yapısını kontrol et
-        if (rol.modulePermissions && Array.isArray(rol.modulePermissions)) {
-          const modulePermission = rol.modulePermissions.find(
-            perm => perm.moduleName === moduleName,
-          );
+        // Her modül adı için kontrol et
+        for (const moduleName of moduleNamesArray) {
+          // Modern modulePermissions yapısını kontrol et
+          if (rol.modulePermissions && Array.isArray(rol.modulePermissions)) {
+            const modulePermission = rol.modulePermissions.find(
+              perm => perm.moduleName === moduleName,
+            );
 
-          if (modulePermission) {
-            if (permission === 'gorebilir' && modulePermission.gorebilir) {
-              hasPermission = true;
-              break;
-            }
-            if (permission === 'duzenleyebilir' && modulePermission.duzenleyebilir) {
-              hasPermission = true;
-              break;
+            if (modulePermission) {
+              if (permission === 'gorebilir' && modulePermission.gorebilir) {
+                hasPermission = true;
+                break;
+              }
+              if (
+                permission === 'duzenleyebilir' &&
+                modulePermission.duzenleyebilir
+              ) {
+                hasPermission = true;
+                break;
+              }
             }
           }
-        }
 
-        // Eski moduller yapısını da destekle (backward compatibility)
-        if (rol.moduller && Array.isArray(rol.moduller)) {
-          for (const modulYetkisi of rol.moduller) {
-            if (modulYetkisi.modul && modulYetkisi.modul.ad === moduleName) {
-              if (permission === 'gorebilir' && modulYetkisi.erisebilir) {
-                hasPermission = true;
-                break;
-              }
-              if (permission === 'duzenleyebilir' && modulYetkisi.duzenleyebilir) {
-                hasPermission = true;
-                break;
+          // Eski moduller yapısını da destekle (backward compatibility)
+          if (rol.moduller && Array.isArray(rol.moduller)) {
+            for (const modulYetkisi of rol.moduller) {
+              if (modulYetkisi.modul && modulYetkisi.modul.ad === moduleName) {
+                if (permission === 'gorebilir' && modulYetkisi.erisebilir) {
+                  hasPermission = true;
+                  break;
+                }
+                if (
+                  permission === 'duzenleyebilir' &&
+                  modulYetkisi.duzenleyebilir
+                ) {
+                  hasPermission = true;
+                  break;
+                }
               }
             }
+          }
+
+          if (hasPermission) {
+            break;
           }
         }
 
@@ -95,8 +121,9 @@ const checkModulePermission = (moduleName, permission = 'gorebilir') => {
       }
 
       if (!hasPermission) {
+        const moduleNamesStr = moduleNamesArray.join(' veya ');
         return res.status(403).json({
-          message: `${moduleName} modülü için ${permission} yetkisi bulunmuyor`,
+          message: `${moduleNamesStr} modülü için ${permission} yetkisi bulunmuyor`,
         });
       }
 
@@ -149,16 +176,31 @@ const checkChecklistPermission = (permission = 'gorebilir') => {
         return res.status(404).json({ message: 'Görev bulunamadı' });
       }
 
-      if (!task.kullanici || !task.kullanici.roller || task.kullanici.roller.length === 0) {
-        return res.status(400).json({ message: 'Görev sahibinin rolü bulunamadı' });
+      if (
+        !task.kullanici ||
+        !task.kullanici.roller ||
+        task.kullanici.roller.length === 0
+      ) {
+        return res
+          .status(400)
+          .json({ message: 'Görev sahibinin rolü bulunamadı' });
       }
 
-      const currentUser = await User.findById(req.user._id).populate('roller', 'ad _id');
-      if (!currentUser || !currentUser.roller || currentUser.roller.length === 0) {
+      const currentUser = await User.findById(req.user._id).populate(
+        'roller',
+        'ad _id',
+      );
+      if (
+        !currentUser ||
+        !currentUser.roller ||
+        currentUser.roller.length === 0
+      ) {
         return res.status(400).json({ message: 'Kullanıcı rolü bulunamadı' });
       }
 
-      const taskOwnerRoleIds = task.kullanici.roller.map(role => role._id.toString());
+      const taskOwnerRoleIds = task.kullanici.roller.map(role =>
+        role._id.toString(),
+      );
 
       // Tüm rolleri paralel olarak kontrol et
       const roleChecks = await Promise.all(
@@ -172,7 +214,10 @@ const checkChecklistPermission = (permission = 'gorebilir') => {
           }
 
           return fullRole.checklistYetkileri.some(yetki => {
-            if (!yetki.hedefRol || !taskOwnerRoleIds.includes(yetki.hedefRol._id.toString())) {
+            if (
+              !yetki.hedefRol ||
+              !taskOwnerRoleIds.includes(yetki.hedefRol._id.toString())
+            ) {
               return false;
             }
 
@@ -180,7 +225,14 @@ const checkChecklistPermission = (permission = 'gorebilir') => {
               return true;
             }
 
-            if (permission === 'puanlayabilir' && (yetki.puanlayabilir || yetki.onaylayabilir)) {
+            if (
+              permission === 'puanlayabilir' &&
+              (yetki.puanlayabilir || yetki.onaylayabilir)
+            ) {
+              return true;
+            }
+
+            if (permission === 'onaylayabilir' && yetki.onaylayabilir) {
               return true;
             }
 

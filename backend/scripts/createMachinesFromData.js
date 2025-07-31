@@ -98,7 +98,9 @@ async function createMachinesFromData() {
       aktif: true,
     }).select('envanterKodu ad durum lokasyon');
 
-    console.log(`\n📋 Envanterdeki makinalar (${inventoryMachines.length} adet):`);
+    console.log(
+      `\n📋 Envanterdeki makinalar (${inventoryMachines.length} adet):`,
+    );
     inventoryMachines.forEach(machine => {
       console.log(
         `  - ${machine.envanterKodu} | ${machine.ad} | ${machine.durum} | ${machine.lokasyon}`,

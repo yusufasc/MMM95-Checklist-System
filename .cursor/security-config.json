@@ -1,0 +1,57 @@
+{
+  "security": {
+    "allowedCommands": [
+      "npm",
+      "node",
+      "npx",
+      "git",
+      "mongodb",
+      "eslint",
+      "prettier"
+    ],
+    "blockedPaths": [
+      "C:\\Windows\\System32",
+      "C:\\Program Files",
+      "%USERPROFILE%\\AppData"
+    ],
+    "fileExtensionRestrictions": {
+      "readOnly": [".exe", ".msi", ".bat", ".ps1"],
+      "allowed": [
+        ".js",
+        ".ts",
+        ".jsx",
+        ".tsx",
+        ".json",
+        ".md",
+        ".css",
+        ".scss",
+        ".html"
+      ]
+    },
+    "apiSafetyLimits": {
+      "maxFileSize": "10MB",
+      "maxApiCallsPerMinute": 100,
+      "timeoutMs": 30000
+    }
+  },
+  "promptDrivenDevelopment": {
+    "autoBackup": true,
+    "backupInterval": "15min",
+    "maxUndoSteps": 50,
+    "safeMode": true,
+    "requireConfirmation": ["delete", "drop", "remove", "destroy"]
+  },
+  "environmentValidation": {
+    "requiredTools": ["node", "npm", "git", "mongodb"],
+    "requiredExtensions": [
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "mongodb.mongodb-vscode"
+    ],
+    "healthChecks": {
+      "database": "mongodb://localhost:27017/mmm-checklist",
+      "backend": "http://localhost:3001/health",
+      "frontend": "http://localhost:3000"
+    }
+  }
+}

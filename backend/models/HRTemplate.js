@@ -44,6 +44,13 @@ const hrTemplateSchema = new mongoose.Schema({
       ref: 'Role',
     },
   ],
+  // Kontrol puanı - Bu şablonu puanlayan kişiye verilecek puan
+  kontrolPuani: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100,
+  },
   aktif: {
     type: Boolean,
     default: true,

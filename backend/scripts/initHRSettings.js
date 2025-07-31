@@ -62,7 +62,9 @@ async function initHRSettings() {
     }
 
     // İK rolü varsa ona da yetki ver
-    const hrRole = roles.find(r => r.ad.includes('İnsan Kaynakları') || r.ad.includes('İK'));
+    const hrRole = roles.find(
+      r => r.ad.includes('İnsan Kaynakları') || r.ad.includes('İK'),
+    );
     if (hrRole) {
       const hrYetkisi = settings.rolYetkileri.find(
         ry => ry.rol.toString() === hrRole._id.toString(),
@@ -73,7 +75,9 @@ async function initHRSettings() {
           rol: hrRole._id,
           yetkiler: {
             kullaniciAcabilir: true,
-            acabildigiRoller: roles.filter(r => r.ad !== 'Admin').map(r => r._id),
+            acabildigiRoller: roles
+              .filter(r => r.ad !== 'Admin')
+              .map(r => r._id),
             kullaniciSilebilir: false,
             silebildigiRoller: [],
             puanlamaYapabilir: true,
@@ -106,7 +110,11 @@ async function initHRSettings() {
     console.log('Mesai Puanlama:', settings.mesaiPuanlama);
     console.log('Devamsızlık Puanlama:', settings.devamsizlikPuanlama);
     console.log('Rol Yetkileri:', settings.rolYetkileri.length, 'rol');
-    console.log('Modül Erişim Yetkileri:', settings.modulErisimYetkileri.length, 'kayıt');
+    console.log(
+      'Modül Erişim Yetkileri:',
+      settings.modulErisimYetkileri.length,
+      'kayıt',
+    );
   } catch (error) {
     console.error('❌ İK ayarları başlatma hatası:', error);
   } finally {

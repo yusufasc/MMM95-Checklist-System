@@ -6,7 +6,9 @@ require('dotenv').config();
 const addMissingModule = async () => {
   try {
     // MongoDB'ye bağlan
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mmm-checklist');
+    await mongoose.connect(
+      process.env.MONGODB_URI || 'mongodb://localhost:27017/mmm-checklist',
+    );
     console.log('✅ MongoDB bağlantısı kuruldu');
 
     // 1. "Kişisel Aktivite" modülünü oluştur/güncelle
@@ -23,7 +25,10 @@ const addMissingModule = async () => {
       { upsert: true, new: true },
     );
 
-    console.log('✅ "Kişisel Aktivite" modülü eklendi/güncellendi:', kisiselAktiviteModule._id);
+    console.log(
+      '✅ "Kişisel Aktivite" modülü eklendi/güncellendi:',
+      kisiselAktiviteModule._id,
+    );
 
     // 2. Tüm rolleri getir
     const roles = await Role.find();
@@ -46,7 +51,9 @@ const addMissingModule = async () => {
         await role.save();
         console.log(`✅ ${role.ad} rolüne "Kişisel Aktivite" yetkisi eklendi`);
       } else {
-        console.log(`⚠️ ${role.ad} rolünde "Kişisel Aktivite" yetkisi zaten mevcut`);
+        console.log(
+          `⚠️ ${role.ad} rolünde "Kişisel Aktivite" yetkisi zaten mevcut`,
+        );
       }
     }
 
@@ -55,7 +62,9 @@ const addMissingModule = async () => {
     console.log('📊 Sonuçlar:');
     console.log('- "Kişisel Aktivite" modülü eklendi');
     console.log('- Tüm rollere görme yetkisi verildi');
-    console.log('- http://localhost:3000/my-activity artık rol yönetiminde görünecek');
+    console.log(
+      '- http://localhost:3000/my-activity artık rol yönetiminde görünecek',
+    );
   } catch (error) {
     console.error('❌ Hata:', error.message);
   } finally {

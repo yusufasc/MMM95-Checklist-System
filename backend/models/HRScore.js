@@ -28,8 +28,22 @@ const hrScoreSchema = new mongoose.Schema({
         required: true,
       },
       madde: {
-        baslik: String,
         puan: Number,
+        maksimumPuan: Number,
+        detaylar: [
+          {
+            maddeId: mongoose.Schema.Types.ObjectId,
+            baslik: String,
+            puan: Number,
+            maksimumPuan: Number,
+            aciklama: String,
+          },
+        ],
+      },
+      notlar: String,
+      degerlendiren: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
       },
       periyot: {
         type: String,
@@ -131,7 +145,10 @@ hrScoreSchema.virtual('toplamPuanlar').get(function () {
     (total, item) => total + (item.madde.puan || 0),
     0,
   );
-  const mesaiPuani = this.mesaiKayitlari.reduce((total, item) => total + (item.puan || 0), 0);
+  const mesaiPuani = this.mesaiKayitlari.reduce(
+    (total, item) => total + (item.puan || 0),
+    0,
+  );
   const devamsizlikPuani = this.devamsizlikKayitlari.reduce(
     (total, item) => total + (item.puan || 0),
     0,
@@ -146,7 +163,8 @@ hrScoreSchema.virtual('toplamPuanlar').get(function () {
     mesaiPuani,
     devamsizlikPuani,
     digerModulPuani,
-    genelToplam: checklistPuani + mesaiPuani + devamsizlikPuani + digerModulPuani,
+    genelToplam:
+      checklistPuani + mesaiPuani + devamsizlikPuani + digerModulPuani,
   };
 });
 
@@ -161,7 +179,10 @@ hrScoreSchema.pre('save', function (next) {
 });
 
 // Compound index for unique user-period combination
-hrScoreSchema.index({ kullanici: 1, 'donem.yil': 1, 'donem.ay': 1 }, { unique: true });
+hrScoreSchema.index(
+  { kullanici: 1, 'donem.yil': 1, 'donem.ay': 1 },
+  { unique: true },
+);
 
 // Index for queries
 hrScoreSchema.index({ 'donem.yil': 1, 'donem.ay': 1 });

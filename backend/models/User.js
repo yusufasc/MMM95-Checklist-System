@@ -35,7 +35,7 @@ const UserSchema = new mongoose.Schema({
   secilenMakinalar: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Machine',
+      ref: 'InventoryItem',
     },
   ],
   durum: {

@@ -19,12 +19,17 @@ mongoose
   .then(async () => {
     console.log('✅ MongoDB bağlandı');
 
-    const ustaRole = await Role.findOne({ ad: 'Usta' }).populate('checklistYetkileri.hedefRol');
+    const ustaRole = await Role.findOne({ ad: 'Usta' }).populate(
+      'checklistYetkileri.hedefRol',
+    );
     console.log('Usta rolü:', ustaRole ? 'BULUNDU' : 'YOK');
 
     if (ustaRole) {
       console.log('Usta ID:', ustaRole._id);
-      console.log('Checklist yetkileri sayısı:', ustaRole.checklistYetkileri?.length || 0);
+      console.log(
+        'Checklist yetkileri sayısı:',
+        ustaRole.checklistYetkileri?.length || 0,
+      );
 
       if (ustaRole.checklistYetkileri?.length > 0) {
         console.log('Yetkileri:');

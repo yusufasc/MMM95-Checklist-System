@@ -1,0 +1,2656 @@
+---
+description: Swagger documentation, OpenAPI schemas, API comments. Triggers: swagger, openapi, docs, API, @swagger, schema, endpoint, documentation, JSDoc.
+globs: 
+alwaysApply: false
+---
+---
+# 📚 MMM Checklist - API Documentation Kuralları
+
+## 🚨 GÜNCEL DEĞİŞİKLİKLER (2025-02-06)
+
+### ✅ MyActivity - Kontrol Puanları API Entegrasyonu
+```javascript
+/**
+ * @swagger
+ * /api/control-scores/my-summary:
+ *   get:
+ *     summary: Kullanıcının kontrol puanları özeti
+ *     description: MyActivity "Genel Karnem" segmentinde gösterilecek kontrol puanları kartı verisi
+ *     tags: [Control Scores]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Kontrol puanları özeti başarıyla getirildi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     genel:
+ *                       type: object
+ *                       properties:
+ *                         toplamPuan:
+ *                           type: number
+ *                           example: 850
+ *                           description: Kullanıcının toplam kontrol puanı
+ *                         toplamGorev:
+ *                           type: number
+ *                           example: 25
+ *                           description: Puanlanan toplam görev sayısı
+ *                         ortalamaPuan:
+ *                           type: number
+ *                           example: 34
+ *                           description: Görev başına ortalama puan
+ *                         basariYuzdesi:
+ *                           type: number
+ *                           example: 85
+ *                           description: Başarı yüzdesi
+ *                     aylık:
+ *                       type: object
+ *                       properties:
+ *                         toplamPuan:
+ *                           type: number
+ *                           example: 120
+ *                         toplamGorev:
+ *                           type: number
+ *                           example: 4
+ *                     haftalık:
+ *                       type: object
+ *                       properties:
+ *                         toplamPuan:
+ *                           type: number
+ *                           example: 45
+ *                         toplamGorev:
+ *                           type: number
+ *                           example: 2
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
+
+/**
+ * Frontend kullanımı:
+ * import controlScoresAPI from '../../services/controlScoresAPI';
+ * 
+ * const loadControlScores = useCallback(async () => {
+ *   try {
+ *     setControlLoading(true);
+ *     const response = await controlScoresAPI.getMySummary();
+ *     setControlSummary(response.data);
+ *   } catch (err) {
+ *     setControlError(err.response?.data?.message || 'Kontrol puanları yüklenirken hata oluştu');
+ *   } finally {
+ *     setControlLoading(false);
+ *   }
+ * }, []);
+ */
+```
+
+### ✅ ScoreBreakdown Component Integration Pattern
+```javascript
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     ScoreBreakdownProps:
+ *       type: object
+ *       description: ScoreBreakdown component props tanımı
+ *       properties:
+ *         loading:
+ *           type: boolean
+ *           description: Parent loading state (artık kullanılmıyor - _parentLoading)
+ *         error:
+ *           type: string
+ *           description: Parent error state
+ *         filters:
+ *           type: object
+ *           description: Parent'dan gelen filter değerleri
+ *           properties:
+ *             month:
+ *               type: number
+ *               example: 2
+ *             year:
+ *               type: number
+ *               example: 2025
+ *         monthlyTotals:
+ *           type: object
+ *           description: Parent'dan gelen monthly totals verisi
+ *         onFilterChange:
+ *           type: function
+ *           description: Parent'ın filter change handler'ı
+ *         onRefresh:
+ *           type: function
+ *           description: Parent'ın refresh handler'ı
+ * 
+ *     ControlScoresCard:
+ *       type: object
+ *       description: Kontrol puanları kartı görünümü
+ *       properties:
+ *         title:
+ *           type: string
+ *           example: "🛡️ Kontrol Puanları"
+ *         icon:
+ *           type: string
+ *           example: "SecurityIcon"
+ *         color:
+ *           type: string
+ *           example: "purple"
+ *         gridSize:
+ *           type: string
+ *           example: "xs=12 md=4"
+ *           description: "3'lü hizalama için md=4 kullanılır"
+ *         cardHeight:
+ *           type: string
+ *           example: "100%"
+ *           description: "Tüm kartlar aynı yükseklikte"
+ *         border:
+ *           type: string
+ *           example: "2px solid purple"
+ *           description: "Puan varsa purple, yoksa grey"
+ *         hoverEffect:
+ *           type: object
+ *           properties:
+ *             transform:
+ *               type: string
+ *               example: "translateY(-4px)"
+ *             boxShadow:
+ *               type: string
+ *               example: "0 8px 25px rgba(0,0,0,0.15)"
+ */
+```
+
+### Kalite Kontrol Dashboard API ✅
+```javascript
+/**
+ * @swagger
+ * /api/quality-control/dashboard/summary:
+ *   get:
+ *     summary: Kalite kontrol dashboard özet bilgileri
+ *     description: Aktif şablonlar, aylık/günlük değerlendirmeler ve ortalama puan
+ *     tags: [Quality Control Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard özet bilgileri
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     activeTemplates:
+ *                       type: number
+ *                       example: 5
+ *                       description: Aktif şablon sayısı
+ *                     monthlyEvaluations:
+ *                       type: number
+ *                       example: 42
+ *                       description: Bu ay yapılan değerlendirme sayısı
+ *                     todayEvaluations:
+ *                       type: number
+ *                       example: 8
+ *                       description: Bugün yapılan değerlendirme sayısı
+ *                     avgScore:
+ *                       type: number
+ *                       example: 87.5
+ *                       description: Bu ayın ortalama puanı
+ *
+ * /api/quality-control/dashboard/recent-evaluations:
+ *   get:
+ *     summary: Son değerlendirmeler
+ *     description: Son 5 kalite kontrol değerlendirmesi
+ *     tags: [Quality Control Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Son değerlendirmeler
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: "507f1f77bcf86cd799439011"
+ *                       degerlendirilen:
+ *                         type: object
+ *                         properties:
+ *                           ad:
+ *                             type: string
+ *                             example: "Ahmet"
+ *                           soyad:
+ *                             type: string
+ *                             example: "Yılmaz"
+ *                       degerlendiren:
+ *                         type: object
+ *                         properties:
+ *                           ad:
+ *                             type: string
+ *                             example: "Fatma"
+ *                           soyad:
+ *                             type: string
+ *                             example: "Kaya"
+ *                       sablon:
+ *                         type: object
+ *                         properties:
+ *                           ad:
+ *                             type: string
+ *                             example: "Üretim Kalite Kontrolü"
+ *                       toplamPuan:
+ *                         type: number
+ *                         example: 85
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2025-02-06T10:30:00Z"
+ *
+ * /api/quality-control/dashboard/performance-trend:
+ *   get:
+ *     summary: Performans trendi
+ *     description: Son 7 günün günlük performans trendi
+ *     tags: [Quality Control Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Performans trend verileri
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: "2025-02-06"
+ *                         description: Tarih (YYYY-MM-DD format)
+ *                       avgScore:
+ *                         type: number
+ *                         example: 87.5
+ *                         description: O günün ortalama puanı
+ *                       count:
+ *                         type: number
+ *                         example: 12
+ *                         description: O gün yapılan değerlendirme sayısı
+ *
+ * /api/quality-control/dashboard/department-performance:
+ *   get:
+ *     summary: Departman performansı
+ *     description: Bu ayın departman bazlı performans verileri
+ *     tags: [Quality Control Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Departman performans verileri
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: "Üretim"
+ *                         description: Departman adı
+ *                       avgScore:
+ *                         type: number
+ *                         example: 92.3
+ *                         description: Departmanın ortalama puanı
+ *                       count:
+ *                         type: number
+ *                         example: 25
+ *                         description: Departmandaki değerlendirme sayısı
+ */
+```
+
+### MyActivity API Endpoints ✅
+```javascript
+/**
+ * @swagger
+ * /api/my-activity/task-details/{id}:
+ *   get:
+ *     summary: Görev detaylarını getir (tüm tip desteği)
+ *     description: |
+ *       ID'ye göre görev detaylarını getirir. Desteklenen tipler:
+ *       - Normal Task (checklist)
+ *       - WorkTask (worktask) - Kalıp değişim görevleri
+ *       - HR Evaluation (hr_checklist_, hr_mesai_, hr_devamsizlik_)
+ *       - Quality Control (quality_control)
+ *     tags: [MyActivity]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: |
+ *           Görev ID'si. Formatlar:
+ *           - MongoDB ObjectId (24 karakter) - Normal Task/WorkTask/QualityControl
+ *           - hr_checklist_{hrScoreId}_{timestamp} - HR Checklist
+ *           - hr_mesai_{hrScoreId}_{timestamp} - HR Mesai
+ *           - hr_devamsizlik_{hrScoreId}_{timestamp} - HR Devamsızlık
+ *         examples:
+ *           normalTask:
+ *             value: "507f1f77bcf86cd799439011"
+ *             summary: Normal Task ID
+ *           workTask:
+ *             value: "507f1f77bcf86cd799439012"
+ *             summary: WorkTask ID
+ *           hrChecklist:
+ *             value: "hr_checklist_507f1f77bcf86cd799439013_1704067200000"
+ *             summary: HR Checklist ID
+ *     responses:
+ *       200:
+ *         description: Görev detayları başarıyla getirildi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - $ref: '#/components/schemas/TaskDetails'
+ *                 - $ref: '#/components/schemas/WorkTaskDetails'
+ *                 - $ref: '#/components/schemas/HRTaskDetails'
+ *                 - $ref: '#/components/schemas/QualityControlDetails'
+ *       404:
+ *         description: Görev bulunamadı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Görev bulunamadı"
+ *       500:
+ *         description: Sunucu hatası
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Sunucu hatası"
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     TaskDetails:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: "507f1f77bcf86cd799439011"
+ *         tip:
+ *           type: string
+ *           enum: [checklist]
+ *           example: "checklist"
+ *         checklistAdi:
+ *           type: string
+ *           example: "Günlük Makina Kontrolü"
+ *         kategori:
+ *           type: string
+ *           example: "Üretim"
+ *         aciklama:
+ *           type: string
+ *           example: "Makina güvenlik ve performans kontrolü"
+ *         kullanici:
+ *           type: object
+ *           properties:
+ *             ad:
+ *               type: string
+ *               example: "Ahmet"
+ *             soyad:
+ *               type: string
+ *               example: "Yılmaz"
+ *             kullaniciAdi:
+ *               type: string
+ *               example: "ahmet.yilmaz"
+ *         makina:
+ *           type: string
+ *           example: "Enjeksiyon Makinası 1 (M001)"
+ *           description: "Makina adı ve envanter kodu formatında"
+ *         durum:
+ *           type: string
+ *           enum: [bekliyor, tamamlandi, onaylandi, reddedildi]
+ *           example: "tamamlandi"
+ *         tamamlanmaTarihi:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-02-06T10:30:00Z"
+ *         onayTarihi:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-02-06T14:20:00Z"
+ *         kontrolTarihi:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-02-06T14:15:00Z"
+ *         onaylayan:
+ *           type: object
+ *           properties:
+ *             ad:
+ *               type: string
+ *               example: "Mehmet"
+ *             soyad:
+ *               type: string
+ *               example: "Demir"
+ *         kontroleden:
+ *           type: object
+ *           properties:
+ *             ad:
+ *               type: string
+ *               example: "Fatma"
+ *             soyad:
+ *               type: string
+ *               example: "Kaya"
+ *         toplamPuan:
+ *           type: number
+ *           example: 85
+ *           description: "Kullanıcının aldığı toplam puan"
+ *         kontrolToplamPuani:
+ *           type: number
+ *           example: 90
+ *           description: "Kontrol sonrası verilen toplam puan"
+ *         maddeler:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/TaskItem'
+ *
+ *     WorkTaskDetails:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: "507f1f77bcf86cd799439012"
+ *         tip:
+ *           type: string
+ *           enum: [worktask]
+ *           example: "worktask"
+ *         checklistAdi:
+ *           type: string
+ *           example: "Kalıp Değişim Süreci"
+ *         kategori:
+ *           type: string
+ *           enum: [İşe Bağlı]
+ *           example: "İşe Bağlı"
+ *         aciklama:
+ *           type: string
+ *           example: "Plastik enjeksiyon kalıp değişim prosedürü"
+ *         kullanici:
+ *           $ref: '#/components/schemas/UserInfo'
+ *         makina:
+ *           type: string
+ *           example: "Enjeksiyon Makinası 2 (INV002)"
+ *           description: "Makina adı ve envanter kodu formatında"
+ *         indirilenKalip:
+ *           type: object
+ *           properties:
+ *             ad:
+ *               type: string
+ *               example: "Kapak Kalıbı A1"
+ *             envanterKodu:
+ *               type: string
+ *               example: "KLP001"
+ *             dinamikAlanlar:
+ *               type: object
+ *               example: { "uretilecekUrun": "Plastik Kapak", "lokasyon": "Depo A" }
+ *         baglananHamade:
+ *           type: object
+ *           properties:
+ *             ad:
+ *               type: string
+ *               example: "Gövde Kalıbı B2"
+ *             envanterKodu:
+ *               type: string
+ *               example: "KLP002"
+ *             dinamikAlanlar:
+ *               type: object
+ *               example: { "uretilecekUrun": "Plastik Gövde", "lokasyon": "Depo B" }
+ *         olusturulmaTarihi:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-02-06T08:00:00Z"
+ *         tamamlanmaTarihi:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-02-06T10:30:00Z"
+ *         onayTarihi:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-02-06T14:20:00Z"
+ *         kontrolTarihi:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-02-06T14:15:00Z"
+ *         durum:
+ *           type: string
+ *           enum: [bekliyor, tamamlandi, onaylandi, reddedildi]
+ *           example: "tamamlandi"
+ *         onaylayanKullanici:
+ *           $ref: '#/components/schemas/UserInfo'
+ *         maddeler:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/WorkTaskItem'
+ *         toplamPuan:
+ *           type: number
+ *           example: 100
+ *           description: "Checklist'teki toplam puan"
+ *         alinanPuan:
+ *           type: number
+ *           example: 85
+ *           description: "Kullanıcının aldığı puan"
+ *         kontrolToplamPuani:
+ *           type: number
+ *           example: 90
+ *           description: "Kontrol sonrası verilen puan"
+ *         basariYuzdesi:
+ *           type: number
+ *           example: 90
+ *           description: "Başarı yüzdesi"
+ *
+ *     TaskItem:
+ *       type: object
+ *       properties:
+ *         sira:
+ *           type: number
+ *           example: 1
+ *         soru:
+ *           type: string
+ *           example: "Makina güvenlik sistemleri çalışıyor mu?"
+ *         cevap:
+ *           type: boolean
+ *           example: true
+ *         kendiPuani:
+ *           type: number
+ *           example: 0
+ *           description: "Artık kullanılmıyor"
+ *         maxPuan:
+ *           type: number
+ *           example: 10
+ *           description: "Bu madde için maksimum puan"
+ *         kontrolPuani:
+ *           type: number
+ *           example: 9
+ *           description: "Kontrol eden tarafından verilen puan"
+ *         yorum:
+ *           type: string
+ *           example: "Güvenlik sistemleri normal çalışıyor"
+ *         kontrolYorumu:
+ *           type: string
+ *           example: "Kontrol edildi, uygun"
+ *         resimUrl:
+ *           type: string
+ *           example: "/uploads/task-images/image1.jpg"
+ *         kontrolResimUrl:
+ *           type: string
+ *           example: "/uploads/control-images/control1.jpg"
+ *         toplamPuan:
+ *           type: number
+ *           example: 9
+ *           description: "Bu madde için alınan toplam puan"
+ *
+ *     WorkTaskItem:
+ *       type: object
+ *       properties:
+ *         soru:
+ *           type: string
+ *           example: "Kalıp değişimi tamamlandı mı?"
+ *         puan:
+ *           type: number
+ *           example: 20
+ *           description: "Bu madde için puan değeri"
+ *         maxPuan:
+ *           type: number
+ *           example: 20
+ *           description: "Frontend uyumluluğu için"
+ *         cevap:
+ *           type: string
+ *           example: "Evet"
+ *           description: "Kullanıcının cevabı"
+ *         alinanPuan:
+ *           type: number
+ *           example: 18
+ *           description: "Bu madde için alınan puan"
+ *         yorum:
+ *           type: string
+ *           example: "Kalıp değişimi sorunsuz tamamlandı"
+ *         resim:
+ *           type: string
+ *           example: "/uploads/worktask-images/kalip1.jpg"
+ *         kontrolYorumu:
+ *           type: string
+ *           example: "Prosedür uygun şekilde takip edilmiş"
+ *         kontrolPuani:
+ *           type: number
+ *           example: 18
+ *           description: "Kontrol eden tarafından verilen puan"
+ *         sira:
+ *           type: number
+ *           example: 1
+ *           description: "Madde sırası"
+ *
+ *     UserInfo:
+ *       type: object
+ *       properties:
+ *         ad:
+ *           type: string
+ *           example: "Ahmet"
+ *         soyad:
+ *           type: string
+ *           example: "Yılmaz"
+ *         kullaniciAdi:
+ *           type: string
+ *           example: "ahmet.yilmaz"
+ *
+ *     HRTaskDetails:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: "hr_checklist_507f1f77bcf86cd799439013_1704067200000"
+ *         tip:
+ *           type: string
+ *           enum: [hr_checklist, hr_mesai, hr_devamsizlik]
+ *           example: "hr_checklist"
+ *         checklistAdi:
+ *           type: string
+ *           example: "İK Şablon Değerlendirmesi"
+ *         kategori:
+ *           type: string
+ *           example: "İK Checklist"
+ *         durum:
+ *           type: string
+ *           enum: [tamamlandi]
+ *           example: "tamamlandi"
+ *         tamamlanmaTarihi:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-02-06T10:30:00Z"
+ *         puanlamaTarihi:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-02-06T10:30:00Z"
+ *         puanlayanKullanici:
+ *           type: object
+ *           properties:
+ *             ad:
+ *               type: string
+ *               example: "İK"
+ *             soyad:
+ *               type: string
+ *               example: "Departmanı"
+ *         maddeler:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               sira:
+ *                 type: number
+ *                 example: 1
+ *               soru:
+ *                 type: string
+ *                 example: "Mesai Saati"
+ *               cevap:
+ *                 type: string
+ *                 example: "8 saat"
+ *               kontrolPuani:
+ *                 type: number
+ *                 example: 100
+ *               maxPuan:
+ *                 type: number
+ *                 example: 100
+ *               kontrolYorumu:
+ *                 type: string
+ *                 example: "Normal mesai saati"
+ *               toplamPuan:
+ *                 type: number
+ *                 example: 100
+ *
+ *     QualityControlDetails:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: "507f1f77bcf86cd799439014"
+ *         tip:
+ *           type: string
+ *           enum: [quality_control]
+ *           example: "quality_control"
+ *         checklistAdi:
+ *           type: string
+ *           example: "Kalite Kontrol Değerlendirmesi"
+ *         kategori:
+ *           type: string
+ *           enum: [Kalite Kontrol]
+ *           example: "Kalite Kontrol"
+ *         durum:
+ *           type: string
+ *           enum: [tamamlandi]
+ *           example: "tamamlandi"
+ *         tamamlanmaTarihi:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-02-06T10:30:00Z"
+ *         puanlamaTarihi:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-02-06T10:30:00Z"
+ *         puanlayanKullanici:
+ *           $ref: '#/components/schemas/UserInfo'
+ *         maddeler:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               sira:
+ *                 type: number
+ *                 example: 1
+ *               soru:
+ *                 type: string
+ *                 example: "Ürün kalite standartları"
+ *               cevap:
+ *                 type: string
+ *                 enum: [Değerlendirildi]
+ *                 example: "Değerlendirildi"
+ *               kontrolPuani:
+ *                 type: number
+ *                 example: 85
+ *               maxPuan:
+ *                 type: number
+ *                 example: 100
+ *               kontrolYorumu:
+ *                 type: string
+ *                 example: "Standartlara uygun"
+ *               toplamPuan:
+ *                 type: number
+ *                 example: 85
+ *               resimUrl:
+ *                 type: string
+ *                 example: "/uploads/quality-images/sample1.jpg"
+ */
+```
+
+### Yeni Birleştirilmiş API'ler
+```javascript
+/**
+ * @swagger
+ * /api/inventory/machines:
+ *   get:
+ *     summary: Birleştirilmiş makina listesi
+ *     description: Hem Machine hem InventoryItem modellerinden makinaları getirir
+ *     tags: [Inventory]
+ *     parameters:
+ *       - in: query
+ *         name: source
+ *         schema:
+ *           type: string
+ *           enum: [all, machine, inventory]
+ *           default: all
+ *         description: Veri kaynağı (all=tümü, machine=Machine model, inventory=InventoryItem)
+ *     responses:
+ *       200:
+ *         description: Makina listesi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   _id: { type: string }
+ *                   ad: { type: string }
+ *                   kod: { type: string }
+ *                   tip: { type: string, enum: [machine, inventoryItem] }
+ *                   kaynak: { type: string }
+ *                   lokasyon: { type: string }
+ *                   durum: { type: string }
+ */
+
+/**
+ * @swagger
+ * /api/inventory/machines/{id}:
+ *   get:
+ *     summary: Makina detayı (tip agnostik)
+ *     description: ID'ye göre Machine veya InventoryItem detayını getirir
+ *     tags: [Inventory]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Makina ID (Machine veya InventoryItem)
+ */
+```
+
+### Deprecated API'ler
+```javascript
+/**
+ * @deprecated /api/tasks/inventory-machines yerine /api/inventory/machines kullanın
+ * @deprecated /api/inventory/machines-for-tasks yerine /api/inventory/machines kullanın
+ */
+```
+
+### WorkTask API Documentation (2025-02-06)
+```javascript
+/**
+ * @swagger
+ * /api/worktasks:
+ *   post:
+ *     summary: Yeni kalıp değişim görevi oluştur
+ *     description: İşe bağlı (olay bazlı) checklist için görev oluşturur
+ *     tags: [WorkTasks]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - checklistId
+ *               - makinaId
+ *               - indirilenKalip
+ *               - baglananHamade
+ *               - makinaDurmaSaati
+ *               - yeniKalipAktifSaati
+ *             properties:
+ *               checklistId:
+ *                 type: string
+ *                 description: İşe bağlı checklist ID
+ *               makinaId:
+ *                 type: string
+ *                 description: Makina ID (Machine veya InventoryItem)
+ *               indirilenKalip:
+ *                 type: string
+ *                 description: İndirilen kalıp ID
+ *               baglananHamade:
+ *                 type: string
+ *                 description: Bağlanan kalıp/hamadde ID
+ *               makinaDurmaSaati:
+ *                 type: string
+ *                 format: date-time
+ *               yeniKalipAktifSaati:
+ *                 type: string
+ *                 format: date-time
+ *               bakimaGitsinMi:
+ *                 type: boolean
+ *                 default: false
+ *               bakimSebebi:
+ *                 type: string
+ *               bakimResimUrl:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Görev başarıyla oluşturuldu
+ *       500:
+ *         description: Sunucu hatası
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 error:
+ *                   type: string
+ *                 stack:
+ *                   type: string
+ *                   description: Sadece development ortamında
+ */
+
+/**
+ * @swagger
+ * /api/worktasks/{id}/items:
+ *   put:
+ *     summary: Checklist maddelerini güncelle
+ *     tags: [WorkTasks]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               maddeler:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     maddeId:
+ *                       type: string
+ *                     yapildi:
+ *                       type: boolean
+ */
+
+/**
+ * @swagger
+ * /api/inventory/kalips-for-tasks:
+ *   get:
+ *     summary: Kalıp değişim için kalıpları listele
+ *     description: Kalıp kategorisindeki aktif envanteri getirir (esnek kategori araması)
+ *     tags: [Inventory]
+ *     responses:
+ *       200:
+ *         description: Kalıp listesi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   _id: { type: string }
+ *                   ad: { type: string }
+ *                   kod: { type: string }
+ *                   envanterKodu: { type: string }
+ *                   uretilecekUrun: { type: string }
+ *                   lokasyon: { type: string }
+ */
+```
+
+## Swagger/OpenAPI Documentation (Zorunlu)
+```javascript
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     summary: Kullanıcı listesini getir
+ *     description: Sistemdeki tüm aktif kullanıcıları getirir
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Sayfa numarası
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Sayfa başına kayıt sayısı
+ *       - in: query
+ *         name: durum
+ *         schema:
+ *           type: string
+ *           enum: [aktif, pasif]
+ *         description: Kullanıcı durumu filtresi
+ *     responses:
+ *       200:
+ *         description: Kullanıcı listesi başarıyla getirildi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *                 pagination:
+ *                   $ref: '#/components/schemas/Pagination'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
+router.get("/", auth, checkModulePermission("Users"), async (req, res) => {
+  // Implementation
+});
+```
+
+## Schema Definitions
+```javascript
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       required:
+ *         - ad
+ *         - soyad
+ *         - kullaniciAdi
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: Kullanıcı ID'si
+ *           example: "507f1f77bcf86cd799439011"
+ *         ad:
+ *           type: string
+ *           description: Kullanıcı adı
+ *           example: "Ahmet"
+ *           maxLength: 50
+ *         soyad:
+ *           type: string
+ *           description: Kullanıcı soyadı
+ *           example: "Yılmaz"
+ *           maxLength: 50
+ *         kullaniciAdi:
+ *           type: string
+ *           description: Benzersiz kullanıcı adı
+ *           example: "ahmet.yilmaz"
+ *           maxLength: 30
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: E-posta adresi
+ *           example: "ahmet@example.com"
+ *         roller:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Role'
+ *           description: Kullanıcının rolleri
+ *         departmanlar:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Department'
+ *           description: Kullanıcının departmanları
+ *         durum:
+ *           type: string
+ *           enum: [aktif, pasif]
+ *           description: Kullanıcı durumu
+ *           example: "aktif"
+ *         olusturmaTarihi:
+ *           type: string
+ *           format: date-time
+ *           description: Kayıt oluşturma tarihi
+ *           example: "2024-01-15T10:30:00Z"
+ *         guncellemeTarihi:
+ *           type: string
+ *           format: date-time
+ *           description: Son güncelleme tarihi
+ *           example: "2024-01-16T14:20:00Z"
+ *
+ *     UserCreate:
+ *       type: object
+ *       required:
+ *         - ad
+ *         - soyad
+ *         - kullaniciAdi
+ *         - sifre
+ *       properties:
+ *         ad:
+ *           type: string
+ *           minLength: 2
+ *           maxLength: 50
+ *           example: "Ahmet"
+ *         soyad:
+ *           type: string
+ *           minLength: 2
+ *           maxLength: 50
+ *           example: "Yılmaz"
+ *         kullaniciAdi:
+ *           type: string
+ *           minLength: 3
+ *           maxLength: 30
+ *           pattern: "^[a-zA-Z0-9._-]+$"
+ *           example: "ahmet.yilmaz"
+ *         sifre:
+ *           type: string
+ *           minLength: 6
+ *           maxLength: 100
+ *           description: "En az 6 karakter, büyük/küçük harf ve rakam içermeli"
+ *           example: "Sifre123"
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: "ahmet@example.com"
+ *         roller:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: "Role ID'leri"
+ *           example: ["507f1f77bcf86cd799439011"]
+ *         departmanlar:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: "Departman ID'leri"
+ *           example: ["507f1f77bcf86cd799439012"]
+ */
+```
+
+## Response Schemas
+```javascript
+/**
+ * @swagger
+ * components:
+ *   responses:
+ *     UnauthorizedError:
+ *       description: Yetkisiz erişim
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               success:
+ *                 type: boolean
+ *                 example: false
+ *               message:
+ *                 type: string
+ *                 example: "Token bulunamadı veya geçersiz"
+ *
+ *     ForbiddenError:
+ *       description: Yetki yok
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               success:
+ *                 type: boolean
+ *                 example: false
+ *               message:
+ *                 type: string
+ *                 example: "Bu işlem için yetkiniz yok"
+ *
+ *     ValidationError:
+ *       description: Doğrulama hatası
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               success:
+ *                 type: boolean
+ *                 example: false
+ *               message:
+ *                 type: string
+ *                 example: "Doğrulama hatası"
+ *               errors:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     field:
+ *                       type: string
+ *                       example: "kullaniciAdi"
+ *                     message:
+ *                       type: string
+ *                       example: "Kullanıcı adı zorunludur"
+ *
+ *     InternalServerError:
+ *       description: Sunucu hatası
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               success:
+ *                 type: boolean
+ *                 example: false
+ *               message:
+ *                 type: string
+ *                 example: "Sunucu hatası"
+ *
+ *   schemas:
+ *     Pagination:
+ *       type: object
+ *       properties:
+ *         currentPage:
+ *           type: integer
+ *           example: 1
+ *         totalPages:
+ *           type: integer
+ *           example: 5
+ *         totalItems:
+ *           type: integer
+ *           example: 47
+ *         hasNextPage:
+ *           type: boolean
+ *           example: true
+ *         hasPrevPage:
+ *           type: boolean
+ *           example: false
+ */
+```
+
+## Security Definitions
+```javascript
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *       description: "JWT token ile kimlik doğrulama. Header: Authorization Bearer <token>"
+ *
+ * security:
+ *   - bearerAuth: []
+ */
+```
+
+## Route Documentation Pattern
+```javascript
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   get:
+ *     summary: Kullanıcı detayı getir
+ *     description: ID'si verilen kullanıcının detay bilgilerini getirir
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: "^[0-9a-fA-F]{24}$"
+ *         description: Kullanıcı MongoDB ObjectId
+ *         example: "507f1f77bcf86cd799439011"
+ *     responses:
+ *       200:
+ *         description: Kullanıcı detayı başarıyla getirildi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *       404:
+ *         description: Kullanıcı bulunamadı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Kullanıcı bulunamadı"
+ *
+ *   put:
+ *     summary: Kullanıcı güncelle
+ *     description: ID'si verilen kullanıcının bilgilerini günceller
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Kullanıcı ID'si
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UserUpdate'
+ *     responses:
+ *       200:
+ *         description: Kullanıcı başarıyla güncellendi
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         description: Kullanıcı bulunamadı
+ */
+```
+
+## API Comments Standards
+```javascript
+// ✅ Route function comments
+/**
+ * Kullanıcı listesini getirir
+ * @route GET /api/users
+ * @access Private - Auth required
+ * @permission Users module read access
+ * @param {Object} req.query - Query parameters
+ * @param {number} req.query.page - Sayfa numarası (default: 1)
+ * @param {number} req.query.limit - Sayfa başına kayıt (default: 10, max: 100)
+ * @param {string} req.query.durum - Durum filtresi (aktif/pasif)
+ * @param {string} req.query.search - Arama terimi (ad, soyad, kullaniciAdi)
+ * @returns {Object} Kullanıcı listesi ve pagination bilgisi
+ * @throws {401} Unauthorized - Token yoksa veya geçersizse
+ * @throws {403} Forbidden - Modül yetkisi yoksa
+ * @throws {500} Internal Server Error - Sunucu hatası
+ */
+const getUsers = async (req, res) => {
+  // Implementation
+};
+
+// ✅ Model field comments
+const UserSchema = new mongoose.Schema({
+  ad: {
+    type: String,
+    required: [true, 'Ad alanı zorunludur'],
+    trim: true,
+    maxlength: [50, 'Ad 50 karakterden uzun olamaz'],
+    // İzin verilen karakterler: Türkçe harfler, boşluk
+    validate: {
+      validator: function(v) {
+        return /^[a-zA-ZğĞıİöÖüÜşŞçÇ\s]+$/.test(v);
+      },
+      message: 'Ad sadece harf ve boşluk içerebilir'
+    }
+  },
+  
+  kullaniciAdi: {
+    type: String,
+    required: [true, 'Kullanıcı adı zorunludur'],
+    unique: true,
+    trim: true,
+    lowercase: true,
+    minlength: [3, 'Kullanıcı adı en az 3 karakter olmalı'],
+    maxlength: [30, 'Kullanıcı adı 30 karakterden uzun olamaz'],
+    // İzin verilen: harf, rakam, nokta, tire, alt çizgi
+    validate: {
+      validator: function(v) {
+        return /^[a-z0-9._-]+$/.test(v);
+      },
+      message: 'Kullanıcı adı sadece küçük harf, rakam, nokta, tire ve alt çizgi içerebilir'
+    }
+  }
+});
+```
+
+## Documentation Generation
+```javascript
+// ✅ Swagger configuration
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'MMM Checklist API',
+      version: '1.0.0',
+      description: 'Endüstriyel Checklist ve Görev Yönetim Sistemi API Dökümantasyonu',
+      contact: {
+        name: 'MMM Team',
+        email: 'support@mmm.com'
+      },
+      license: {
+        name: 'MIT',
+        url: 'https://opensource.org/licenses/MIT'
+      }
+    },
+    servers: [
+      {
+        url: 'http://localhost:5000',
+        description: 'Development server'
+      },
+      {
+        url: 'https://api.mmm.com',
+        description: 'Production server'
+      }
+    ],
+    tags: [
+      {
+        name: 'Auth',
+        description: 'Kimlik doğrulama işlemleri'
+      },
+      {
+        name: 'Users',
+        description: 'Kullanıcı yönetimi'
+      },
+      {
+        name: 'Tasks',
+        description: 'Görev yönetimi'
+      },
+      {
+        name: 'Inventory',
+        description: 'Envanter yönetimi'
+      }
+    ]
+  },
+  apis: ['./routes/*.js', './models/*.js']
+};
+
+const specs = swaggerJsdoc(options);
+
+// Swagger UI setup
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'MMM Checklist API Docs'
+}));
+```
+
+## API Testing Documentation
+```javascript
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Kullanıcı girişi
+ *     description: Kullanıcı adı ve şifre ile sistem girişi
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - kullaniciAdi
+ *               - sifre
+ *             properties:
+ *               kullaniciAdi:
+ *                 type: string
+ *                 example: "admin"
+ *               sifre:
+ *                 type: string
+ *                 example: "123456"
+ *           examples:
+ *             admin:
+ *               summary: Admin kullanıcısı
+ *               value:
+ *                 kullaniciAdi: "admin"
+ *                 sifre: "admin123"
+ *             normalUser:
+ *               summary: Normal kullanıcı
+ *               value:
+ *                 kullaniciAdi: "user1"
+ *                 sifre: "user123"
+ *     responses:
+ *       200:
+ *         description: Giriş başarılı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 token:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Geçersiz giriş bilgileri
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Kullanıcı adı veya şifre hatalı"
+ */
+```
+
+## Documentation Maintenance
+```bash
+# ✅ Package.json scripts for documentation
+{
+  "scripts": {
+    "docs:generate": "swagger-jsdoc -d swaggerDef.js -o swagger.json routes/*.js",
+    "docs:serve": "swagger-ui-serve swagger.json",
+    "docs:validate": "swagger-parser validate swagger.json",
+    "docs:export": "swagger-codegen generate -i swagger.json -l html2 -o docs/",
+    "docs:postman": "swagger-codegen generate -i swagger.json -l postman-collection -o postman/"
+  }
+}
+```
+
+## 🚨 API Endpoint Değişiklikleri (2025-02-06)
+
+### HR Management API Güncellemeleri
+```javascript
+// ❌ ESKİ: Frontend yanlış endpoint kullanıyor
+hrManagementAPI: {
+  getTemplates: () => api.get('/hr-management/templates'),
+  getSettings: () => api.get('/hr-management/settings'),
+}
+
+// ✅ YENİ: Doğru endpoint'ler
+hrManagementAPI: {
+  getTemplates: () => api.get('/hr/templates'),
+  getSettings: () => api.get('/hr/settings'),
+  getRoles: () => api.get('/roles'), // Global roles endpoint
+  getUsers: () => api.get('/users'), // Global users endpoint
+}
+
+// Backend'e eklenen yeni endpoint'ler:
+// GET /hr/templates - Tüm şablonları getir
+// GET /hr/templates/:id - Tek şablon detayı
+// POST /hr/templates - Yeni şablon oluştur
+// PUT /hr/templates/:id - Şablon güncelle
+// DELETE /hr/templates/:id - Şablon sil
+// GET /hr/settings - Ayarları getir
+// PUT /hr/settings - Ayarları güncelle
+// POST /hr/settings/role-permissions - Rol yetkilerini güncelle
+// POST /hr/settings/module-access - Modül erişimini güncelle
+```
+
+### Tasks API - Makina Seçimi
+```javascript
+// ✅ DOĞRU ENDPOINT
+POST /api/tasks/select-machines
+Body: { selectedMachines: ['machineId1', 'machineId2'] }
+
+// Frontend kullanımı:
+import { tasksAPI } from '../services/api';
+await tasksAPI.selectMachines(['machineId1', 'machineId2']);
+
+// ❌ YANLIŞ: Bu endpoint yok
+POST /api/auth/select-machines // 404 hatası
+```
+
+## Swagger Documentation Kuralları
+```javascript
+/**
+ * @swagger
+ * /api/tasks/select-machines:
+ *   post:
+ *     summary: Makina seçimi
+ *     description: Seçilen makinaları görevle ilişkilendirir
+ *     tags: [Tasks]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - selectedMachines
+ *             properties:
+ *               selectedMachines:
+ *                 type: array
+ *                 items:
+ */
+```
+
+### 🚀 Cache System API Documentation ✅
+```javascript
+/**
+ * @swagger
+ * /api/cache/stats:
+ *   get:
+ *     summary: Cache istatistikleri
+ *     description: Sistem cache performans istatistiklerini getirir
+ *     tags: [Cache Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cache istatistikleri başarıyla getirildi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     hits:
+ *                       type: number
+ *                       example: 1250
+ *                       description: Cache hit sayısı
+ *                     misses:
+ *                       type: number
+ *                       example: 180
+ *                       description: Cache miss sayısı
+ *                     hitRate:
+ *                       type: string
+ *                       example: "87.41"
+ *                       description: Cache hit oranı (%)
+ *                     sets:
+ *                       type: number
+ *                       example: 320
+ *                       description: Cache set işlem sayısı
+ *                     deletes:
+ *                       type: number
+ *                       example: 45
+ *                       description: Cache delete işlem sayısı
+ *                     errors:
+ *                       type: number
+ *                       example: 2
+ *                       description: Cache error sayısı
+ *                     memoryUsage:
+ *                       type: object
+ *                       properties:
+ *                         rss:
+ *                           type: number
+ *                           example: 52428800
+ *                         heapTotal:
+ *                           type: number
+ *                           example: 29360128
+ *                         heapUsed:
+ *                           type: number
+ *                           example: 18874496
+ *                     uptime:
+ *                       type: number
+ *                       example: 3600.5
+ *                       description: Sunucu uptime (saniye)
+ *                     redisConnected:
+ *                       type: boolean
+ *                       example: true
+ *                       description: Redis bağlantı durumu
+ *
+ * /api/cache/clear:
+ *   post:
+ *     summary: Cache temizleme
+ *     description: Belirtilen pattern'e göre cache'i temizler
+ *     tags: [Cache Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               pattern:
+ *                 type: string
+ *                 example: "users:*"
+ *                 description: Temizlenecek cache pattern'i
+ *               force:
+ *                 type: boolean
+ *                 example: false
+ *                 description: Zorla temizleme (tüm cache)
+ *     responses:
+ *       200:
+ *         description: Cache başarıyla temizlendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Cache pattern 'users:*' temizlendi"
+ *                 clearedCount:
+ *                   type: number
+ *                   example: 15
+ *                   description: Temizlenen cache entry sayısı
+ *
+ * /api/cache/performance:
+ *   get:
+ *     summary: Cache performans metrikleri
+ *     description: Detaylı cache performans analizi
+ *     tags: [Cache Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Performans metrikleri
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     responseTimeImprovement:
+ *                       type: string
+ *                       example: "85%"
+ *                       description: Response time iyileştirmesi
+ *                     databaseLoadReduction:
+ *                       type: string
+ *                       example: "70%"
+ *                       description: Database yük azalması
+ *                     memoryUsageOptimization:
+ *                       type: string
+ *                       example: "40%"
+ *                       description: Memory kullanım optimizasyonu
+ *                     cacheDistribution:
+ *                       type: object
+ *                       properties:
+ *                         redis:
+ *                           type: number
+ *                           example: 75
+ *                           description: Redis cache kullanım oranı (%)
+ *                         memory:
+ *                           type: number
+ *                           example: 25
+ *                           description: Memory cache kullanım oranı (%)
+ *                     topCachedEndpoints:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           endpoint:
+ *                             type: string
+ *                             example: "/api/users"
+ *                           hits:
+ *                             type: number
+ *                             example: 450
+ *                           hitRate:
+ *                             type: string
+ *                             example: "92.3%"
+ */
+```
+
+### Cache TTL Configuration Documentation
+```javascript
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     CacheConfiguration:
+ *       type: object
+ *       properties:
+ *         SHORT_CACHE:
+ *           type: object
+ *           description: Kısa süreli cache (5-15 dakika)
+ *           properties:
+ *             dashboard:
+ *               type: number
+ *               example: 300000
+ *               description: Dashboard data (5 min)
+ *             tasks:
+ *               type: number
+ *               example: 180000
+ *               description: User tasks (3 min)
+ *             controlPending:
+ *               type: number
+ *               example: 300000
+ *               description: Control pending (5 min)
+ *         MEDIUM_CACHE:
+ *           type: object
+ *           description: Orta süreli cache (30-60 dakika)
+ *           properties:
+ *             users:
+ *               type: number
+ *               example: 1800000
+ *               description: User lists (30 min)
+ *             roles:
+ *               type: number
+ *               example: 3600000
+ *               description: Roles (60 min)
+ *             departments:
+ *               type: number
+ *               example: 3600000
+ *               description: Departments (60 min)
+ *             machines:
+ *               type: number
+ *               example: 1800000
+ *               description: Machine lists (30 min)
+ *         LONG_CACHE:
+ *           type: object
+ *           description: Uzun süreli cache (2-24 saat)
+ *           properties:
+ *             templates:
+ *               type: number
+ *               example: 7200000
+ *               description: Templates (2 hours)
+ *             settings:
+ *               type: number
+ *               example: 86400000
+ *               description: System settings (24 hours)
+ *             modules:
+ *               type: number
+ *               example: 86400000
+ *               description: Module definitions (24 hours)
+ *
+ *     CacheKeyPatterns:
+ *       type: object
+ *       properties:
+ *         userSpecific:
+ *           type: array
+ *           items:
+ *             type: string
+ *           example: 
+ *             - "user:{userId}:profile"
+ *             - "user:{userId}:tasks"
+ *             - "user:{userId}:dashboard"
+ *             - "user:{userId}:my-activity"
+ *         global:
+ *           type: array
+ *           items:
+ *             type: string
+ *           example:
+ *             - "users:list"
+ *             - "roles:list"
+ *             - "departments:list"
+ *             - "machines:all"
+ *             - "inventory:categories"
+ *         moduleSpecific:
+ *           type: array
+ *           items:
+ *             type: string
+ *           example:
+ *             - "dashboard:summary"
+ *             - "tasks:pending"
+ *             - "inventory:dashboard"
+ *             - "quality:templates"
+ *             - "hr:settings"
+ */
+```
+
+### Cache Middleware Documentation
+```javascript
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     CacheMiddleware:
+ *       type: object
+ *       description: Cache middleware kullanım örnekleri
+ *       properties:
+ *         predefinedMiddlewares:
+ *           type: object
+ *           properties:
+ *             dashboardCache:
+ *               type: string
+ *               example: "dashboardCache(5)"
+ *               description: "Dashboard cache (5 dakika TTL)"
+ *             usersListCache:
+ *               type: string
+ *               example: "usersListCache(30)"
+ *               description: "User list cache (30 dakika TTL)"
+ *             rolesListCache:
+ *               type: string
+ *               example: "rolesListCache(60)"
+ *               description: "Roles cache (60 dakika TTL)"
+ *             inventoryCache:
+ *               type: string
+ *               example: "inventoryCache(15)"
+ *               description: "Inventory cache (15 dakika TTL)"
+ *         customMiddleware:
+ *           type: object
+ *           properties:
+ *             example:
+ *               type: string
+ *               example: |
+ *                 const customCache = cacheMiddleware({
+ *                   keyGenerator: (req) => `custom:${req.user.id}:${req.params.id}`,
+ *                   ttl: 10 * 60 * 1000, // 10 minutes
+ *                   storage: 'redis'
+ *                 });
+ *         invalidationPatterns:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               action:
+ *                 type: string
+ *                 example: "POST /api/users"
+ *               invalidates:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["users:*", "dashboard:*"]
+ */
+```
+
+### 🔧 Inventory Field Templates API ✅
+```javascript
+/**
+ * @swagger
+ * /api/inventory/categories/{id}/fields:
+ *   get:
+ *     summary: Kategori alan şablonlarını getir
+ *     description: |
+ *       Belirtilen envanter kategorisine ait alan şablonlarını getirir.
+ *       Database field mapping ile frontend uyumlu format döner.
+ *     tags: [Inventory Field Templates]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: "^[0-9a-fA-F]{24}$"
+ *         description: Kategori MongoDB ObjectId
+ *         example: "68380aa8b945226655fd3a9b"
+ *     responses:
+ *       200:
+ *         description: Alan şablonları başarıyla getirildi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   _id:
+ *                     type: string
+ *                     example: "675e2a1b8f4c6d1234567890"
+ *                   kategoriId:
+ *                     type: string
+ *                     example: "68380aa8b945226655fd3a9b"
+ *                   alan:
+ *                     type: string
+ *                     example: "Makine Adı"
+ *                     description: "Backward compatibility field"
+ *                   ad:
+ *                     type: string
+ *                     example: "Makine Adı"
+ *                     description: "Database alanAdi → Frontend ad mapping"
+ *                   tip:
+ *                     type: string
+ *                     enum: [text, number, select, date, boolean, textarea]
+ *                     example: "text"
+ *                     description: "Database alanTipi → Frontend tip mapping"
+ *                   gerekli:
+ *                     type: boolean
+ *                     example: true
+ *                     description: "Database zorunlu → Frontend gerekli mapping"
+ *                   siraNo:
+ *                     type: number
+ *                     example: 1
+ *                     description: "Alan sırası"
+ *                   grup:
+ *                     type: string
+ *                     example: "Genel Tanımlayıcı Bilgiler"
+ *                     description: "Alan grubu"
+ *                   varsayilanDeger:
+ *                     type: string
+ *                     example: ""
+ *                     description: "Varsayılan değer"
+ *                   secenekler:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                     example: ["Seçenek 1", "Seçenek 2"]
+ *                     description: "Select tipi için seçenekler"
+ *                   aciklama:
+ *                     type: string
+ *                     example: "Makina adı bilgisi"
+ *                   aktif:
+ *                     type: boolean
+ *                     example: true
+ *             examples:
+ *               plasticInjectionMachine:
+ *                 summary: Plastik enjeksiyon makinası alanları
+ *                 value:
+ *                   - _id: "675e2a1b8f4c6d1234567890"
+ *                     kategoriId: "68380aa8b945226655fd3a9b"
+ *                     alan: "Makine Adı"
+ *                     ad: "Makine Adı"
+ *                     tip: "text"
+ *                     gerekli: true
+ *                     siraNo: 1
+ *                     grup: "Genel Tanımlayıcı Bilgiler"
+ *                     varsayilanDeger: ""
+ *                     secenekler: []
+ *                     aciklama: "Makina adı bilgisi"
+ *                     aktif: true
+ *                   - _id: "675e2a1b8f4c6d1234567891"
+ *                     kategoriId: "68380aa8b945226655fd3a9b"
+ *                     alan: "Seri No"
+ *                     ad: "Seri No"
+ *                     tip: "text"
+ *                     gerekli: true
+ *                     siraNo: 2
+ *                     grup: "Genel Tanımlayıcı Bilgiler"
+ *                     varsayilanDeger: ""
+ *                     secenekler: []
+ *                     aciklama: "Makina seri numarası"
+ *                     aktif: true
+ *       404:
+ *         description: Kategori bulunamadı veya alan şablonu yok
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Bu kategori için alan şablonu bulunamadı"
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
+
+/**
+ * Backend Implementation Example:
+ * 
+ * router.get('/categories/:id/fields', auth, checkModulePermission('Envanter Yönetimi'), async (req, res) => {
+ *   try {
+ *     console.log('🔍 Field templates isteniyor, categoryId:', req.params.id);
+ *     
+ *     const templates = await InventoryFieldTemplate.find({kategoriId: req.params.id}).sort({siraNo: 1});
+ *     console.log(`📊 ${templates.length} template bulundu`);
+ *     
+ *     // Database field mapping (alanAdi → ad, alanTipi → tip, zorunlu → gerekli)
+ *     const mappedTemplates = templates.map((template) => ({
+ *       _id: template._id,
+ *       kategoriId: template.kategoriId,
+ *       alan: template.alanAdi,        // Backward compatibility
+ *       ad: template.alanAdi,          // alanAdi → ad  
+ *       tip: template.alanTipi,        // alanTipi → tip
+ *       gerekli: template.zorunlu,     // zorunlu → gerekli
+ *       siraNo: template.siraNo,
+ *       grup: template.grup,
+ *       varsayilanDeger: template.varsayilanDeger,
+ *       secenekler: template.secenekler,
+ *       aciklama: template.aciklama,
+ *       aktif: template.aktif
+ *     }));
+ *     
+ *     console.log('✅ Field templates mapped and sent:', mappedTemplates.length);
+ *     res.json(mappedTemplates);
+ *   } catch (error) {
+ *     console.error('❌ Field templates error:', error);
+ *     res.status(500).json({ 
+ *       message: 'Field templates yüklenirken hata oluştu',
+ *       error: error.message 
+ *     });
+ *   }
+ * });
+ */
+```
+
+### 🔧 MyActivity Enhanced Task Details API ✅
+```javascript
+/**
+ * @swagger
+ * /api/my-activity/task-details/{id}:
+ *   get:
+ *     summary: Görev detaylarını getir (tüm tip desteği) - ENHANCED
+ *     description: |
+ *       ID'ye göre görev detaylarını getirir. Desteklenen tipler:
+ *       - Normal Task (checklist)
+ *       - WorkTask (worktask) - Kalıp değişim görevleri ✅ YENİ
+ *       - HR Evaluation (hr_checklist_, hr_mesai_, hr_devamsizlik_)
+ *       - Quality Control (quality_control)
+ *       
+ *       ✅ GÜNCEL: WorkTask desteği eklendi - Kalıp bilgileri dahil
+ *     tags: [MyActivity]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: |
+ *           Görev ID'si. Formatlar:
+ *           - MongoDB ObjectId (24 karakter) - Normal Task/WorkTask/QualityControl
+ *           - hr_checklist_{hrScoreId}_{timestamp} - HR Checklist
+ *           - hr_mesai_{hrScoreId}_{timestamp} - HR Mesai
+ *           - hr_devamsizlik_{hrScoreId}_{timestamp} - HR Devamsızlık
+ *         examples:
+ *           normalTask:
+ *             value: "507f1f77bcf86cd799439011"
+ *             summary: Normal Task ID
+ *           workTask:
+ *             value: "507f1f77bcf86cd799439012"
+ *             summary: WorkTask ID (YENİ)
+ *           hrChecklist:
+ *             value: "hr_checklist_507f1f77bcf86cd799439013_1704067200000"
+ *             summary: HR Checklist ID
+ *     responses:
+ *       200:
+ *         description: Görev detayları başarıyla getirildi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - $ref: '#/components/schemas/TaskDetails'
+ *                 - $ref: '#/components/schemas/WorkTaskDetailsEnhanced'
+ *                 - $ref: '#/components/schemas/HRTaskDetails'
+ *                 - $ref: '#/components/schemas/QualityControlDetails'
+ *             examples:
+ *               workTaskExample:
+ *                 summary: WorkTask Detayı (YENİ)
+ *                 value:
+ *                   id: "507f1f77bcf86cd799439012"
+ *                   tip: "worktask"
+ *                   checklistAdi: "Kalıp Değişim Süreci"
+ *                   kategori: "İşe Bağlı"
+ *                   aciklama: "Plastik enjeksiyon kalıp değişim prosedürü"
+ *                   kullanici:
+ *                     ad: "Ahmet"
+ *                     soyad: "Yılmaz"
+ *                     kullaniciAdi: "ahmet.yilmaz"
+ *                   makina: "Enjeksiyon Makinası 2 (INV002)"
+ *                   indirilenKalip:
+ *                     ad: "Kapak Kalıbı A1"
+ *                     envanterKodu: "KLP001"
+ *                     dinamikAlanlar:
+ *                       uretilecekUrun: "Plastik Kapak"
+ *                       lokasyon: "Depo A"
+ *                   baglananHamade:
+ *                     ad: "Gövde Kalıbı B2"
+ *                     envanterKodu: "KLP002"
+ *                     dinamikAlanlar:
+ *                       uretilecekUrun: "Plastik Gövde"
+ *                       lokasyon: "Depo B"
+ *                   olusturulmaTarihi: "2025-02-06T08:00:00Z"
+ *                   tamamlanmaTarihi: "2025-02-06T10:30:00Z"
+ *                   onayTarihi: "2025-02-06T14:20:00Z"
+ *                   kontrolTarihi: "2025-02-06T14:15:00Z"
+ *                   durum: "tamamlandi"
+ *                   onaylayanKullanici:
+ *                     ad: "Mehmet"
+ *                     soyad: "Demir"
+ *                   maddeler:
+ *                     - soru: "Makina durduruldu mu?"
+ *                       puan: 25
+ *                       maxPuan: 25
+ *                       cevap: "Evet"
+ *                       alinanPuan: 23
+ *                       yorum: "Makina güvenli şekilde durduruldu"
+ *                       resim: "/uploads/worktask-images/makina1.jpg"
+ *                       kontrolYorumu: "Prosedür uygun şekilde takip edilmiş"
+ *                       kontrolPuani: 23
+ *                       sira: 1
+ *                   toplamPuan: 100
+ *                   alinanPuan: 85
+ *                   kontrolToplamPuani: 90
+ *                   basariYuzdesi: 90
+ *       404:
+ *         description: Görev bulunamadı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Görev bulunamadı"
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     WorkTaskDetailsEnhanced:
+ *       type: object
+ *       description: ✅ YENİ - Enhanced WorkTask details with kalıp bilgileri
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: "507f1f77bcf86cd799439012"
+ *         tip:
+ *           type: string
+ *           enum: [worktask]
+ *           example: "worktask"
+ *         checklistAdi:
+ *           type: string
+ *           example: "Kalıp Değişim Süreci"
+ *         kategori:
+ *           type: string
+ *           enum: [İşe Bağlı]
+ *           example: "İşe Bağlı"
+ *         aciklama:
+ *           type: string
+ *           example: "Plastik enjeksiyon kalıp değişim prosedürü"
+ *         kullanici:
+ *           $ref: '#/components/schemas/UserInfo'
+ *         makina:
+ *           type: string
+ *           example: "Enjeksiyon Makinası 2 (INV002)"
+ *           description: "Makina adı ve envanter kodu formatında"
+ *         indirilenKalip:
+ *           type: object
+ *           description: "✅ YENİ - İndirilen kalıp bilgileri"
+ *           properties:
+ *             ad:
+ *               type: string
+ *               example: "Kapak Kalıbı A1"
+ *             envanterKodu:
+ *               type: string
+ *               example: "KLP001"
+ *             dinamikAlanlar:
+ *               type: object
+ *               example: 
+ *                 uretilecekUrun: "Plastik Kapak"
+ *                 lokasyon: "Depo A"
+ *                 agirlik: "2.5 kg"
+ *         baglananHamade:
+ *           type: object
+ *           description: "✅ YENİ - Bağlanan kalıp/hamadde bilgileri"
+ *           properties:
+ *             ad:
+ *               type: string
+ *               example: "Gövde Kalıbı B2"
+ *             envanterKodu:
+ *               type: string
+ *               example: "KLP002"
+ *             dinamikAlanlar:
+ *               type: object
+ *               example: 
+ *                 uretilecekUrun: "Plastik Gövde"
+ *                 lokasyon: "Depo B"
+ *                 agirlik: "3.2 kg"
+ *         olusturulmaTarihi:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-02-06T08:00:00Z"
+ *         tamamlanmaTarihi:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-02-06T10:30:00Z"
+ *         onayTarihi:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-02-06T14:20:00Z"
+ *         kontrolTarihi:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-02-06T14:15:00Z"
+ *         durum:
+ *           type: string
+ *           enum: [bekliyor, tamamlandi, onaylandi, reddedildi]
+ *           example: "tamamlandi"
+ *         onaylayanKullanici:
+ *           $ref: '#/components/schemas/UserInfo'
+ *         maddeler:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/WorkTaskItemEnhanced'
+ *         toplamPuan:
+ *           type: number
+ *           example: 100
+ *           description: "Checklist'teki toplam puan"
+ *         alinanPuan:
+ *           type: number
+ *           example: 85
+ *           description: "Kullanıcının aldığı puan"
+ *         kontrolToplamPuani:
+ *           type: number
+ *           example: 90
+ *           description: "Kontrol sonrası verilen puan"
+ *         basariYuzdesi:
+ *           type: number
+ *           example: 90
+ *           description: "Başarı yüzdesi"
+ *
+ *     WorkTaskItemEnhanced:
+ *       type: object
+ *       properties:
+ *         soru:
+ *           type: string
+ *           example: "Kalıp değişimi tamamlandı mı?"
+ *         puan:
+ *           type: number
+ *           example: 20
+ *           description: "Bu madde için puan değeri"
+ *         maxPuan:
+ *           type: number
+ *           example: 20
+ *           description: "Frontend uyumluluğu için"
+ *         cevap:
+ *           type: string
+ *           example: "Evet"
+ *           description: "Kullanıcının cevabı"
+ *         alinanPuan:
+ *           type: number
+ *           example: 18
+ *           description: "Bu madde için alınan puan"
+ *         yorum:
+ *           type: string
+ *           example: "Kalıp değişimi sorunsuz tamamlandı"
+ *         resim:
+ *           type: string
+ *           example: "/uploads/worktask-images/kalip1.jpg"
+ *           description: "✅ YENİ - WorkTask resim desteği"
+ *         kontrolYorumu:
+ *           type: string
+ *           example: "Prosedür uygun şekilde takip edilmiş"
+ *         kontrolPuani:
+ *           type: number
+ *           example: 18
+ *           description: "Kontrol eden tarafından verilen puan"
+ *         sira:
+ *           type: number
+ *           example: 1
+ *           description: "Madde sırası"
+ */
+
+/**
+ * Backend Implementation Example:
+ * 
+ * router.get('/task-details/:id', auth, async (req, res) => {
+ *   try {
+ *     const taskId = req.params.id;
+ *     console.log('🔍 Task details isteniyor:', taskId);
+ * 
+ *     // ✅ YENİ: WorkTask kontrolü eklendi
+ *     console.log('🔍 Checking if this is a WorkTask...');
+ *     const workTask = await WorkTask.findById(taskId)
+ *       .populate('kullanici', 'ad soyad kullaniciAdi')
+ *       .populate('checklist', 'ad kategori aciklama maddeler')
+ *       .populate('makina', 'ad makinaNo envanterKodu')
+ *       .populate('indirilenKalip', 'envanterKodu ad dinamikAlanlar')
+ *       .populate('baglananHamade', 'envanterKodu ad dinamikAlanlar')
+ *       .populate('onaylayanKullanici', 'ad soyad');
+ * 
+ *     if (workTask) {
+ *       console.log('✅ WorkTask found:', workTask.checklist?.ad);
+ *       const taskDetails = MyActivityFormatters.formatWorkTaskDetails(workTask);
+ *       console.log(`✅ WorkTask detayları hazırlandı - ${taskDetails.checklistAdi} - ${taskDetails.maddeler.length} madde`);
+ *       return res.json(taskDetails);
+ *     }
+ * 
+ *     // Other task type checks...
+ *   } catch (error) {
+ *     console.error('❌ Görev detayları hatası:', error.message);
+ *     res.status(500).json({ message: 'Sunucu hatası' });
+ *   }
+ * });
+ */
+```
+
+### 🔧 Field Mapping Documentation ✅
+```javascript
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     InventoryFieldMapping:
+ *       type: object
+ *       description: "Database → Frontend field mapping sistemi"
+ *       properties:
+ *         databaseSchema:
+ *           type: object
+ *           description: "MongoDB'de saklanan alan adları"
+ *           properties:
+ *             alanAdi:
+ *               type: string
+ *               example: "Makine Adı"
+ *               description: "Database field name"
+ *             alanTipi:
+ *               type: string
+ *               example: "text"
+ *               description: "Database field type"
+ *             zorunlu:
+ *               type: boolean
+ *               example: true
+ *               description: "Database required flag"
+ *         frontendSchema:
+ *           type: object
+ *           description: "Frontend'de beklenen alan adları"
+ *           properties:
+ *             ad:
+ *               type: string
+ *               example: "Makine Adı"
+ *               description: "Frontend field name (mapped from alanAdi)"
+ *             tip:
+ *               type: string
+ *               example: "text"
+ *               description: "Frontend field type (mapped from alanTipi)"
+ *             gerekli:
+ *               type: boolean
+ *               example: true
+ *               description: "Frontend required flag (mapped from zorunlu)"
+ *         mappingFunction:
+ *           type: string
+ *           example: |
+ *             const mapTemplateFields = (template) => ({
+ *               _id: template._id,
+ *               kategoriId: template.kategoriId,
+ *               alan: template.alanAdi,        // Backward compatibility
+ *               ad: template.alanAdi,          // alanAdi → ad  
+ *               tip: template.alanTipi,        // alanTipi → tip
+ *               gerekli: template.zorunlu,     // zorunlu → gerekli
+ *               siraNo: template.siraNo,
+ *               grup: template.grup,
+ *               varsayilanDeger: template.varsayilanDeger,
+ *               secenekler: template.secenekler,
+ *               aciklama: template.aciklama,
+ *               aktif: template.aktif
+ *             });
+ */
+```
+
+## 🎯 Task Management API Updates (2025-01-20)
+
+### Task Starting Endpoint
+```javascript
+/**
+ * @swagger
+ * /api/tasks/{id}/start:
+ *   put:
+ *     summary: "Görevi başlat ve makinaya ata"
+ *     description: "Bekleme durumundaki bir görevi seçili makinaya atar ve başlatır"
+ *     tags: [Tasks]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "60d0fe4f5311236168a109ca"
+ *         description: "Başlatılacak görev ID'si"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - makinaId
+ *             properties:
+ *               makinaId:
+ *                 type: string
+ *                 example: "60d0fe4f5311236168a109cb"
+ *                 description: "Görevin atanacağı makina ID'si"
+ *     responses:
+ *       200:
+ *         description: "Görev başarıyla başlatıldı"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Görev başarıyla başlatıldı"
+ *                 task:
+ *                   $ref: '#/components/schemas/TaskWithMachine'
+ *       400:
+ *         description: "Hatalı istek (makina seçimi eksik veya görev zaten başlatılmış)"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Makina seçimi gerekli"
+ *       404:
+ *         description: "Görev bulunamadı"
+ *       500:
+ *         description: "Sunucu hatası"
+ */
+```
+
+### Task Status Definitions
+```javascript
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     TaskStatus:
+ *       type: string
+ *       enum:
+ *         - bekliyor
+ *         - baslatildi
+ *         - tamamlandi
+ *         - iptal
+ *       description: |
+ *         Task durumları:
+ *         - `bekliyor`: Template state - henüz makinaya atanmamış
+ *         - `baslatildi`: Makinaya atanmış ve başlatılmış
+ *         - `tamamlandi`: Kullanıcı tarafından tamamlanmış
+ *         - `iptal`: İptal edilmiş
+ *       
+ *     TaskWithMachine:
+ *       allOf:
+ *         - $ref: '#/components/schemas/Task'
+ *         - type: object
+ *           properties:
+ *             makina:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                   example: "60d0fe4f5311236168a109cb"
+ *                 ad:
+ *                   type: string
+ *                   example: "Makina ZF101"
+ *                 makinaNo:
+ *                   type: string
+ *                   example: "ZF101"
+ *                 envanterKodu:
+ *                   type: string
+ *                   example: "MKN001"
+ *             durum:
+ *               type: string
+ *               enum: [baslatildi, tamamlandi]
+ *               example: "baslatildi"
+ *             baslamaTarihi:
+ *               type: string
+ *               format: date-time
+ *               example: "2025-01-20T09:15:00Z"
+ *               description: "Görevin başlatılma tarihi"
+ */
+```
+
+### Star Rating API Schema
+```javascript
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     StarRatingRequest:
+ *       type: object
+ *       description: "Yıldız tabanlı puanlama sistemi için istek"
+ *       required:
+ *         - maddeler
+ *       properties:
+ *         maddeler:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               index:
+ *                 type: number
+ *                 example: 0
+ *                 description: "Madde sırası (0-based)"
+ *               kontrolPuani:
+ *                 type: number
+ *                 minimum: 0
+ *                 maximum: 10
+ *                 example: 8
+ *                 description: "1-10 yıldız puanı"
+ *               kontrolYorumu:
+ *                 type: string
+ *                 example: "Kaliteli iş yapılmış"
+ *                 description: "Kontrol yorumu (opsiyonel)"
+ *         genelYorum:
+ *           type: string
+ *           example: "Genel olarak başarılı bir çalışma"
+ *           description: "Genel değerlendirme yorumu"
+ *         
+ *     StarRatingResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *           example: true
+ *         message:
+ *           type: string
+ *           example: "Puanlama başarıyla kaydedildi"
+ *         toplamPuan:
+ *           type: number
+ *           example: 85
+ *           description: "Toplam alınan puan"
+ *         maxPuan:
+ *           type: number
+ *           example: 100
+ *           description: "Maksimum olası puan"
+ *         yuzde:
+ *           type: number
+ *           example: 85
+ *           description: "Başarı yüzdesi"
+ */
+```

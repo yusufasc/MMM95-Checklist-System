@@ -58,7 +58,8 @@ const Departments = () => {
       setDepartments(response.data);
     } catch (error) {
       setError(
-        'Veriler yüklenirken hata oluştu: ' + (error.response?.data?.message || error.message),
+        'Veriler yüklenirken hata oluştu: ' +
+          (error.response?.data?.message || error.message),
       );
     } finally {
       setLoading(false);
@@ -102,7 +103,9 @@ const Departments = () => {
   const handleYetkiChange = (hedefDepartmanId, yetkiTuru, value) => {
     const newYetkiler = [...formData.digerDepartmanYetkileri];
     const existingIndex = newYetkiler.findIndex(
-      y => y.hedefDepartman === hedefDepartmanId || y.hedefDepartman?._id === hedefDepartmanId,
+      y =>
+        y.hedefDepartman === hedefDepartmanId ||
+        y.hedefDepartman?._id === hedefDepartmanId,
     );
 
     if (existingIndex >= 0) {
@@ -123,7 +126,9 @@ const Departments = () => {
 
   const getYetkiDurumu = (hedefDepartmanId, yetkiTuru) => {
     const yetki = formData.digerDepartmanYetkileri.find(
-      y => y.hedefDepartman === hedefDepartmanId || y.hedefDepartman?._id === hedefDepartmanId,
+      y =>
+        y.hedefDepartman === hedefDepartmanId ||
+        y.hedefDepartman?._id === hedefDepartmanId,
     );
     return yetki ? yetki[yetkiTuru] : false;
   };
@@ -175,7 +180,12 @@ const Departments = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        minHeight='400px'
+      >
         <CircularProgress />
       </Box>
     );
@@ -183,21 +193,32 @@ const Departments = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Departman Yönetimi</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpen}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3,
+        }}
+      >
+        <Typography variant='h4'>Departman Yönetimi</Typography>
+        <Button
+          variant='contained'
+          startIcon={<AddIcon />}
+          onClick={handleOpen}
+        >
           Yeni Departman
         </Button>
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+        <Alert severity='error' sx={{ mb: 2 }} onClose={() => setError('')}>
           {error}
         </Alert>
       )}
 
       {success && (
-        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>
+        <Alert severity='success' sx={{ mb: 2 }} onClose={() => setSuccess('')}>
           {success}
         </Alert>
       )}
@@ -219,34 +240,44 @@ const Departments = () => {
               return (
                 <TableRow key={department._id}>
                   <TableCell>
-                    <Typography variant="h6">{department.ad}</Typography>
+                    <Typography variant='h6'>{department.ad}</Typography>
                   </TableCell>
                   <TableCell>
-                    <Chip label={getYetkiSayisi(department)} color="primary" size="small" />
+                    <Chip
+                      label={getYetkiSayisi(department)}
+                      color='primary'
+                      size='small'
+                    />
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <Chip
                         icon={<VisibilityIcon />}
                         label={`${yetkiDetayi.gorebilir} Görme`}
-                        variant="outlined"
-                        size="small"
-                        color="info"
+                        variant='outlined'
+                        size='small'
+                        color='info'
                       />
                       <Chip
                         icon={<AssessmentIcon />}
                         label={`${yetkiDetayi.puanlayabilir} Puanlama`}
-                        variant="outlined"
-                        size="small"
-                        color="success"
+                        variant='outlined'
+                        size='small'
+                        color='success'
                       />
                     </Box>
                   </TableCell>
                   <TableCell>
-                    {new Date(department.olusturmaTarihi).toLocaleDateString('tr-TR')}
+                    {new Date(department.olusturmaTarihi).toLocaleDateString(
+                      'tr-TR',
+                    )}
                   </TableCell>
                   <TableCell>
-                    <IconButton size="small" onClick={() => handleEdit(department)} color="primary">
+                    <IconButton
+                      size='small'
+                      onClick={() => handleEdit(department)}
+                      color='primary'
+                    >
                       <EditIcon />
                     </IconButton>
                   </TableCell>
@@ -258,33 +289,35 @@ const Departments = () => {
       </TableContainer>
 
       {/* Departman Dialog */}
-      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-        <DialogTitle>{editMode ? 'Departman Düzenle' : 'Yeni Departman Ekle'}</DialogTitle>
+      <Dialog open={open} onClose={handleClose} maxWidth='md' fullWidth>
+        <DialogTitle>
+          {editMode ? 'Departman Düzenle' : 'Yeni Departman Ekle'}
+        </DialogTitle>
         <DialogContent>
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity='error' sx={{ mb: 2 }}>
               {error}
             </Alert>
           )}
 
           <TextField
             autoFocus
-            margin="dense"
-            name="ad"
-            label="Departman Adı"
+            margin='dense'
+            name='ad'
+            label='Departman Adı'
             fullWidth
-            variant="outlined"
+            variant='outlined'
             value={formData.ad}
             onChange={handleChange}
             sx={{ mb: 3 }}
           />
 
-          <Typography variant="h6" gutterBottom>
+          <Typography variant='h6' gutterBottom>
             Diğer Departmanlara Yetkileri
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Bu departmanın hangi departmanları görüntüleyebileceğini ve puanlayabileceğini
-            belirleyin.
+          <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+            Bu departmanın hangi departmanları görüntüleyebileceğini ve
+            puanlayabileceğini belirleyin.
           </Typography>
 
           {departments
@@ -292,41 +325,61 @@ const Departments = () => {
             .map(targetDept => (
               <Accordion key={targetDept._id} sx={{ mb: 1 }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                    <Typography variant="h6">{targetDept.ad}</Typography>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      width: '100%',
+                    }}
+                  >
+                    <Typography variant='h6'>{targetDept.ad}</Typography>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       {getYetkiDurumu(targetDept._id, 'gorebilir') && (
-                        <Chip label="Görme" size="small" color="info" />
+                        <Chip label='Görme' size='small' color='info' />
                       )}
                       {getYetkiDurumu(targetDept._id, 'puanlayabilir') && (
-                        <Chip label="Puanlama" size="small" color="success" />
+                        <Chip label='Puanlama' size='small' color='success' />
                       )}
                     </Box>
                   </Box>
                 </AccordionSummary>
                 <AccordionDetails>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Box
+                    sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+                  >
                     <FormControlLabel
                       control={
                         <Checkbox
                           checked={getYetkiDurumu(targetDept._id, 'gorebilir')}
                           onChange={e =>
-                            handleYetkiChange(targetDept._id, 'gorebilir', e.target.checked)
+                            handleYetkiChange(
+                              targetDept._id,
+                              'gorebilir',
+                              e.target.checked,
+                            )
                           }
                         />
                       }
-                      label="Bu departmanın işlerini görüntüleyebilir"
+                      label='Bu departmanın işlerini görüntüleyebilir'
                     />
                     <FormControlLabel
                       control={
                         <Checkbox
-                          checked={getYetkiDurumu(targetDept._id, 'puanlayabilir')}
+                          checked={getYetkiDurumu(
+                            targetDept._id,
+                            'puanlayabilir',
+                          )}
                           onChange={e =>
-                            handleYetkiChange(targetDept._id, 'puanlayabilir', e.target.checked)
+                            handleYetkiChange(
+                              targetDept._id,
+                              'puanlayabilir',
+                              e.target.checked,
+                            )
                           }
                         />
                       }
-                      label="Bu departmanın işlerini puanlayabilir"
+                      label='Bu departmanın işlerini puanlayabilir'
                     />
                   </Box>
                 </AccordionDetails>
@@ -335,7 +388,7 @@ const Departments = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>İptal</Button>
-          <Button onClick={handleSubmit} variant="contained">
+          <Button onClick={handleSubmit} variant='contained'>
             {editMode ? 'Güncelle' : 'Ekle'}
           </Button>
         </DialogActions>

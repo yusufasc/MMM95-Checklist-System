@@ -48,12 +48,16 @@ class TaskScheduler {
   // Günlük görevleri oluştur
   async createDailyTasks() {
     try {
-      const dailyChecklists = await ChecklistTemplate.find({ periyot: 'gunluk' })
+      const dailyChecklists = await ChecklistTemplate.find({
+        periyot: 'gunluk',
+      })
         .populate('hedefRol')
         .populate('hedefDepartman');
 
       await Promise.all(
-        dailyChecklists.map(checklist => this.createTasksForChecklist(checklist, 'gunluk')),
+        dailyChecklists.map(checklist =>
+          this.createTasksForChecklist(checklist, 'gunluk'),
+        ),
       );
     } catch (error) {
       console.error('Günlük görevler oluşturulurken hata:', error);
@@ -63,12 +67,16 @@ class TaskScheduler {
   // Haftalık görevleri oluştur
   async createWeeklyTasks() {
     try {
-      const weeklyChecklists = await ChecklistTemplate.find({ periyot: 'haftalik' })
+      const weeklyChecklists = await ChecklistTemplate.find({
+        periyot: 'haftalik',
+      })
         .populate('hedefRol')
         .populate('hedefDepartman');
 
       await Promise.all(
-        weeklyChecklists.map(checklist => this.createTasksForChecklist(checklist, 'haftalik')),
+        weeklyChecklists.map(checklist =>
+          this.createTasksForChecklist(checklist, 'haftalik'),
+        ),
       );
     } catch (error) {
       console.error('Haftalık görevler oluşturulurken hata:', error);
@@ -78,12 +86,16 @@ class TaskScheduler {
   // Aylık görevleri oluştur
   async createMonthlyTasks() {
     try {
-      const monthlyChecklists = await ChecklistTemplate.find({ periyot: 'aylik' })
+      const monthlyChecklists = await ChecklistTemplate.find({
+        periyot: 'aylik',
+      })
         .populate('hedefRol')
         .populate('hedefDepartman');
 
       await Promise.all(
-        monthlyChecklists.map(checklist => this.createTasksForChecklist(checklist, 'aylik')),
+        monthlyChecklists.map(checklist =>
+          this.createTasksForChecklist(checklist, 'aylik'),
+        ),
       );
     } catch (error) {
       console.error('Aylık görevler oluşturulurken hata:', error);
@@ -147,7 +159,9 @@ class TaskScheduler {
         });
 
         if (existingTask) {
-          console.log(`⚠️  ${user.kullaniciAdi} için ${checklist.ad} görevi zaten mevcut`);
+          console.log(
+            `⚠️  ${user.kullaniciAdi} için ${checklist.ad} görevi zaten mevcut`,
+          );
           return;
         }
 
@@ -170,12 +184,17 @@ class TaskScheduler {
         });
 
         await task.save();
-        console.log(`✅ ${user.kullaniciAdi} için ${checklist.ad} görevi oluşturuldu`);
+        console.log(
+          `✅ ${user.kullaniciAdi} için ${checklist.ad} görevi oluşturuldu`,
+        );
       });
 
       await Promise.all(userPromises);
     } catch (error) {
-      console.error(`${checklist.ad} için görevler oluşturulurken hata:`, error);
+      console.error(
+        `${checklist.ad} için görevler oluşturulurken hata:`,
+        error,
+      );
     }
   }
 

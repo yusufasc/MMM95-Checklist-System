@@ -1,104 +1,65 @@
 {
-        // Olası öznitelikler hakkında bilgi edinmek için IntelliSense kullanın.
-        // Mevcut özniteliklerin açıklamalarını görüntülemek için üzerine gelin.
-        // Daha fazla bilgi için şu adresi ziyaret edin: https://go.microsoft.com/fwlink/?linkid=830387
-        "version": "0.2.0",
-        "configurations": [
-                {
-                        "name": "🚀 Backend Debug",
-                        "type": "node",
-                        "request": "launch",
-                        "program": "${workspaceFolder}/backend/server.js",
-                        "cwd": "${workspaceFolder}/backend",
-                        "env": {
-                                "NODE_ENV": "development",
-                                "DEBUG": "*"
-                        },
-                        "args": ["--max-http-header-size=32768"],
-                        "console": "integratedTerminal",
-                        "restart": true,
-                        "runtimeArgs": ["--inspect"],
-                        "skipFiles": [
-                                "<node_internals>/**"
-                        ],
-                        "outputCapture": "std"
-                },
-                {
-                        "name": "🐛 Backend Debug (Break on Start)",
-                        "type": "node",
-                        "request": "launch",
-                        "program": "${workspaceFolder}/backend/server.js",
-                        "cwd": "${workspaceFolder}/backend",
-                        "env": {
-                                "NODE_ENV": "development",
-                                "DEBUG": "*"
-                        },
-                        "args": ["--max-http-header-size=32768"],
-                        "console": "integratedTerminal",
-                        "restart": true,
-                        "runtimeArgs": ["--inspect-brk"],
-                        "skipFiles": [
-                                "<node_internals>/**"
-                        ],
-                        "outputCapture": "std",
-                        "stopOnEntry": true
-                },
-                {
-                        "name": "🔗 Backend Attach",
-                        "type": "node",
-                        "request": "attach",
-                        "port": 9229,
-                        "address": "localhost",
-                        "restart": false,
-                        "sourceMaps": false,
-                        "outDir": null,
-                        "localRoot": "${workspaceFolder}/backend",
-                        "remoteRoot": null,
-                        "skipFiles": [
-                                "<node_internals>/**"
-                        ]
-                },
-                {
-                        "name": "⚛️ Frontend Debug (Chrome)",
-                        "type": "chrome",
-                        "request": "launch",
-                        "url": "http://localhost:3000",
-                        "webRoot": "${workspaceFolder}/frontend/src",
-                        "sourceMapPathOverrides": {
-                                "webpack:///src/*": "${webRoot}/*"
-                        },
-                        "userDataDir": false,
-                        "runtimeArgs": [
-                                "--disable-web-security",
-                                "--disable-features=VizDisplayCompositor"
-                        ]
-                },
-                {
-                        "name": "🧪 Test Debug",
-                        "type": "node",
-                        "request": "launch",
-                        "program": "${workspaceFolder}/backend/scripts/createTestData.js",
-                        "cwd": "${workspaceFolder}/backend",
-                        "env": {
-                                "NODE_ENV": "development",
-                                "DEBUG": "*"
-                        },
-                        "console": "integratedTerminal",
-                        "restart": true,
-                        "runtimeArgs": ["--inspect"],
-                        "skipFiles": [
-                                "<node_internals>/**"
-                        ]
-                }
-        ],
-        "compounds": [
-                {
-                        "name": "🚀 Full Stack Debug",
-                        "configurations": [
-                                "🚀 Backend Debug",
-                                "⚛️ Frontend Debug (Chrome)"
-                        ],
-                        "stopAll": true
-                }
-        ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "🚀 MMM Backend Debug",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/server.js",
+      "cwd": "${workspaceFolder}/backend",
+      "env": {
+        "NODE_ENV": "development",
+        "DEBUG": "*",
+        "MONGODB_URI": "mongodb://localhost:27017/mmm-checklist"
+      },
+      "console": "integratedTerminal",
+      "restart": true,
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "outputCapture": "std"
+    },
+    {
+      "name": "🎮 MMM Frontend Debug",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/frontend",
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\npm.cmd",
+      "runtimeArgs": ["start"],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "🔧 MMM Script Debug",
+      "type": "node",
+      "request": "launch",
+      "program": "${file}",
+      "cwd": "${workspaceFolder}/backend",
+      "env": {
+        "NODE_ENV": "development",
+        "MONGODB_URI": "mongodb://localhost:27017/mmm-checklist"
+      },
+      "console": "integratedTerminal",
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe"
+    },
+    {
+      "name": "🧪 MMM Test Debug",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\npm.cmd",
+      "runtimeArgs": ["test"],
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "🎯 MMM Full Stack Debug",
+      "configurations": ["🚀 MMM Backend Debug", "🎮 MMM Frontend Debug"],
+      "stopAll": true
+    }
+  ]
 }

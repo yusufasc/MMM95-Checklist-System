@@ -13,7 +13,16 @@ const InventoryFieldTemplateSchema = new mongoose.Schema({
   },
   alanTipi: {
     type: String,
-    enum: ['text', 'number', 'date', 'select', 'boolean', 'textarea', 'email', 'url'],
+    enum: [
+      'text',
+      'number',
+      'date',
+      'select',
+      'boolean',
+      'textarea',
+      'email',
+      'url',
+    ],
     default: 'text',
   },
   zorunlu: {
@@ -70,7 +79,10 @@ const InventoryFieldTemplateSchema = new mongoose.Schema({
 });
 
 // Unique index - aynı kategoride aynı alan adı olmasın
-InventoryFieldTemplateSchema.index({ kategoriId: 1, alanAdi: 1 }, { unique: true });
+InventoryFieldTemplateSchema.index(
+  { kategoriId: 1, alanAdi: 1 },
+  { unique: true },
+);
 
 // Güncelleme tarihini otomatik ayarla
 InventoryFieldTemplateSchema.pre('save', function (next) {
@@ -78,4 +90,7 @@ InventoryFieldTemplateSchema.pre('save', function (next) {
   next();
 });
 
-module.exports = mongoose.model('InventoryFieldTemplate', InventoryFieldTemplateSchema);
+module.exports = mongoose.model(
+  'InventoryFieldTemplate',
+  InventoryFieldTemplateSchema,
+);

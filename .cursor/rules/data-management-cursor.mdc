@@ -1,0 +1,498 @@
+---
+description: Excel import/export, file uploads, data processing, bulk operations. Triggers: Excel, ExcelJS, import, export, file, upload, multer, data, bulk, backup.
+globs: 
+alwaysApply: false
+---
+# 📊 MMM Checklist - Data Management Kuralları
+
+## Excel Export/Import Patterns
+```javascript
+const ExcelJS = require('exceljs');
+
+// ✅ Excel export pattern
+const exportUsersToExcel = async (users, res) => {
+  try {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Kullanıcılar');
+
+    // Header styling
+    worksheet.columns = [
+      { header: 'Ad', key: 'ad', width: 20 },
+      { header: 'Soyad', key: 'soyad', width: 20 },
+      { header: 'Kullanıcı Adı', key: 'kullaniciAdi', width: 25 },
+      { header: 'Email', key: 'email', width: 30 },
+      { header: 'Durum', key: 'durum', width: 15 },
+      { header: 'Oluşturma Tarihi', key: 'olusturmaTarihi', width: 20 }
+    ];
+
+    // Header formatting
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' }
+    };
+
+    // Add data rows
+    users.forEach(user => {
+      worksheet.addRow({
+        ad: user.ad,
+        soyad: user.soyad,
+        kullaniciAdi: user.kullaniciAdi,
+        email: user.email || '',
+        durum: user.durum,
+        olusturmaTarihi: user.olusturmaTarihi?.toLocaleDateString('tr-TR') || ''
+      });
+    });
+
+    // Auto-filter and formatting
+    worksheet.autoFilter = 'A1:F1';
+    
+    // Generate filename with timestamp
+    const filename = `kullanicilar_${new Date().toISOString().split('T')[0]}.xlsx`;
+    
+    // Set response headers
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+
+    // Write to response
+    await workbook.xlsx.write(res);
+    res.end();
+
+  } catch (error) {
+    console.error('Excel export error:', error);
+    throw new Error('Excel dosyası oluşturulurken hata oluştu');
+  }
+};
+
+// ✅ Excel import pattern
+const importUsersFromExcel = async (file) => {
+  try {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(file.buffer);
+    
+    const worksheet = workbook.getWorksheet(1);
+    const users = [];
+    const errors = [];
+
+    // Skip header row, start from row 2
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return; // Skip header
+
+      try {
+        const userData = {
+          ad: row.getCell(1).value?.toString()?.trim(),
+          soyad: row.getCell(2).value?.toString()?.trim(),
+          kullaniciAdi: row.getCell(3).value?.toString()?.trim(),
+          email: row.getCell(4).value?.toString()?.trim(),
+          durum: row.getCell(5).value?.toString()?.trim() || 'aktif'
+        };
+
+        // Validation
+        if (!userData.ad || !userData.soyad || !userData.kullaniciAdi) {
+          errors.push(`Satır ${rowNumber}: Ad, soyad ve kullanıcı adı zorunludur`);
+          return;
+        }
+
+        if (userData.email && !/\S+@\S+\.\S+/.test(userData.email)) {
+          errors.push(`Satır ${rowNumber}: Geçersiz email formatı`);
+          return;
+        }
+
+        users.push(userData);
+
+      } catch (error) {
+        errors.push(`Satır ${rowNumber}: ${error.message}`);
+      }
+    });
+
+    return { users, errors };
+
+  } catch (error) {
+    throw new Error(`Excel dosyası okunurken hata: ${error.message}`);
+  }
+};
+```
+
+## File Upload Security
+```javascript
+const multer = require('multer');
+const path = require('path');
+
+// ✅ Secure file upload configuration
+const storage = multer.memoryStorage();
+
+const fileFilter = (req, file, cb) => {
+  // Allowed file types
+  const allowedTypes = [
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'image/jpeg',
+    'image/png',
+    'image/jpg'
+  ];
+
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Desteklenmeyen dosya türü'), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+    files: 1 // Single file only
+  }
+});
+
+// ✅ File upload endpoint
+router.post('/import', auth, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Dosya seçilmedi'
+      });
+    }
+
+    // File type validation
+    const allowedExtensions = ['.xlsx', '.xls'];
+    const fileExtension = path.extname(req.file.originalname).toLowerCase();
+    
+    if (!allowedExtensions.includes(fileExtension)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Sadece Excel dosyaları (.xlsx, .xls) kabul edilir'
+      });
+    }
+
+    // Process file
+    const result = await importUsersFromExcel(req.file);
+    
+    if (result.errors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Dosyada hatalar bulundu',
+        errors: result.errors
+      });
+    }
+
+    // Save to database
+    const savedUsers = await User.insertMany(result.users);
+
+    res.json({
+      success: true,
+      message: `${savedUsers.length} kullanıcı başarıyla içe aktarıldı`,
+      data: savedUsers
+    });
+
+  } catch (error) {
+    console.error('File import error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Dosya işlenirken hata oluştu'
+    });
+  }
+});
+```
+
+## Data Transformation Utilities
+```javascript
+// ✅ Data sanitization helpers
+const sanitizeData = {
+  // Remove HTML tags and scripts
+  cleanHtml: (text) => {
+    if (!text) return '';
+    return text.replace(/<[^>]*>/g, '').trim();
+  },
+
+  // Normalize Turkish characters for search
+  normalizeTurkish: (text) => {
+    if (!text) return '';
+    const turkishMap = {
+      'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
+      'Ç': 'C', 'Ğ': 'G', 'İ': 'I', 'Ö': 'O', 'Ş': 'S', 'Ü': 'U'
+    };
+    return text.replace(/[çğıöşüÇĞİÖŞÜ]/g, char => turkishMap[char] || char);
+  },
+
+  // Phone number formatting
+  formatPhone: (phone) => {
+    if (!phone) return '';
+    return phone.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4');
+  },
+
+  // Email validation and cleanup
+  cleanEmail: (email) => {
+    if (!email) return '';
+    return email.toLowerCase().trim();
+  }
+};
+
+// ✅ Data validation helpers
+const validateData = {
+  isValidObjectId: (id) => {
+    return /^[0-9a-fA-F]{24}$/.test(id);
+  },
+
+  isValidEmail: (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  },
+
+  isValidPhone: (phone) => {
+    return /^[\+]?[0-9]{10,15}$/.test(phone.replace(/\s/g, ''));
+  },
+
+  isValidDate: (date) => {
+    return date instanceof Date && !isNaN(date);
+  }
+};
+```
+
+## Bulk Operations
+```javascript
+// ✅ Bulk insert with validation
+const bulkCreateUsers = async (users) => {
+  const results = {
+    successful: [],
+    failed: [],
+    duplicates: []
+  };
+
+  for (let i = 0; i < users.length; i++) {
+    try {
+      const user = users[i];
+      
+      // Check for duplicates
+      const existing = await User.findOne({ kullaniciAdi: user.kullaniciAdi });
+      if (existing) {
+        results.duplicates.push({
+          row: i + 1,
+          kullaniciAdi: user.kullaniciAdi,
+          message: 'Kullanıcı adı zaten mevcut'
+        });
+        continue;
+      }
+
+      // Validate and create
+      const newUser = await User.create(user);
+      results.successful.push({
+        row: i + 1,
+        _id: newUser._id,
+        kullaniciAdi: newUser.kullaniciAdi
+      });
+
+    } catch (error) {
+      results.failed.push({
+        row: i + 1,
+        data: users[i],
+        error: error.message
+      });
+    }
+  }
+
+  return results;
+};
+
+// ✅ Bulk update with optimistic locking
+const bulkUpdateUsers = async (updates) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const results = [];
+
+    for (const update of updates) {
+      const { _id, ...data } = update;
+      
+      const result = await User.findByIdAndUpdate(
+        _id,
+        { ...data, guncellemeTarihi: new Date() },
+        { new: true, session, runValidators: true }
+      );
+
+      if (!result) {
+        throw new Error(`Kullanıcı bulunamadı: ${_id}`);
+      }
+
+      results.push(result);
+    }
+
+    await session.commitTransaction();
+    return results;
+
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+};
+```
+
+## Data Backup & Archive
+```javascript
+// ✅ Database backup utilities
+const createDataBackup = async () => {
+  try {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupDir = `./backups/${timestamp}`;
+    
+    // Ensure backup directory exists
+    await fs.promises.mkdir(backupDir, { recursive: true });
+
+    // Backup each collection
+    const collections = ['users', 'tasks', 'inventory', 'departments'];
+    
+    for (const collectionName of collections) {
+      const Model = mongoose.model(collectionName.charAt(0).toUpperCase() + collectionName.slice(1));
+      const data = await Model.find({}).lean();
+      
+      const filename = path.join(backupDir, `${collectionName}.json`);
+      await fs.promises.writeFile(filename, JSON.stringify(data, null, 2));
+      
+      console.log(`✅ ${collectionName} backed up: ${data.length} records`);
+    }
+
+    return backupDir;
+
+  } catch (error) {
+    console.error('Backup failed:', error);
+    throw error;
+  }
+};
+
+// ✅ Data archival strategy
+const archiveOldData = async (months = 12) => {
+  const cutoffDate = new Date();
+  cutoffDate.setMonth(cutoffDate.getMonth() - months);
+
+  try {
+    // Archive completed tasks older than cutoff
+    const oldTasks = await Task.find({
+      durum: 'tamamlandi',
+      tamamlanmaTarihi: { $lt: cutoffDate }
+    });
+
+    if (oldTasks.length > 0) {
+      // Move to archive collection
+      await ArchivedTask.insertMany(oldTasks);
+      await Task.deleteMany({
+        _id: { $in: oldTasks.map(t => t._id) }
+      });
+
+      console.log(`✅ ${oldTasks.length} eski görev arşivlendi`);
+    }
+
+    // Archive old activity logs
+    const oldLogs = await ActivityLog.find({
+      tarih: { $lt: cutoffDate }
+    });
+
+    if (oldLogs.length > 0) {
+      await ArchivedActivityLog.insertMany(oldLogs);
+      await ActivityLog.deleteMany({
+        _id: { $in: oldLogs.map(l => l._id) }
+      });
+
+      console.log(`✅ ${oldLogs.length} eski log arşivlendi`);
+    }
+
+    return {
+      archivedTasks: oldTasks.length,
+      archivedLogs: oldLogs.length
+    };
+
+  } catch (error) {
+    console.error('Archive failed:', error);
+    throw error;
+  }
+};
+```
+
+## File Management
+```javascript
+// ✅ Temporary file cleanup
+const cleanupTempFiles = async () => {
+  try {
+    const tempDir = './temp';
+    const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+    const now = Date.now();
+
+    const files = await fs.promises.readdir(tempDir);
+    
+    for (const file of files) {
+      const filePath = path.join(tempDir, file);
+      const stats = await fs.promises.stat(filePath);
+      
+      if (now - stats.mtime.getTime() > maxAge) {
+        await fs.promises.unlink(filePath);
+        console.log(`🗑️ Deleted temp file: ${file}`);
+      }
+    }
+
+  } catch (error) {
+    console.error('Cleanup failed:', error);
+  }
+};
+
+// ✅ File size monitoring
+const monitorFileUploads = (req, res, next) => {
+  const startTime = Date.now();
+  
+  req.on('end', () => {
+    const duration = Date.now() - startTime;
+    const size = req.headers['content-length'];
+    
+    if (size > 1024 * 1024) { // > 1MB
+      console.log(`📁 Large file upload: ${size} bytes in ${duration}ms`);
+    }
+  });
+  
+  next();
+};
+```
+
+## Data Export Templates
+```javascript
+// ✅ Reusable export templates
+const exportTemplates = {
+  users: {
+    columns: [
+      { header: 'Ad', key: 'ad', width: 20 },
+      { header: 'Soyad', key: 'soyad', width: 20 },
+      { header: 'Kullanıcı Adı', key: 'kullaniciAdi', width: 25 },
+      { header: 'Email', key: 'email', width: 30 },
+      { header: 'Durum', key: 'durum', width: 15 }
+    ],
+    transform: (user) => ({
+      ad: user.ad,
+      soyad: user.soyad,
+      kullaniciAdi: user.kullaniciAdi,
+      email: user.email || '',
+      durum: user.durum
+    })
+  },
+
+  tasks: {
+    columns: [
+      { header: 'Görev Adı', key: 'ad', width: 30 },
+      { header: 'Açıklama', key: 'aciklama', width: 40 },
+      { header: 'Durum', key: 'durum', width: 15 },
+      { header: 'Atanan', key: 'atanan', width: 25 },
+      { header: 'Son Tarih', key: 'sonTarih', width: 20 }
+    ],
+    transform: (task) => ({
+      ad: task.ad,
+      aciklama: task.aciklama,
+      durum: task.durum,
+      atanan: task.atananKullanici?.ad + ' ' + task.atananKullanici?.soyad,
+      sonTarih: task.sonTarih?.toLocaleDateString('tr-TR')
+    })
+  }
+};
+```
+

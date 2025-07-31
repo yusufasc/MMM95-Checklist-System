@@ -1,5 +1,5 @@
 const express = require('express');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
@@ -11,6 +11,7 @@ const router = express.Router();
 router.post('/login', async (req, res) => {
   try {
     const { kullaniciAdi, sifre } = req.body;
+    console.log('🔍 Login attempt:', { kullaniciAdi, sifre: '***' });
 
     // Kullanıcıyı bul ve rol bilgilerini tam olarak populate et
     const user = await User.findOne({ kullaniciAdi })
@@ -31,13 +32,22 @@ router.post('/login', async (req, res) => {
       .populate('departmanlar', 'ad');
 
     if (!user) {
-      return res.status(400).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
+      console.log('❌ User not found:', kullaniciAdi);
+      return res
+        .status(400)
+        .json({ message: 'Geçersiz kullanıcı adı veya şifre' });
     }
+
+    console.log('✅ User found:', user.kullaniciAdi, user.ad, user.soyad);
 
     // Şifre kontrolü
     const isMatch = await bcrypt.compare(sifre, user.sifreHash);
+    console.log('🔐 Password check:', isMatch);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
+      console.log('❌ Password mismatch for user:', kullaniciAdi);
+      return res
+        .status(400)
+        .json({ message: 'Geçersiz kullanıcı adı veya şifre' });
     }
 
     // Kullanıcı aktif mi?
@@ -56,23 +66,28 @@ router.post('/login', async (req, res) => {
       },
     };
 
-    jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' }, (err, token) => {
-      if (err) {
-        throw err;
-      }
-      res.json({
-        token,
-        user: {
-          id: user.id,
-          ad: user.ad,
-          soyad: user.soyad,
-          kullaniciAdi: user.kullaniciAdi,
-          roller: user.roller, // Tam populate edilmiş rol bilgileri
-          departmanlar: user.departmanlar,
-          durum: user.durum,
-        },
-      });
-    });
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' },
+      (err, token) => {
+        if (err) {
+          throw err;
+        }
+        res.json({
+          token,
+          user: {
+            id: user.id,
+            ad: user.ad,
+            soyad: user.soyad,
+            kullaniciAdi: user.kullaniciAdi,
+            roller: user.roller, // Tam populate edilmiş rol bilgileri
+            departmanlar: user.departmanlar,
+            durum: user.durum,
+          },
+        });
+      },
+    );
   } catch (error) {
     console.error(error.message);
     res.status(500).send('Sunucu hatası');

@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Container, Typography, Box, Alert, Tabs, Tab, Paper } from '@mui/material';
+import {
+  Container,
+  Typography,
+  Box,
+  Alert,
+  Tabs,
+  Tab,
+  Paper,
+} from '@mui/material';
 import {
   Settings as SettingsIcon,
   Assignment as AssignmentIcon,
@@ -8,13 +16,13 @@ import {
   AdminPanelSettings as AdminIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import QualityControlTemplates from '../components/QualityControlTemplates';
-import QualityControlStatistics from '../components/QualityControlStatistics';
+import QualityControlTemplates from '../components/Quality/QualityControlTemplates';
+import QualityControlStatistics from '../components/Quality/QualityControlStatistics';
 
 function TabPanel({ children, value, index, ...other }) {
   return (
     <div
-      role="tabpanel"
+      role='tabpanel'
       hidden={value !== index}
       id={`qc-management-tabpanel-${index}`}
       aria-labelledby={`qc-management-tab-${index}`}
@@ -36,12 +44,15 @@ const QualityControlManagement = () => {
   const [tabValue, setTabValue] = useState(0);
 
   // Sadece admin erişimi
-  const canAccess = isAdmin() || hasModulePermission('Kalite Kontrol', 'duzenleyebilir');
+  const canAccess =
+    isAdmin() || hasModulePermission('Kalite Kontrol', 'duzenleyebilir');
 
   if (!canAccess) {
     return (
-      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-        <Alert severity="error">Bu sayfaya sadece yöneticiler erişebilir.</Alert>
+      <Container maxWidth='xl' sx={{ mt: 4, mb: 4 }}>
+        <Alert severity='error'>
+          Bu sayfaya sadece yöneticiler erişebilir.
+        </Alert>
       </Container>
     );
   }
@@ -51,12 +62,12 @@ const QualityControlManagement = () => {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth='xl' sx={{ mt: 4, mb: 4 }}>
       {/* Başlık */}
       <Box sx={{ mb: 4 }}>
         <Typography
-          variant="h4"
-          component="h1"
+          variant='h4'
+          component='h1'
           gutterBottom
           sx={{
             fontWeight: 'bold',
@@ -67,18 +78,22 @@ const QualityControlManagement = () => {
             WebkitTextFillColor: 'transparent',
           }}
         >
-          <AdminIcon sx={{ mr: 2, verticalAlign: 'middle', color: '#e91e63' }} />
+          <AdminIcon
+            sx={{ mr: 2, verticalAlign: 'middle', color: '#e91e63' }}
+          />
           Kalite Kontrol Yönetimi
         </Typography>
-        <Typography variant="subtitle1" color="text.secondary">
-          Değerlendirme şablonlarını yönetin ve kalite kontrol süreçlerini analiz edin
+        <Typography variant='subtitle1' color='text.secondary'>
+          Değerlendirme şablonlarını yönetin ve kalite kontrol süreçlerini
+          analiz edin
         </Typography>
       </Box>
 
       {/* Alert */}
-      <Alert severity="info" sx={{ mb: 3 }}>
-        <strong>Yönetici Paneli:</strong> Bu sayfada oluşturulan şablonlar, kalite kontrol personeli
-        tarafından çalışan değerlendirmelerinde kullanılacaktır.
+      <Alert severity='info' sx={{ mb: 3 }}>
+        <strong>Yönetici Paneli:</strong> Bu sayfada oluşturulan şablonlar,
+        kalite kontrol personeli tarafından çalışan değerlendirmelerinde
+        kullanılacaktır.
       </Alert>
 
       {/* Tabs */}
@@ -86,8 +101,8 @@ const QualityControlManagement = () => {
         <Tabs
           value={tabValue}
           onChange={handleTabChange}
-          aria-label="kalite kontrol yönetimi tabs"
-          variant="fullWidth"
+          aria-label='kalite kontrol yönetimi tabs'
+          variant='fullWidth'
           sx={{
             borderBottom: 1,
             borderColor: 'divider',
@@ -98,21 +113,21 @@ const QualityControlManagement = () => {
         >
           <Tab
             icon={<AssignmentIcon />}
-            label="Şablon Yönetimi"
-            id="qc-management-tab-0"
-            aria-controls="qc-management-tabpanel-0"
+            label='Şablon Yönetimi'
+            id='qc-management-tab-0'
+            aria-controls='qc-management-tabpanel-0'
           />
           <Tab
             icon={<AnalyticsIcon />}
-            label="Sistem İstatistikleri"
-            id="qc-management-tab-1"
-            aria-controls="qc-management-tabpanel-1"
+            label='Sistem İstatistikleri'
+            id='qc-management-tab-1'
+            aria-controls='qc-management-tabpanel-1'
           />
           <Tab
             icon={<SettingsIcon />}
-            label="Sistem Ayarları"
-            id="qc-management-tab-2"
-            aria-controls="qc-management-tabpanel-2"
+            label='Sistem Ayarları'
+            id='qc-management-tab-2'
+            aria-controls='qc-management-tabpanel-2'
           />
         </Tabs>
 
@@ -127,10 +142,10 @@ const QualityControlManagement = () => {
 
         <TabPanel value={tabValue} index={2}>
           <Box sx={{ p: 3 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
+            <Typography variant='h6' sx={{ mb: 2 }}>
               Sistem Ayarları
             </Typography>
-            <Alert severity="info">Sistem ayarları yakında eklenecektir.</Alert>
+            <Alert severity='info'>Sistem ayarları yakında eklenecektir.</Alert>
           </Box>
         </TabPanel>
       </Paper>

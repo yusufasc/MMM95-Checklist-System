@@ -95,20 +95,37 @@ const qualityControlEvaluationSchema = new mongoose.Schema(
 );
 
 // İndeksler
-qualityControlEvaluationSchema.index({ degerlendirilenKullanici: 1, degerlendirmeTarihi: -1 });
-qualityControlEvaluationSchema.index({ degerlendirenKullanici: 1, degerlendirmeTarihi: -1 });
+qualityControlEvaluationSchema.index({
+  degerlendirilenKullanici: 1,
+  degerlendirmeTarihi: -1,
+});
+qualityControlEvaluationSchema.index({
+  degerlendirenKullanici: 1,
+  degerlendirmeTarihi: -1,
+});
 qualityControlEvaluationSchema.index({ makina: 1, degerlendirmeTarihi: -1 });
 qualityControlEvaluationSchema.index({ basariYuzdesi: 1 });
 
 // Toplam puan ve başarı yüzdesini hesapla
 qualityControlEvaluationSchema.pre('save', function (next) {
   if (this.puanlamalar && this.puanlamalar.length > 0) {
-    this.toplamPuan = this.puanlamalar.reduce((sum, p) => sum + (p.puan || 0), 0);
-    this.maksimumPuan = this.puanlamalar.reduce((sum, p) => sum + (p.maksimumPuan || 0), 0);
+    this.toplamPuan = this.puanlamalar.reduce(
+      (sum, p) => sum + (p.puan || 0),
+      0,
+    );
+    this.maksimumPuan = this.puanlamalar.reduce(
+      (sum, p) => sum + (p.maksimumPuan || 0),
+      0,
+    );
     this.basariYuzdesi =
-      this.maksimumPuan > 0 ? Math.round((this.toplamPuan / this.maksimumPuan) * 100) : 0;
+      this.maksimumPuan > 0
+        ? Math.round((this.toplamPuan / this.maksimumPuan) * 100)
+        : 0;
   }
   next();
 });
 
-module.exports = mongoose.model('QualityControlEvaluation', qualityControlEvaluationSchema);
+module.exports = mongoose.model(
+  'QualityControlEvaluation',
+  qualityControlEvaluationSchema,
+);

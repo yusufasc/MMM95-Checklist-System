@@ -1,0 +1,329 @@
+---
+description: MongoDB models, Mongoose schemas, database queries, data modeling. File paths: backend/models/. Triggers: MongoDB, Mongoose, Schema, model, query, find, create, update, delete, populate, aggregate.
+globs: 
+alwaysApply: false
+---
+
+# 🗄️ MMM Checklist - Database (MongoDB) Kuralları
+
+## 🚨 GÜNCEL DEĞİŞİKLİKLER (2025-02-06)
+
+### Makina Yönetimi Karmaşası Çözümü
+- **Problem**: Machine.js ve InventoryItem.js arasında makina verisi duplikasyonu
+- **Çözüm**: Birleştirilmiş API ile her iki kaynaktan veri çekme
+- **Dikkat**: Yeni makina kayıtları için InventoryItem tercih edilmeli
+
+### Temizlenen Model Dosyaları
+- Tüm `.commented` dosyalar silindi (17 adet)
+- Model dosyalarında sadece `.js` uzantılı dosyalar kalmalı
+
+## MongoDB Schema Design (Zorunlu Pattern)
+```javascript
+const mongoose = require('mongoose');
+
+const ModelSchema = new mongoose.Schema({
+  // Türkçe field names (mevcut proje standardı)
+  ad: {
+    type: String,
+    required: [true, 'Ad alanı zorunludur'],
+    trim: true,
+    maxlength: [100, 'Ad 100 karakterden uzun olamaz']
+  },
+  
+  // ObjectId references
+  departmanId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Department',
+    required: true
+  },
+  
+  // Enum values
+  durum: {
+    type: String,
+    enum: ['aktif', 'pasif', 'beklemede'],
+    default: 'aktif'
+  },
+  
+  // Timestamps
+  olusturmaTarihi: {
+    type: Date,
+    default: Date.now
+  },
+  guncellemeTarihi: {
+    type: Date,
+    default: Date.now
+  }
+}, {
+  timestamps: true, // createdAt, updatedAt otomatik
+  versionKey: false // __v field'ını kaldır
+});
+
+// Indexes for performance
+ModelSchema.index({ departmanId: 1, durum: 1 });
+ModelSchema.index({ olusturmaTarihi: -1 });
+
+module.exports = mongoose.model('ModelName', ModelSchema);
+```
+
+## Makina Verisi Yönetimi (YENİ)
+```javascript
+// ⚠️ İki farklı makina modeli var
+// 1. Machine Model - Eski sistem
+const MachineSchema = new mongoose.Schema({
+  makinaNo: String,
+  ad: String,
+  departman: { type: ObjectId, ref: 'Department' },
+  sorumluRoller: [{ type: ObjectId, ref: 'Role' }],
+  durum: String
+});
+
+// 2. InventoryItem Model - Yeni sistem (Tercih edilmeli)
+const InventoryItemSchema = new mongoose.Schema({
+  envanterKodu: String,
+  ad: String,
+  kategoriId: { type: ObjectId, ref: 'InventoryCategory' },
+  dinamikAlanlar: mongoose.Schema.Types.Mixed,
+  durum: String
+});
+
+// ✅ Birleştirilmiş sorgulama
+const getAllMachines = async () => {
+  const [machines, inventoryMachines] = await Promise.all([
+    Machine.find({ durum: 'aktif' }),
+    InventoryItem.find({ 
+      kategoriId: makinaCategoryId,
+      durum: { $regex: /^aktif$/i } 
+    })
+  ]);
+  
+  // Standart formata dönüştür ve birleştir
+  return [...formatMachines(machines), ...formatInventoryItems(inventoryMachines)];
+};
+```
+
+## Query Optimization (Zorunlu)
+```javascript
+// ✅ Efficient population
+const users = await User.find({ durum: 'aktif' })
+  .populate('roller', 'ad yetki') // Sadece gerekli fields
+  .populate('departmanlar', 'ad')
+  .select('ad soyad kullaniciAdi durum') // Sadece gerekli fields
+  .sort({ olusturmaTarihi: -1 })
+  .limit(50);
+
+// ✅ Aggregation for complex queries
+const stats = await User.aggregate([
+  { $match: { durum: 'aktif' } },
+  { $group: { _id: '$departmanId', count: { $sum: 1 } } },
+  { $lookup: { from: 'departments', localField: '_id', foreignField: '_id', as: 'departman' } }
+]);
+
+// ❌ Over-population - YASAKLI
+const users = await User.find().populate('roller departmanlar secilenMakinalar');
+```
+
+## Data Validation & Sanitization
+```javascript
+// ✅ Schema validation
+const UserSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    validate: {
+      validator: function(v) {
+        return /\S+@\S+\.\S+/.test(v);
+      },
+      message: 'Geçerli bir email adresi giriniz'
+    }
+  },
+  
+  telefon: {
+    type: String,
+    validate: {
+      validator: function(v) {
+        return /^[\+]?[0-9]{10,15}$/.test(v);
+      },
+      message: 'Geçerli bir telefon numarası giriniz'
+    }
+  }
+});
+
+// ✅ Pre-save middleware
+UserSchema.pre('save', function(next) {
+  if (this.isModified()) {
+    this.guncellemeTarihi = new Date();
+  }
+  next();
+});
+```
+
+## Error Handling & Transactions
+```javascript
+// ✅ Transaction pattern
+const session = await mongoose.startSession();
+session.startTransaction();
+
+try {
+  const user = await User.create([newUser], { session });
+  const role = await Role.findByIdAndUpdate(
+    roleId, 
+    { $push: { kullanicilar: user[0]._id } },
+    { session }
+  );
+  
+  await session.commitTransaction();
+  return user[0];
+} catch (error) {
+  await session.abortTransaction();
+  throw error;
+} finally {
+  session.endSession();
+}
+
+// ✅ Error handling
+const handleDBError = (error) => {
+  if (error.name === 'ValidationError') {
+    const errors = Object.values(error.errors).map(e => e.message);
+    return { message: errors.join(', '), status: 400 };
+  }
+  
+  if (error.code === 11000) {
+    return { message: 'Bu kayıt zaten mevcut', status: 409 };
+  }
+  
+  return { message: 'Veritabanı hatası', status: 500 };
+};
+```
+
+## Performance & Indexing
+```javascript
+// ✅ Compound indexes
+UserSchema.index({ departmanId: 1, durum: 1 });
+UserSchema.index({ kullaniciAdi: 1 }, { unique: true });
+UserSchema.index({ olusturmaTarihi: -1 });
+
+// ✅ Text search index
+UserSchema.index({ 
+  ad: 'text', 
+  soyad: 'text', 
+  kullaniciAdi: 'text' 
+});
+
+// ✅ Query performance monitoring
+const startTime = Date.now();
+const result = await User.find(query);
+const queryTime = Date.now() - startTime;
+
+if (queryTime > 100) {
+  console.warn(`Slow query detected: ${queryTime}ms`, query);
+}
+```
+
+## Data Migration & Seeding
+```javascript
+// ✅ Migration script pattern
+const migrateDepartments = async () => {
+  const departments = [
+    { ad: 'Yönetim', kod: 'YNT' },
+    { ad: 'Üretim', kod: 'URT' },
+    { ad: 'Kalite', kod: 'KLT' }
+  ];
+  
+  for (const dept of departments) {
+    await Department.findOneAndUpdate(
+      { kod: dept.kod },
+      dept,
+      { upsert: true, new: true }
+    );
+  }
+};
+
+// ✅ Data seeding
+const seedInitialData = async () => {
+  const count = await User.countDocuments();
+  if (count === 0) {
+    await createDefaultUsers();
+    await createDefaultRoles();
+    await createDefaultDepartments();
+  }
+};
+```
+
+## Database Maintenance
+```javascript
+// ✅ Cleanup operations
+const cleanupExpiredTokens = async () => {
+  await Token.deleteMany({
+    expiresAt: { $lt: new Date() }
+  });
+};
+
+// ✅ Data archiving
+const archiveOldData = async () => {
+  const cutoffDate = new Date();
+  cutoffDate.setMonths(cutoffDate.getMonths() - 12);
+  
+  await ArchivedData.insertMany(
+    await OldData.find({ createdAt: { $lt: cutoffDate } })
+  );
+  
+  await OldData.deleteMany({ createdAt: { $lt: cutoffDate } });
+};
+```
+
+## Database Security
+```javascript
+// ✅ Input sanitization
+const sanitizeInput = (obj) => {
+  const sanitized = {};
+  for (const key in obj) {
+    if (typeof obj[key] === 'string') {
+      sanitized[key] = obj[key].replace(/[<>]/g, '');
+    } else {
+      sanitized[key] = obj[key];
+    }
+  }
+  return sanitized;
+};
+
+// ✅ Safe query building
+const buildSafeQuery = (filters) => {
+  const query = {};
+  
+  if (filters.durum && ['aktif', 'pasif'].includes(filters.durum)) {
+    query.durum = filters.durum;
+  }
+  
+  if (mongoose.Types.ObjectId.isValid(filters.departmanId)) {
+    query.departmanId = filters.departmanId;
+  }
+  
+  return query;
+};
+```
+
+## Database Connection Management
+```javascript
+// ✅ Connection optimization
+mongoose.set('bufferCommands', false);
+mongoose.set('maxPoolSize', 10);
+mongoose.set('serverSelectionTimeoutMS', 5000);
+mongoose.set('socketTimeoutMS', 45000);
+
+// ✅ Connection monitoring
+mongoose.connection.on('connected', () => {
+  console.log('✅ MongoDB bağlantısı kuruldu');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('❌ MongoDB bağlantı hatası:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('⚠️ MongoDB bağlantısı kesildi');
+});
+```
+
+

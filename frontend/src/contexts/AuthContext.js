@@ -1,6 +1,13 @@
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from 'react';
 import PropTypes from 'prop-types';
-import { authAPI, tasksAPI } from '../services/api';
+import { authAPI, tasksAPI, inventoryAPI } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -18,10 +25,18 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [selectedMachines, setSelectedMachines] = useState([]);
   const [accessibleMachines, setAccessibleMachines] = useState([]);
+  const [currentShift, setCurrentShift] = useState(null);
 
   // Makina verilerine ihtiyaç duyan roller
   const machineRelatedRoles = useMemo(
-    () => ['Ortacı', 'Usta', 'Paketlemeci', 'Kalite Kontrol', 'VARDİYA AMİRİ', 'Admin'],
+    () => [
+      'Ortacı',
+      'Usta',
+      'Paketlemeci',
+      'Kalite Kontrol',
+      'VARDİYA AMİRİ',
+      'Admin',
+    ],
     [],
   );
 
@@ -30,7 +45,9 @@ export const AuthProvider = ({ children }) => {
       if (!userRoles || !Array.isArray(userRoles)) {
         return false;
       }
-      return userRoles.some(role => machineRelatedRoles.includes(role.ad || role));
+      return userRoles.some(role =>
+        machineRelatedRoles.includes(role.ad || role),
+      );
     },
     [machineRelatedRoles],
   );
@@ -41,21 +58,47 @@ export const AuthProvider = ({ children }) => {
       if (userRoles && !needsMachineData(userRoles)) {
         setAccessibleMachines([]);
         setSelectedMachines([]);
+        setCurrentShift(null);
         return;
       }
 
       try {
-        const inventoryMachinesResponse = await tasksAPI.getInventoryMachines();
+        const inventoryMachinesResponse = await inventoryAPI.getMachines('all');
         setAccessibleMachines(inventoryMachinesResponse.data);
 
         const selectedResponse = await tasksAPI.getMySelectedMachines();
-        setSelectedMachines(selectedResponse.data);
+
+        // Vardiya bilgisi dahil mi kontrol et
+        if (selectedResponse.data && selectedResponse.data.machines) {
+          // Yeni format: machines ve shift bilgisi ayrı
+          setSelectedMachines(selectedResponse.data.machines);
+          setCurrentShift(selectedResponse.data.shift);
+        } else {
+          // Eski format: sadece makina listesi
+          setSelectedMachines(selectedResponse.data);
+          setCurrentShift(null);
+        }
+
+        // Aktif vardiya bilgisini ayrıca getir
+        try {
+          const shiftResponse = await tasksAPI.getCurrentShift();
+          if (shiftResponse.data.hasActiveShift) {
+            setCurrentShift(shiftResponse.data.shift);
+          }
+        } catch (error) {
+          // Vardiya bilgisi getirilemezse sessizce devam et
+          console.warn('Vardiya bilgisi getirilemedi:', error.message);
+        }
       } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
+        if (
+          typeof process !== 'undefined' &&
+          process.env?.NODE_ENV === 'development'
+        ) {
           console.error('Makina verileri yüklenirken hata:', error);
         }
         setAccessibleMachines([]);
         setSelectedMachines([]);
+        setCurrentShift(null);
       }
     },
     [needsMachineData],
@@ -64,18 +107,34 @@ export const AuthProvider = ({ children }) => {
   const checkAuthStatus = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const userData = localStorage.getItem('user');
 
-      if (token && userData) {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      // Token'ı backend'de doğrula
+      try {
+        const response = await authAPI.getMe();
+        const userData = response.data;
+
+        // Güncel kullanıcı verisini kaydet
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
         setIsAuthenticated(true);
 
         // Sayfa yenilendiğinde de makina verilerini yükle
-        await loadMachineData(parsedUser.roller);
+        await loadMachineData(userData.roller);
+      } catch (error) {
+        // Token geçersiz veya süresi dolmuş
+        console.error('Token doğrulama hatası:', error);
+        logout();
       }
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
+      if (
+        typeof process !== 'undefined' &&
+        process.env?.NODE_ENV === 'development'
+      ) {
         console.error('Auth check hatası:', error);
       }
       logout();
@@ -88,13 +147,37 @@ export const AuthProvider = ({ children }) => {
     try {
       const machineIds = machines.map(m => m._id);
 
-      await tasksAPI.selectMachines(machineIds);
+      const response = await tasksAPI.selectMachines(machineIds);
       setSelectedMachines(machines);
-      return { success: true };
+
+      // Vardiya bilgisi varsa güncelle
+      if (response.data.shift) {
+        setCurrentShift(response.data.shift);
+      }
+
+      return {
+        success: true,
+        message: response.data.message,
+        shift: response.data.shift,
+      };
     } catch (error) {
       return {
         success: false,
         error: error.response?.data?.message || 'Makina seçimi güncellenemedi',
+      };
+    }
+  };
+
+  const endCurrentShift = async () => {
+    try {
+      await tasksAPI.endShift();
+      setCurrentShift(null);
+      setSelectedMachines([]);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Vardiya sonlandırılamadı',
       };
     }
   };
@@ -145,7 +228,10 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
-      return { success: false, error: error.response?.data?.message || 'Veriler yenilenemedi' };
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Veriler yenilenemedi',
+      };
     }
   };
 
@@ -166,7 +252,10 @@ export const AuthProvider = ({ children }) => {
             if (permission === 'erisebilir' && modulYetkisi.erisebilir) {
               return true;
             }
-            if (permission === 'duzenleyebilir' && modulYetkisi.duzenleyebilir) {
+            if (
+              permission === 'duzenleyebilir' &&
+              modulYetkisi.duzenleyebilir
+            ) {
               return true;
             }
           }
@@ -200,7 +289,10 @@ export const AuthProvider = ({ children }) => {
             if (permission === 'gorebilir' && yetki.gorebilir) {
               return true;
             }
-            if (permission === 'puanlayabilir' && (yetki.puanlayabilir || yetki.onaylayabilir)) {
+            if (
+              permission === 'puanlayabilir' &&
+              (yetki.puanlayabilir || yetki.onaylayabilir)
+            ) {
               return true;
             }
             if (permission === 'onaylayabilir' && yetki.onaylayabilir) {
@@ -217,7 +309,12 @@ export const AuthProvider = ({ children }) => {
   const getAccessibleMenuItems = () => {
     const allMenuItems = [
       // Admin Sayfaları (Üstte)
-      { text: 'Dashboard', icon: 'DashboardIcon', path: '/dashboard', module: null },
+      {
+        text: 'Dashboard',
+        icon: 'DashboardIcon',
+        path: '/dashboard',
+        module: null,
+      },
       {
         text: 'Kullanıcılar',
         icon: 'PeopleIcon',
@@ -267,20 +364,61 @@ export const AuthProvider = ({ children }) => {
         module: 'İnsan Kaynakları Yönetimi',
         adminOnly: true,
       },
+      {
+        text: 'Bonus Yönetimi',
+        icon: 'StarIcon',
+        path: '/bonus-evaluation-management',
+        module: 'Bonus Değerlendirme Yönetimi',
+        adminOnly: true,
+      },
+      {
+        text: 'Ekipman Yönetimi',
+        icon: 'InventoryIcon',
+        path: '/equipment-management',
+        module: 'Ekipman Yönetimi',
+        adminOnly: true,
+      },
 
       // Ayırıcı
       { text: 'divider', isDivider: true },
 
       // Kullanıcı Sayfaları (Sıralı)
-      { text: 'Görevlerim', icon: 'TaskIcon', path: '/tasks', module: 'Görev Yönetimi' },
+      {
+        text: 'Görevlerim',
+        icon: 'TaskIcon',
+        path: '/tasks',
+        module: 'Görev Yönetimi',
+      },
       {
         text: 'Kontrol Bekleyenler',
         icon: 'PendingActionsIcon',
         path: '/control-pending',
         module: 'Kontrol Bekleyenler',
       },
-      { text: 'Yaptım', icon: 'BuildIcon', path: '/worktasks', module: 'Yaptım' },
-      { text: 'Kişisel Performansım', icon: 'AssessmentIcon', path: '/my-activity', module: null },
+      {
+        text: 'Yaptım Kontrol',
+        icon: 'BuildIcon',
+        path: '/worktask-control',
+        module: 'Kontrol Bekleyenler',
+      },
+      {
+        text: 'Yaptım',
+        icon: 'BuildIcon',
+        path: '/worktasks',
+        module: 'Yaptım',
+      },
+      {
+        text: 'Kişisel Performansım',
+        icon: 'AssessmentIcon',
+        path: '/my-activity',
+        module: null,
+      },
+      {
+        text: 'Profilim',
+        icon: 'PersonIcon',
+        path: '/profile',
+        module: null,
+      },
       {
         text: 'Kalite Kontrol',
         icon: 'EngineeringIcon',
@@ -294,7 +432,24 @@ export const AuthProvider = ({ children }) => {
         module: 'İnsan Kaynakları',
         checkCustomAccess: true,
       },
-      { text: 'Performans', icon: 'BarChartIcon', path: '/performance', module: 'Performans' },
+      {
+        text: 'Performans',
+        icon: 'BarChartIcon',
+        path: '/performance',
+        module: 'Performans',
+      },
+      {
+        text: 'Personel Takip',
+        icon: 'EngineeringIcon',
+        path: '/personnel-tracking',
+        module: 'Personel Takip',
+      },
+      {
+        text: 'Bonus Değerlendirme',
+        icon: 'StarIcon',
+        path: '/bonus-evaluation',
+        module: 'Bonus Değerlendirme',
+      },
     ];
 
     return allMenuItems.filter(item => {
@@ -314,6 +469,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     isAuthenticated,
+    isLoggedIn: isAuthenticated,
     loading,
     selectedMachines,
     accessibleMachines,
@@ -326,6 +482,8 @@ export const AuthProvider = ({ children }) => {
     updateSelectedMachines,
     loadMachineData,
     refreshUserData,
+    currentShift,
+    endCurrentShift,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

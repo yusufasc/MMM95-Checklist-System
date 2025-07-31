@@ -1,0 +1,706 @@
+---
+description: Cron jobs, system cleanup, database maintenance, automated tasks. File paths: backend/scripts/. Triggers: cron, maintenance, cleanup, schedule, automation, scripts.
+globs: 
+alwaysApply: false
+---
+# 🔧 MMM Checklist - Maintenance & Cleanup Kuralları
+
+## Scheduled Maintenance Tasks
+```javascript
+const cron = require('node-cron');
+const fs = require('fs').promises;
+const path = require('path');
+
+// ✅ Daily maintenance routine (3 AM)
+cron.schedule('0 3 * * *', async () => {
+  logger.info('🔧 Starting daily maintenance routine');
+  
+  try {
+    await Promise.all([
+      cleanupTempFiles(),
+      cleanupOldLogs(),
+      optimizeDatabase(),
+      generateDailyReport()
+    ]);
+    
+    logger.info('✅ Daily maintenance completed successfully');
+  } catch (error) {
+    logger.error('❌ Daily maintenance failed', { error: error.message });
+  }
+});
+
+// ✅ Weekly maintenance (Sunday 2 AM)
+cron.schedule('0 2 * * 0', async () => {
+  logger.info('🔧 Starting weekly maintenance routine');
+  
+  try {
+    await Promise.all([
+      createDataBackup(),
+      archiveOldData(),
+      cleanupCommentedFiles(),
+      updateSystemMetrics()
+    ]);
+    
+    logger.info('✅ Weekly maintenance completed successfully');
+  } catch (error) {
+    logger.error('❌ Weekly maintenance failed', { error: error.message });
+  }
+});
+
+// ✅ Monthly maintenance (1st day, 1 AM)
+cron.schedule('0 1 1 * *', async () => {
+  logger.info('🔧 Starting monthly maintenance routine');
+  
+  try {
+    await Promise.all([
+      deepCleanDatabase(),
+      generateMonthlyReport(),
+      checkDiskSpace(),
+      updateDependencies()
+    ]);
+    
+    logger.info('✅ Monthly maintenance completed successfully');
+  } catch (error) {
+    logger.error('❌ Monthly maintenance failed', { error: error.message });
+  }
+});
+```
+
+## File Cleanup Operations
+```javascript
+// ✅ Temporary files cleanup
+const cleanupTempFiles = async () => {
+  try {
+    const tempDirs = ['./temp', './uploads/temp', './logs/temp'];
+    const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+    const now = Date.now();
+    let totalDeleted = 0;
+
+    for (const tempDir of tempDirs) {
+      try {
+        const files = await fs.readdir(tempDir);
+        
+        for (const file of files) {
+          const filePath = path.join(tempDir, file);
+          const stats = await fs.stat(filePath);
+          
+          if (now - stats.mtime.getTime() > maxAge) {
+            await fs.unlink(filePath);
+            totalDeleted++;
+            logger.debug(`🗑️ Deleted temp file: ${file}`);
+          }
+        }
+      } catch (dirError) {
+        // Directory might not exist, continue
+        logger.debug(`Temp directory not found: ${tempDir}`);
+      }
+    }
+
+    logger.info(`🧹 Temp files cleanup completed`, { filesDeleted: totalDeleted });
+    return totalDeleted;
+
+  } catch (error) {
+    logger.error('Temp files cleanup failed', { error: error.message });
+    throw error;
+  }
+};
+
+// ✅ Old log files cleanup
+const cleanupOldLogs = async () => {
+  try {
+    const logDir = './logs';
+    const maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+    const now = Date.now();
+    let totalDeleted = 0;
+
+    const files = await fs.readdir(logDir);
+    
+    for (const file of files) {
+      if (file.endsWith('.log') && !file.includes('current')) {
+        const filePath = path.join(logDir, file);
+        const stats = await fs.stat(filePath);
+        
+        if (now - stats.mtime.getTime() > maxAge) {
+          // Archive before deletion
+          const archivePath = path.join(logDir, 'archive', file);
+          await fs.mkdir(path.dirname(archivePath), { recursive: true });
+          await fs.rename(filePath, archivePath);
+          totalDeleted++;
+          logger.debug(`📦 Archived old log: ${file}`);
+        }
+      }
+    }
+
+    logger.info(`📋 Log files cleanup completed`, { filesArchived: totalDeleted });
+    return totalDeleted;
+
+  } catch (error) {
+    logger.error('Log files cleanup failed', { error: error.message });
+    throw error;
+  }
+};
+
+// ✅ Commented files cleanup (from refactoring)
+const cleanupCommentedFiles = async () => {
+  try {
+    const searchDirs = ['./backend/routes', './frontend/src'];
+    let totalDeleted = 0;
+
+    for (const dir of searchDirs) {
+      const files = await findCommentedFiles(dir);
+      
+      for (const file of files) {
+        if (file.endsWith('.commented')) {
+          await fs.unlink(file);
+          totalDeleted++;
+          logger.debug(`🗑️ Deleted commented file: ${file}`);
+        }
+      }
+    }
+
+    logger.info(`🧹 Commented files cleanup completed`, { filesDeleted: totalDeleted });
+    return totalDeleted;
+
+  } catch (error) {
+    logger.error('Commented files cleanup failed', { error: error.message });
+    throw error;
+  }
+};
+
+// ✅ Find commented files recursively
+const findCommentedFiles = async (dir) => {
+  const files = [];
+  
+  try {
+    const items = await fs.readdir(dir);
+    
+    for (const item of items) {
+      const fullPath = path.join(dir, item);
+      const stats = await fs.stat(fullPath);
+      
+      if (stats.isDirectory()) {
+        files.push(...await findCommentedFiles(fullPath));
+      } else if (item.endsWith('.commented')) {
+        files.push(fullPath);
+      }
+    }
+  } catch (error) {
+    // Directory might not exist or be accessible
+    logger.debug(`Cannot access directory: ${dir}`);
+  }
+  
+  return files;
+};
+```
+
+## Database Optimization
+```javascript
+// ✅ Database optimization routine
+const optimizeDatabase = async () => {
+  try {
+    logger.info('🔧 Starting database optimization');
+    
+    // Get all collection names
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    const optimizationResults = {};
+
+    for (const collection of collections) {
+      const collectionName = collection.name;
+      
+      try {
+        // Re-index collection
+        await mongoose.connection.db.collection(collectionName).reIndex();
+        
+        // Get collection stats
+        const stats = await mongoose.connection.db.collection(collectionName).stats();
+        
+        optimizationResults[collectionName] = {
+          documents: stats.count,
+          avgObjSize: Math.round(stats.avgObjSize || 0),
+          storageSize: Math.round(stats.storageSize / 1024 / 1024), // MB
+          indexCount: stats.nindexes
+        };
+        
+        logger.debug(`✅ Optimized collection: ${collectionName}`);
+        
+      } catch (collError) {
+        logger.warn(`Failed to optimize collection: ${collectionName}`, { 
+          error: collError.message 
+        });
+      }
+    }
+
+    logger.info('🔧 Database optimization completed', optimizationResults);
+    return optimizationResults;
+
+  } catch (error) {
+    logger.error('Database optimization failed', { error: error.message });
+    throw error;
+  }
+};
+
+// ✅ Deep database cleanup
+const deepCleanDatabase = async () => {
+  try {
+    logger.info('🧹 Starting deep database cleanup');
+    
+    const cleanupResults = {
+      deletedRecords: 0,
+      archivedRecords: 0,
+      optimizedCollections: 0
+    };
+
+    // 1. Remove orphaned references
+    await cleanupOrphanedReferences();
+    
+    // 2. Archive old completed tasks (older than 1 year)
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    
+    const oldTasks = await Task.find({
+      durum: 'tamamlandi',
+      tamamlanmaTarihi: { $lt: oneYearAgo }
+    });
+
+    if (oldTasks.length > 0) {
+      // Move to archive collection
+      await ArchivedTask.insertMany(oldTasks);
+      await Task.deleteMany({
+        _id: { $in: oldTasks.map(t => t._id) }
+      });
+      
+      cleanupResults.archivedRecords += oldTasks.length;
+    }
+
+    // 3. Remove old session data
+    const oldSessions = await Session.deleteMany({
+      createdAt: { $lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+    });
+    cleanupResults.deletedRecords += oldSessions.deletedCount || 0;
+
+    // 4. Compact collections
+    const collections = ['users', 'tasks', 'inventory', 'activitylogs'];
+    for (const collName of collections) {
+      try {
+        await mongoose.connection.db.collection(collName).compact();
+        cleanupResults.optimizedCollections++;
+      } catch (compactError) {
+        logger.warn(`Failed to compact collection: ${collName}`, {
+          error: compactError.message
+        });
+      }
+    }
+
+    logger.info('🧹 Deep database cleanup completed', cleanupResults);
+    return cleanupResults;
+
+  } catch (error) {
+    logger.error('Deep database cleanup failed', { error: error.message });
+    throw error;
+  }
+};
+
+// ✅ Orphaned references cleanup
+const cleanupOrphanedReferences = async () => {
+  try {
+    // Find tasks with invalid user references
+    const tasksWithInvalidUsers = await Task.aggregate([
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'atananKullanici',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        $match: {
+          atananKullanici: { $ne: null },
+          user: { $size: 0 }
+        }
+      }
+    ]);
+
+    if (tasksWithInvalidUsers.length > 0) {
+      await Task.updateMany(
+        { _id: { $in: tasksWithInvalidUsers.map(t => t._id) } },
+        { $unset: { atananKullanici: 1 } }
+      );
+      
+      logger.info(`🧹 Cleaned up ${tasksWithInvalidUsers.length} orphaned task references`);
+    }
+
+    // Similar cleanup for other collections...
+    // Add more orphaned reference cleanup as needed
+
+  } catch (error) {
+    logger.error('Orphaned references cleanup failed', { error: error.message });
+    throw error;
+  }
+};
+```
+
+## System Health Monitoring
+```javascript
+// ✅ Disk space monitoring
+const checkDiskSpace = async () => {
+  try {
+    const { exec } = require('child_process');
+    const { promisify } = require('util');
+    const execAsync = promisify(exec);
+
+    // Check disk usage (Linux/Mac)
+    const { stdout } = await execAsync('df -h /');
+    const lines = stdout.split('\n');
+    const diskInfo = lines[1].split(/\s+/);
+    
+    const diskUsage = {
+      total: diskInfo[1],
+      used: diskInfo[2],
+      available: diskInfo[3],
+      usePercentage: parseInt(diskInfo[4])
+    };
+
+    // Alert if disk usage is high
+    if (diskUsage.usePercentage > 80) {
+      logger.warn('⚠️ High disk usage detected', diskUsage);
+      
+      // Trigger additional cleanup if needed
+      if (diskUsage.usePercentage > 90) {
+        logger.error('🚨 Critical disk usage - starting emergency cleanup');
+        await emergencyCleanup();
+      }
+    }
+
+    logger.info('💾 Disk space check completed', diskUsage);
+    return diskUsage;
+
+  } catch (error) {
+    logger.error('Disk space check failed', { error: error.message });
+    // Fallback for Windows or other systems
+    return { error: 'Could not check disk space' };
+  }
+};
+
+// ✅ Emergency cleanup procedures
+const emergencyCleanup = async () => {
+  try {
+    logger.info('🚨 Starting emergency cleanup procedure');
+    
+    const cleanupResults = {
+      tempFiles: 0,
+      oldLogs: 0,
+      archivedData: 0
+    };
+
+    // 1. Aggressive temp file cleanup (reduce age threshold)
+    const tempDirs = ['./temp', './logs/temp', './uploads/temp'];
+    const maxAge = 1 * 60 * 60 * 1000; // 1 hour instead of 24
+    
+    for (const dir of tempDirs) {
+      try {
+        const files = await fs.readdir(dir);
+        const now = Date.now();
+        
+        for (const file of files) {
+          const filePath = path.join(dir, file);
+          const stats = await fs.stat(filePath);
+          
+          if (now - stats.mtime.getTime() > maxAge) {
+            await fs.unlink(filePath);
+            cleanupResults.tempFiles++;
+          }
+        }
+      } catch (dirError) {
+        // Continue if directory doesn't exist
+      }
+    }
+
+    // 2. Archive more aggressively (6 months instead of 1 year)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    const oldData = await Task.find({
+      durum: 'tamamlandi',
+      tamamlanmaTarihi: { $lt: sixMonthsAgo }
+    });
+
+    if (oldData.length > 0) {
+      await ArchivedTask.insertMany(oldData);
+      await Task.deleteMany({
+        _id: { $in: oldData.map(t => t._id) }
+      });
+      cleanupResults.archivedData = oldData.length;
+    }
+
+    // 3. Compress old log files
+    const logFiles = await fs.readdir('./logs');
+    for (const logFile of logFiles) {
+      if (logFile.endsWith('.log') && !logFile.includes('current')) {
+        // Implementation would depend on available compression library
+        // For now, just move to archive
+        const sourcePath = path.join('./logs', logFile);
+        const archivePath = path.join('./logs/archive', logFile);
+        await fs.mkdir(path.dirname(archivePath), { recursive: true });
+        await fs.rename(sourcePath, archivePath);
+        cleanupResults.oldLogs++;
+      }
+    }
+
+    logger.info('🚨 Emergency cleanup completed', cleanupResults);
+    return cleanupResults;
+
+  } catch (error) {
+    logger.error('Emergency cleanup failed', { error: error.message });
+    throw error;
+  }
+};
+```
+
+## Automated Reports
+```javascript
+// ✅ Daily system report
+const generateDailyReport = async () => {
+  try {
+    const today = new Date();
+    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+    
+    const report = {
+      date: today.toISOString().split('T')[0],
+      system: {
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        nodeVersion: process.version
+      },
+      database: await getDatabaseStats(),
+      activity: await getActivityStats(yesterday, today),
+      performance: await getPerformanceStats(yesterday, today),
+      errors: await getErrorStats(yesterday, today)
+    };
+
+    // Save report to file
+    const reportPath = `./reports/daily-${report.date}.json`;
+    await fs.mkdir(path.dirname(reportPath), { recursive: true });
+    await fs.writeFile(reportPath, JSON.stringify(report, null, 2));
+
+    logger.info('📊 Daily report generated', { 
+      date: report.date,
+      reportPath 
+    });
+
+    return report;
+
+  } catch (error) {
+    logger.error('Daily report generation failed', { error: error.message });
+    throw error;
+  }
+};
+
+// ✅ Monthly comprehensive report
+const generateMonthlyReport = async () => {
+  try {
+    const now = new Date();
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    const report = {
+      month: lastMonth.toISOString().substring(0, 7), // YYYY-MM
+      summary: {
+        totalUsers: await User.countDocuments({ durum: 'aktif' }),
+        totalTasks: await Task.countDocuments(),
+        completedTasks: await Task.countDocuments({ 
+          durum: 'tamamlandi',
+          tamamlanmaTarihi: { 
+            $gte: lastMonth, 
+            $lt: thisMonth 
+          }
+        }),
+        newUsers: await User.countDocuments({
+          olusturmaTarihi: { 
+            $gte: lastMonth, 
+            $lt: thisMonth 
+          }
+        })
+      },
+      performance: await getMonthlyPerformanceStats(lastMonth, thisMonth),
+      topUsers: await getTopActiveUsers(lastMonth, thisMonth),
+      systemHealth: await getSystemHealthSummary(lastMonth, thisMonth)
+    };
+
+    // Save comprehensive report
+    const reportPath = `./reports/monthly-${report.month}.json`;
+    await fs.mkdir(path.dirname(reportPath), { recursive: true });
+    await fs.writeFile(reportPath, JSON.stringify(report, null, 2));
+
+    logger.info('📊 Monthly report generated', { 
+      month: report.month,
+      reportPath 
+    });
+
+    return report;
+
+  } catch (error) {
+    logger.error('Monthly report generation failed', { error: error.message });
+    throw error;
+  }
+};
+
+// ✅ Helper functions for reports
+const getDatabaseStats = async () => {
+  try {
+    const stats = await mongoose.connection.db.stats();
+    return {
+      collections: stats.collections,
+      dataSize: Math.round(stats.dataSize / 1024 / 1024), // MB
+      storageSize: Math.round(stats.storageSize / 1024 / 1024), // MB
+      indexes: stats.indexes
+    };
+  } catch (error) {
+    return { error: error.message };
+  }
+};
+
+const getActivityStats = async (startDate, endDate) => {
+  try {
+    return await ActivityLog.aggregate([
+      {
+        $match: {
+          tarih: { $gte: startDate, $lt: endDate }
+        }
+      },
+      {
+        $group: {
+          _id: '$islem',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+  } catch (error) {
+    return { error: error.message };
+  }
+};
+```
+
+## Dependency Management
+```javascript
+// ✅ Dependency update checking
+const updateDependencies = async () => {
+  try {
+    const { exec } = require('child_process');
+    const { promisify } = require('util');
+    const execAsync = promisify(exec);
+
+    logger.info('🔍 Checking for dependency updates');
+    
+    // Check for outdated packages
+    const { stdout: frontendCheck } = await execAsync('cd frontend && npm outdated --json', { encoding: 'utf8' });
+    const { stdout: backendCheck } = await execAsync('cd backend && npm outdated --json', { encoding: 'utf8' });
+    
+    const outdatedPackages = {
+      frontend: frontendCheck ? JSON.parse(frontendCheck) : {},
+      backend: backendCheck ? JSON.parse(backendCheck) : {}
+    };
+
+    // Count outdated packages
+    const frontendCount = Object.keys(outdatedPackages.frontend).length;
+    const backendCount = Object.keys(outdatedPackages.backend).length;
+
+    if (frontendCount > 0 || backendCount > 0) {
+      logger.warn('📦 Outdated dependencies found', {
+        frontend: frontendCount,
+        backend: backendCount
+      });
+      
+      // Save update report
+      const reportPath = `./reports/dependency-updates-${new Date().toISOString().split('T')[0]}.json`;
+      await fs.mkdir(path.dirname(reportPath), { recursive: true });
+      await fs.writeFile(reportPath, JSON.stringify(outdatedPackages, null, 2));
+    } else {
+      logger.info('✅ All dependencies are up to date');
+    }
+
+    return outdatedPackages;
+
+  } catch (error) {
+    logger.error('Dependency update check failed', { error: error.message });
+    return { error: error.message };
+  }
+};
+```
+
+## Maintenance Utilities
+```javascript
+// ✅ Maintenance status tracking
+const maintenanceStatus = {
+  inProgress: false,
+  currentTask: null,
+  startTime: null,
+  
+  start: (taskName) => {
+    maintenanceStatus.inProgress = true;
+    maintenanceStatus.currentTask = taskName;
+    maintenanceStatus.startTime = new Date();
+    
+    logger.info(`🔧 Maintenance started: ${taskName}`);
+  },
+  
+  end: () => {
+    const duration = new Date() - maintenanceStatus.startTime;
+    
+    logger.info(`✅ Maintenance completed: ${maintenanceStatus.currentTask}`, {
+      duration: `${duration}ms`
+    });
+    
+    maintenanceStatus.inProgress = false;
+    maintenanceStatus.currentTask = null;
+    maintenanceStatus.startTime = null;
+  },
+  
+  getStatus: () => {
+    return {
+      inProgress: maintenanceStatus.inProgress,
+      currentTask: maintenanceStatus.currentTask,
+      startTime: maintenanceStatus.startTime,
+      duration: maintenanceStatus.startTime ? 
+        new Date() - maintenanceStatus.startTime : null
+    };
+  }
+};
+
+// ✅ Maintenance API endpoint
+router.get('/maintenance/status', auth, (req, res) => {
+  res.json(maintenanceStatus.getStatus());
+});
+
+router.post('/maintenance/trigger', auth, async (req, res) => {
+  if (!req.user.roller.includes('admin')) {
+    return res.status(403).json({ message: 'Admin yetkisi gerekli' });
+  }
+  
+  const { task } = req.body;
+  
+  try {
+    switch (task) {
+      case 'cleanup':
+        await cleanupTempFiles();
+        break;
+      case 'optimize':
+        await optimizeDatabase();
+        break;
+      case 'backup':
+        await createDataBackup();
+        break;
+      default:
+        return res.status(400).json({ message: 'Geçersiz görev' });
+    }
+    
+    res.json({ success: true, message: `${task} görevi tamamlandı` });
+    
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: `${task} görevi başarısız: ${error.message}` 
+    });
+  }
+});
+

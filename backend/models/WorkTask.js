@@ -20,12 +20,12 @@ const WorkTaskSchema = new mongoose.Schema({
   indirilenKalip: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'InventoryItem',
-    required: true,
+    required: false,
   },
   baglananHamade: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'InventoryItem',
-    required: true,
+    required: false,
   },
   makinaDurmaSaati: {
     type: Date,
@@ -34,6 +34,12 @@ const WorkTaskSchema = new mongoose.Schema({
   yeniKalipAktifSaati: {
     type: Date,
     required: true,
+  },
+  // Kalıp değişim buddy bilgisi
+  kalipDegisimBuddy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false,
   },
   // Bakım bilgileri
   bakimaGitsinMi: {
@@ -100,6 +106,14 @@ const WorkTaskSchema = new mongoose.Schema({
   toplamPuan: {
     type: Number,
     default: 0,
+  },
+  kontrolToplamPuani: {
+    type: Number,
+    default: 0,
+  },
+  puanlayanKullanici: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
   },
   // Onay bilgileri
   onaylayanKullanici: {

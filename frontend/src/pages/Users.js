@@ -29,6 +29,7 @@ import {
   Edit as EditIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { usersAPI, rolesAPI, departmentsAPI } from '../services/api';
 
@@ -71,7 +72,8 @@ const Users = () => {
       setDepartments(departmentsRes.data);
     } catch (error) {
       setError(
-        'Veriler yüklenirken hata oluştu: ' + (error.response?.data?.message || error.message),
+        'Veriler yüklenirken hata oluştu: ' +
+          (error.response?.data?.message || error.message),
       );
     } finally {
       setLoading(false);
@@ -106,6 +108,20 @@ const Users = () => {
       departmanlar: user.departmanlar.map(d => d._id),
       durum: user.durum,
     });
+  };
+
+  const handleDelete = async userId => {
+    if (window.confirm('Bu kullanıcıyı silmek istediğinizden emin misiniz?')) {
+      try {
+        await usersAPI.delete(userId);
+        setSuccess('Kullanıcı başarıyla silindi');
+        loadData();
+      } catch (error) {
+        setError(
+          error.response?.data?.message || 'Silme işlemi sırasında hata oluştu',
+        );
+      }
+    }
   };
 
   const handleClose = () => {
@@ -177,13 +193,20 @@ const Users = () => {
       handleClose();
       loadData(); // Listeyi yenile
     } catch (error) {
-      setError(error.response?.data?.message || 'İşlem sırasında bir hata oluştu');
+      setError(
+        error.response?.data?.message || 'İşlem sırasında bir hata oluştu',
+      );
     }
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        minHeight='400px'
+      >
         <CircularProgress />
       </Box>
     );
@@ -191,21 +214,32 @@ const Users = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Kullanıcı Yönetimi</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpen}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3,
+        }}
+      >
+        <Typography variant='h4'>Kullanıcı Yönetimi</Typography>
+        <Button
+          variant='contained'
+          startIcon={<AddIcon />}
+          onClick={handleOpen}
+        >
           Yeni Kullanıcı
         </Button>
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+        <Alert severity='error' sx={{ mb: 2 }} onClose={() => setError('')}>
           {error}
         </Alert>
       )}
 
       {success && (
-        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>
+        <Alert severity='success' sx={{ mb: 2 }} onClose={() => setSuccess('')}>
           {success}
         </Alert>
       )}
@@ -231,7 +265,12 @@ const Users = () => {
                 <TableCell>{user.kullaniciAdi}</TableCell>
                 <TableCell>
                   {user.roller?.map(rol => (
-                    <Chip key={rol._id} label={rol.ad} size="small" sx={{ mr: 0.5 }} />
+                    <Chip
+                      key={rol._id}
+                      label={rol.ad}
+                      size='small'
+                      sx={{ mr: 0.5 }}
+                    />
                   ))}
                 </TableCell>
                 <TableCell>
@@ -239,8 +278,8 @@ const Users = () => {
                     <Chip
                       key={dept._id}
                       label={dept.ad}
-                      size="small"
-                      variant="outlined"
+                      size='small'
+                      variant='outlined'
                       sx={{ mr: 0.5 }}
                     />
                   ))}
@@ -249,12 +288,23 @@ const Users = () => {
                   <Chip
                     label={user.durum}
                     color={user.durum === 'aktif' ? 'success' : 'error'}
-                    size="small"
+                    size='small'
                   />
                 </TableCell>
                 <TableCell>
-                  <IconButton size="small" color="primary" onClick={() => handleEdit(user)}>
+                  <IconButton
+                    size='small'
+                    color='primary'
+                    onClick={() => handleEdit(user)}
+                  >
                     <EditIcon />
+                  </IconButton>
+                  <IconButton
+                    size='small'
+                    color='error'
+                    onClick={() => handleDelete(user._id)}
+                  >
+                    <DeleteIcon />
                   </IconButton>
                 </TableCell>
               </TableRow>
@@ -264,57 +314,59 @@ const Users = () => {
       </TableContainer>
 
       {/* Kullanıcı Ekleme/Düzenleme Dialog */}
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>{editMode ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı Ekle'}</DialogTitle>
+      <Dialog open={open} onClose={handleClose} maxWidth='sm' fullWidth>
+        <DialogTitle>
+          {editMode ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı Ekle'}
+        </DialogTitle>
         <DialogContent>
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity='error' sx={{ mb: 2 }}>
               {error}
             </Alert>
           )}
 
           <TextField
             autoFocus
-            margin="dense"
-            name="ad"
-            label="Ad"
+            margin='dense'
+            name='ad'
+            label='Ad'
             fullWidth
-            variant="outlined"
+            variant='outlined'
             value={formData.ad}
             onChange={handleChange}
             sx={{ mb: 2 }}
           />
           <TextField
-            margin="dense"
-            name="soyad"
-            label="Soyad"
+            margin='dense'
+            name='soyad'
+            label='Soyad'
             fullWidth
-            variant="outlined"
+            variant='outlined'
             value={formData.soyad}
             onChange={handleChange}
             sx={{ mb: 2 }}
           />
           <TextField
-            margin="dense"
-            name="kullaniciAdi"
-            label="Kullanıcı Adı"
+            margin='dense'
+            name='kullaniciAdi'
+            label='Kullanıcı Adı'
             fullWidth
-            variant="outlined"
+            variant='outlined'
             value={formData.kullaniciAdi}
             onChange={handleChange}
             sx={{ mb: 2 }}
           />
           <TextField
-            margin="dense"
-            name="sifre"
+            margin='dense'
+            name='sifre'
             label={
               editMode
                 ? 'Yeni Şifre (değiştirmek istemiyorsanız boş bırakın)'
                 : 'Şifre (en az 6 karakter)'
             }
-            type="password"
+            type='password'
             fullWidth
-            variant="outlined"
+            variant='outlined'
             value={formData.sifre}
             onChange={handleChange}
             sx={{ mb: 2 }}
@@ -322,11 +374,11 @@ const Users = () => {
           <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel>Roller</InputLabel>
             <Select
-              name="roller"
+              name='roller'
               multiple
               value={formData.roller}
               onChange={handleChange}
-              label="Roller"
+              label='Roller'
             >
               {roles.map(role => (
                 <MenuItem key={role._id} value={role._id}>
@@ -338,11 +390,11 @@ const Users = () => {
           <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel>Departmanlar</InputLabel>
             <Select
-              name="departmanlar"
+              name='departmanlar'
               multiple
               value={formData.departmanlar}
               onChange={handleChange}
-              label="Departmanlar"
+              label='Departmanlar'
             >
               {departments.map(dept => (
                 <MenuItem key={dept._id} value={dept._id}>
@@ -353,9 +405,14 @@ const Users = () => {
           </FormControl>
           <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel>Durum</InputLabel>
-            <Select name="durum" value={formData.durum} onChange={handleChange} label="Durum">
-              <MenuItem value="aktif">Aktif</MenuItem>
-              <MenuItem value="pasif">Pasif</MenuItem>
+            <Select
+              name='durum'
+              value={formData.durum}
+              onChange={handleChange}
+              label='Durum'
+            >
+              <MenuItem value='aktif'>Aktif</MenuItem>
+              <MenuItem value='pasif'>Pasif</MenuItem>
             </Select>
           </FormControl>
         </DialogContent>
@@ -363,7 +420,11 @@ const Users = () => {
           <Button onClick={handleClose} startIcon={<CancelIcon />}>
             İptal
           </Button>
-          <Button onClick={handleSubmit} variant="contained" startIcon={<SaveIcon />}>
+          <Button
+            onClick={handleSubmit}
+            variant='contained'
+            startIcon={<SaveIcon />}
+          >
             {editMode ? 'Güncelle' : 'Kaydet'}
           </Button>
         </DialogActions>

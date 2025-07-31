@@ -1,0 +1,623 @@
+---
+description: Jest tests, unit tests, integration tests, mocking. File extensions: .test.js, .spec.js. Triggers: test, jest, describe, it, expect, mock, coverage, testing, spec.
+globs: 
+alwaysApply: false
+---
+# 🧪 MMM Checklist - Testing Standards Kuralları
+
+## 🚀 YENİ TEST YAKLAŞIMI (2025-02-06)
+
+### 🧪 Fonksiyonel Test Verisi Oluşturma ✅
+```javascript
+// ✅ YENİ: create-test-worktasks.js pattern - Real data testing
+// Test script'leri gerçek database ile çalışır, prodüksiyon benzeri veri oluşturur
+
+const createTestWorkTasks = async () => {
+  try {
+    console.log('🚀 Test WorkTask verisi oluşturuluyor...');
+    
+    await connectDB();
+
+    // Real user/machine/inventory dependencies
+    const adminUser = await User.findOne({ ad: 'Admin' });
+    const makina = await Machine.findOne({ durum: 'aktif' });
+    const indirilenKalip = await InventoryItem.findOne({}).limit(1);
+    const baglananKalip = await InventoryItem.findOne({}).skip(1).limit(1);
+
+    // İşe bağlı checklist şablonu oluştur/bul
+    let checklistTemplate = await ChecklistTemplate.findOne({ tur: 'iseBagli' });
+    if (!checklistTemplate) {
+      checklistTemplate = new ChecklistTemplate({
+        ad: 'Kalıp Değişimi Checklist',
+        aciklama: 'İşe bağlı kalıp değişim görevi',
+        kategori: 'Üretim',
+        tur: 'iseBagli',
+        periyot: 'olayBazli',
+        hedefRol: adminUser.roller[0],
+        maddeler: [
+          {
+            soru: 'Makina durduruldu mu?',
+            puan: 25,
+            fotografGereklimi: true,
+            aciklama: 'Makina güvenli şekilde durdurulmalı',
+          },
+          // ... diğer maddeler
+        ],
+        aktif: true,
+      });
+      await checklistTemplate.save();
+    }
+
+    // Test WorkTask'ları oluştur
+    for (let i = 1; i <= 3; i++) {
+      const workTask = new WorkTask({
+        kullanici: adminUser._id,
+        checklist: checklistTemplate._id,
+        makina: makina._id,
+        indirilenKalip: indirilenKalip._id,
+        baglananHamade: baglananKalip._id,
+        makinaDurmaSaati: new Date(Date.now() - (i * 24 * 60 * 60 * 1000) - (60 * 60 * 1000)),
+        yeniKalipAktifSaati: new Date(Date.now() - (i * 24 * 60 * 60 * 1000) - (30 * 60 * 1000)),
+        maddeler: checklistTemplate.maddeler.map((madde, index) => ({
+          maddeId: madde._id,
+          soru: madde.soru,
+          yapildi: true,
+          yapilmaTarihi: new Date(),
+          puan: madde.puan,
+          maxPuan: madde.puan,
+          kontrolPuani: Math.floor(madde.puan * (0.8 + Math.random() * 0.2)), // 80-100% puan
+          kontrolYorumu: `Test kontrol yorumu ${index + 1}`,
+          yorum: `Test kullanıcı yorumu ${index + 1}`,
+        })),
+        durum: 'tamamlandi',
+        toplamPuan: checklistTemplate.maddeler.reduce((sum, madde) => sum + madde.puan, 0),
+        tamamlanmaTarihi: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)),
+        onaylayanKullanici: adminUser._id,
+        onayTarihi: new Date(Date.now() - (i * 24 * 60 * 60 * 1000) + (2 * 60 * 60 * 1000)),
+        onayNotu: `Test onay notu ${i}`,
+      });
+
+      workTask.kontrolToplamPuani = workTask.maddeler.reduce((sum, madde) => sum + (madde.kontrolPuani || 0), 0);
+      
+      await workTask.save();
+      console.log(`✅ WorkTask ${i} oluşturuldu: ${workTask._id}`);
+    }
+
+    console.log(`\n🎉 Test WorkTask'lar başarıyla oluşturuldu!`);
+  } catch (error) {
+    console.error('❌ Hata:', error);
+  } finally {
+    await mongoose.disconnect();
+  }
+};
+
+// Bu yaklaşımın avantajları:
+// ✅ Gerçek database dependencies
+// ✅ Prodüksiyon benzeri veri yapısı
+// ✅ API endpoint'leri doğrudan test edilebilir
+// ✅ Frontend integration test için hazır veri
+```
+
+### 🔧 API Test Script Pattern ✅
+```javascript
+// ✅ test-api.js - Node.js ile doğrudan API test
+const axios = require('axios');
+const jwt = require('jsonwebtoken');
+
+async function testAPI() {
+  try {
+    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Fresh token
+    
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    console.log('🔍 Testing MyActivity API endpoints...\n');
+
+    // Test 1: Control Pending (WorkTasks)
+    console.log('1️⃣ Testing control_pending endpoint:');
+    try {
+      const response1 = await axios.get('http://localhost:5000/api/my-activity/scores-detail?tip=control_pending', { headers });
+      console.log('✅ Status:', response1.status);
+      console.log('📊 Data length:', response1.data?.length || 0);
+      
+      if (response1.data && response1.data.length > 0) {
+        console.log('🎯 First item sample:');
+        const firstItem = response1.data[0];
+        console.log('   - Tip:', firstItem.tip);
+        console.log('   - Soru:', firstItem.soru);
+        console.log('   - Puanlar:', firstItem.puanlar);
+        console.log('   - Durum:', firstItem.durum);
+        console.log('   - Makina:', firstItem.makina);
+      }
+    } catch (error) {
+      console.log('❌ Error:', error.response?.status, error.response?.data || error.message);
+    }
+
+    // Test 2: Summary
+    console.log('2️⃣ Testing summary endpoint:');
+    try {
+      const response2 = await axios.get('http://localhost:5000/api/my-activity/summary', { headers });
+      console.log('✅ Status:', response2.status);
+      console.log('📊 Summary data:', response2.data);
+    } catch (error) {
+      console.log('❌ Error:', error.response?.status, error.response?.data || error.message);
+    }
+
+  } catch (error) {
+    console.error('❌ Test failed:', error.message);
+  }
+}
+
+testAPI();
+
+// Bu yaklaşımın avantajları:
+// ✅ Gerçek server ile test
+// ✅ Authentication test dahil
+// ✅ Network layer test
+// ✅ Response format validation
+```
+
+### 🔑 Fresh Token Generator Pattern ✅
+```javascript
+// ✅ get-fresh-token.js - Dinamik token oluşturma
+const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const connectDB = require('./config/db');
+const User = require('./models/User');
+
+async function getFreshToken() {
+  try {
+    await connectDB();
+    
+    const adminUser = await User.findOne({ ad: 'Admin' });
+    if (!adminUser) {
+      console.log('❌ Admin kullanıcısı bulunamadı');
+      return;
+    }
+
+    const token = jwt.sign(
+      {
+        user: {
+          _id: adminUser._id,
+          ad: adminUser.ad,
+          soyad: adminUser.soyad,
+          roller: adminUser.roller
+        }
+      },
+      process.env.JWT_SECRET || 'fallback_secret_key_for_development',
+      { expiresIn: '24h' }
+    );
+
+    console.log('🔑 Fresh Admin Token:');
+    console.log(token);
+    console.log('\n📋 Test komutları:');
+    console.log(`curl -H "Authorization: Bearer ${token}" "http://localhost:5000/api/my-activity/scores-detail?tip=control_pending"`);
+    console.log(`curl -H "Authorization: Bearer ${token}" "http://localhost:5000/api/my-activity/summary"`);
+
+  } catch (error) {
+    console.error('❌ Hata:', error);
+  } finally {
+    await mongoose.disconnect();
+  }
+}
+
+getFreshToken();
+
+// Bu yaklaşımın avantajları:
+// ✅ Dinamik token generation
+// ✅ Gerçek user verileri ile
+// ✅ Expired token problemi yok
+// ✅ Copy-paste ready test commands
+```
+
+### 📋 Test Data Validation Pattern ✅
+```javascript
+// ✅ check-inventory.js - Mevcut veri kontrolü
+const mongoose = require('mongoose');
+const connectDB = require('./config/db');
+const InventoryItem = require('./models/InventoryItem');
+
+async function checkInventory() {
+  try {
+    await connectDB();
+    
+    console.log('📦 Inventory itemları kontrol ediliyor...');
+    
+    const items = await InventoryItem.find({}).limit(10);
+    
+    console.log(`Toplam ${items.length} item bulundu:`);
+    
+    items.forEach((item, index) => {
+      console.log(`${index + 1}. ${item.ad} (${item.envanterKodu})`);
+      console.log(`   Durum: ${item.durum}`);
+      console.log('');
+    });
+
+  } catch (error) {
+    console.error('❌ Hata:', error);
+  } finally {
+    await mongoose.disconnect();
+  }
+}
+
+checkInventory();
+
+// Bu yaklaşımın avantajları:
+// ✅ Pre-test data validation
+// ✅ Dependency kontrolü
+// ✅ Debug friendly output
+// ✅ Gerçek veri yapısı analizi
+```
+
+## Jest Test Structure (Zorunlu Pattern)
+```javascript
+// ✅ Standart test dosyası yapısı
+const request = require('supertest');
+const mongoose = require('mongoose');
+const app = require('../server');
+const User = require('../models/User');
+
+describe('User Management', () => {
+  // Setup before all tests
+  beforeAll(async () => {
+    await mongoose.connect(process.env.TEST_DB_URI);
+  });
+
+  // Cleanup before each test
+  beforeEach(async () => {
+    await User.deleteMany({});
+    await createTestData();
+  });
+
+  // Cleanup after all tests
+  afterAll(async () => {
+    await mongoose.connection.close();
+  });
+
+  describe('POST /api/users', () => {
+    it('should create a new user with valid data', async () => {
+      const userData = {
+        ad: 'Test',
+        soyad: 'User',
+        kullaniciAdi: 'testuser',
+        sifreHash: 'hashedpassword'
+      };
+
+      const response = await request(app)
+        .post('/api/users')
+        .send(userData)
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.kullaniciAdi).toBe(userData.kullaniciAdi);
+    });
+
+    it('should return 400 for invalid user data', async () => {
+      const invalidData = { ad: '' }; // Missing required fields
+
+      const response = await request(app)
+        .post('/api/users')
+        .send(invalidData)
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('zorunlu');
+    });
+  });
+});
+```
+
+## Frontend Component Testing
+```javascript
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { jest } from '@jest/globals';
+import UserManagement from '../components/UserManagement';
+import * as userService from '../services/userService';
+
+// Mock external dependencies
+jest.mock('../services/userService');
+const mockUserService = userService;
+
+describe('UserManagement Component', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should display loading state initially', () => {
+    mockUserService.getUsers.mockReturnValue(new Promise(() => {}));
+    
+    render(<UserManagement />);
+    
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  });
+
+  it('should display users after loading', async () => {
+    const mockUsers = [
+      { _id: '1', ad: 'John', soyad: 'Doe', kullaniciAdi: 'johndoe' }
+    ];
+    
+    mockUserService.getUsers.mockResolvedValue({ data: mockUsers });
+    
+    render(<UserManagement />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
+    });
+  });
+
+  it('should handle user creation', async () => {
+    mockUserService.getUsers.mockResolvedValue({ data: [] });
+    mockUserService.createUser.mockResolvedValue({ data: { success: true } });
+    
+    render(<UserManagement />);
+    
+    const addButton = screen.getByRole('button', { name: /ekle/i });
+    fireEvent.click(addButton);
+    
+    // Fill form and submit
+    const nameInput = screen.getByLabelText(/ad/i);
+    fireEvent.change(nameInput, { target: { value: 'Test User' } });
+    
+    const submitButton = screen.getByRole('button', { name: /kaydet/i });
+    fireEvent.click(submitButton);
+    
+    await waitFor(() => {
+      expect(mockUserService.createUser).toHaveBeenCalledWith(
+        expect.objectContaining({ ad: 'Test User' })
+      );
+    });
+  });
+});
+```
+
+## API Testing Utilities
+```javascript
+// ✅ Test helpers
+const createTestUser = async (userData = {}) => {
+  const defaultUser = {
+    ad: 'Test',
+    soyad: 'User',
+    kullaniciAdi: `test_${Date.now()}`,
+    sifreHash: 'hashedpassword',
+    durum: 'aktif'
+  };
+  
+  return await User.create({ ...defaultUser, ...userData });
+};
+
+const createAuthenticatedRequest = (app, token) => {
+  return request(app).set('Authorization', `Bearer ${token}`);
+};
+
+// ✅ Database test helpers
+const clearDatabase = async () => {
+  const collections = mongoose.connection.collections;
+  for (const key in collections) {
+    await collections[key].deleteMany({});
+  }
+};
+
+const seedTestData = async () => {
+  await User.create([
+    { ad: 'Admin', soyad: 'User', kullaniciAdi: 'admin', durum: 'aktif' },
+    { ad: 'Regular', soyad: 'User', kullaniciAdi: 'user', durum: 'aktif' }
+  ]);
+};
+```
+
+## Mock Strategies
+```javascript
+// ✅ Service mocking
+jest.mock('../services/emailService', () => ({
+  sendEmail: jest.fn().mockResolvedValue(true),
+  sendNotification: jest.fn().mockResolvedValue(true)
+}));
+
+// ✅ Database mocking for unit tests
+jest.mock('../models/User', () => ({
+  find: jest.fn(),
+  findById: jest.fn(),
+  create: jest.fn(),
+  findByIdAndUpdate: jest.fn(),
+  findByIdAndDelete: jest.fn()
+}));
+
+// ✅ External API mocking
+jest.mock('axios', () => ({
+  get: jest.fn(),
+  post: jest.fn(),
+  put: jest.fn(),
+  delete: jest.fn()
+}));
+```
+
+## Integration Testing
+```javascript
+// ✅ Full workflow integration test
+describe('User Registration Workflow', () => {
+  it('should complete user registration process', async () => {
+    // Step 1: Register user
+    const registerData = {
+      ad: 'Integration',
+      soyad: 'Test',
+      kullaniciAdi: 'integration_test',
+      sifre: 'password123'
+    };
+
+    const registerResponse = await request(app)
+      .post('/api/auth/register')
+      .send(registerData)
+      .expect(201);
+
+    const userId = registerResponse.body.data._id;
+
+    // Step 2: Verify user was created
+    const user = await User.findById(userId);
+    expect(user.kullaniciAdi).toBe(registerData.kullaniciAdi);
+
+    // Step 3: Login with new user
+    const loginResponse = await request(app)
+      .post('/api/auth/login')
+      .send({
+        kullaniciAdi: registerData.kullaniciAdi,
+        sifre: registerData.sifre
+      })
+      .expect(200);
+
+    expect(loginResponse.body.token).toBeDefined();
+
+    // Step 4: Access protected route
+    const protectedResponse = await request(app)
+      .get('/api/profile')
+      .set('Authorization', `Bearer ${loginResponse.body.token}`)
+      .expect(200);
+
+    expect(protectedResponse.body.data.kullaniciAdi).toBe(registerData.kullaniciAdi);
+  });
+});
+```
+
+## Performance Testing
+```javascript
+// ✅ Performance test example
+describe('Performance Tests', () => {
+  it('should handle 100 concurrent user creations', async () => {
+    const startTime = Date.now();
+    
+    const promises = Array.from({ length: 100 }, (_, i) =>
+      request(app)
+        .post('/api/users')
+        .send({
+          ad: 'User',
+          soyad: `Test${i}`,
+          kullaniciAdi: `user_${i}_${Date.now()}`,
+          sifreHash: 'hashedpassword'
+        })
+    );
+
+    const responses = await Promise.all(promises);
+    const endTime = Date.now();
+
+    // Verify all requests succeeded
+    responses.forEach(response => {
+      expect(response.status).toBe(201);
+    });
+
+    // Performance assertion
+    const duration = endTime - startTime;
+    expect(duration).toBeLessThan(5000); // Should complete in under 5 seconds
+  });
+});
+```
+
+## Error Handling Tests
+```javascript
+// ✅ Error scenario testing
+describe('Error Handling', () => {
+  it('should handle database connection errors', async () => {
+    // Mock database error
+    User.find.mockRejectedValue(new Error('Database connection failed'));
+
+    const response = await request(app)
+      .get('/api/users')
+      .expect(500);
+
+    expect(response.body.message).toContain('Sunucu hatası');
+  });
+
+  it('should handle validation errors', async () => {
+    const invalidUser = { kullaniciAdi: '' }; // Missing required fields
+
+    const response = await request(app)
+      .post('/api/users')
+      .send(invalidUser)
+      .expect(400);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.errors).toBeDefined();
+  });
+
+  it('should handle unauthorized access', async () => {
+    const response = await request(app)
+      .get('/api/admin/users')
+      .expect(401);
+
+    expect(response.body.message).toContain('Token');
+  });
+});
+```
+
+## Test Coverage Requirements
+```javascript
+// ✅ Jest coverage configuration
+module.exports = {
+  collectCoverage: true,
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    },
+    './src/components/': {
+      branches: 85,
+      functions: 85,
+      lines: 85,
+      statements: 85
+    }
+  },
+  collectCoverageFrom: [
+    'src/**/*.{js,jsx}',
+    '!src/index.js',
+    '!src/reportWebVitals.js',
+    '!src/setupTests.js'
+  ]
+};
+```
+
+## Test Organization
+```javascript
+// ✅ Test file naming convention
+// Unit tests: ComponentName.test.js
+// Integration tests: workflow.integration.test.js
+// E2E tests: userJourney.e2e.test.js
+
+// ✅ Test grouping
+describe('UserService', () => {
+  describe('CRUD Operations', () => {
+    describe('CREATE', () => {
+      it('should create user with valid data');
+      it('should reject invalid data');
+    });
+    
+    describe('READ', () => {
+      it('should fetch all users');
+      it('should fetch user by ID');
+    });
+  });
+  
+  describe('Authentication', () => {
+    it('should authenticate valid credentials');
+    it('should reject invalid credentials');
+  });
+});
+```
+
+## Continuous Testing
+```bash
+# ✅ Package.json test scripts
+{
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:unit": "jest --testPathPattern=test --testPathIgnorePattern=integration",
+    "test:ci": "jest --coverage --watchAll=false --ci"
+  }
+}
+```
+

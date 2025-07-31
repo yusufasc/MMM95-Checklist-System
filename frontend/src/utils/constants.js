@@ -115,7 +115,8 @@ export const STORAGE_KEYS = {
 
 // Error Messages
 export const ERROR_MESSAGES = {
-  NETWORK_ERROR: 'Ağ bağlantısı hatası. Lütfen internet bağlantınızı kontrol edin.',
+  NETWORK_ERROR:
+    'Ağ bağlantısı hatası. Lütfen internet bağlantınızı kontrol edin.',
   UNAUTHORIZED: 'Bu işlem için yetkiniz bulunmuyor.',
   SERVER_ERROR: 'Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.',
   VALIDATION_ERROR: 'Girilen bilgiler geçersiz.',

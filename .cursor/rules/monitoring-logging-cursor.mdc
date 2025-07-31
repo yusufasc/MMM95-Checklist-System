@@ -1,0 +1,609 @@
+---
+description: Winston logging, error tracking, performance monitoring, system health. Triggers: winston, logging, error, monitoring, performance, health, metrics, tracking.
+globs: 
+alwaysApply: false
+---
+# 📈 MMM Checklist - Monitoring & Logging Kuralları
+
+## Winston Logging Configuration
+```javascript
+const winston = require('winston');
+const path = require('path');
+
+// ✅ Production logging setup
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.combine(
+    winston.format.timestamp({
+      format: 'YYYY-MM-DD HH:mm:ss'
+    }),
+    winston.format.errors({ stack: true }),
+    winston.format.json(),
+    winston.format.printf(({ timestamp, level, message, stack, ...meta }) => {
+      return JSON.stringify({
+        timestamp,
+        level,
+        message,
+        stack,
+        userId: meta.userId,
+        sessionId: meta.sessionId,
+        requestId: meta.requestId,
+        ...meta
+      });
+    })
+  ),
+  defaultMeta: {
+    service: 'mmm-checklist',
+    environment: process.env.NODE_ENV || 'development'
+  },
+  transports: [
+    // Error logs - separate file
+    new winston.transports.File({
+      filename: path.join('./logs', 'error.log'),
+      level: 'error',
+      maxsize: 10 * 1024 * 1024, // 10MB
+      maxFiles: 5,
+      tailable: true
+    }),
+    
+    // All logs combined
+    new winston.transports.File({
+      filename: path.join('./logs', 'combined.log'),
+      maxsize: 10 * 1024 * 1024, // 10MB
+      maxFiles: 10,
+      tailable: true
+    }),
+    
+    // Console for development
+    ...(process.env.NODE_ENV === 'development' ? [
+      new winston.transports.Console({
+        format: winston.format.combine(
+          winston.format.colorize(),
+          winston.format.simple()
+        )
+      })
+    ] : [])
+  ]
+});
+
+// ✅ Request logging middleware
+const requestLogger = (req, res, next) => {
+  const startTime = Date.now();
+  const requestId = req.headers['x-request-id'] || `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  req.requestId = requestId;
+  
+  // Log request start
+  logger.info('Request started', {
+    requestId,
+    method: req.method,
+    url: req.url,
+    userAgent: req.headers['user-agent'],
+    ip: req.ip,
+    userId: req.user?.id
+  });
+
+  // Override res.json to log response
+  const originalJson = res.json;
+  res.json = function(data) {
+    const duration = Date.now() - startTime;
+    
+    logger.info('Request completed', {
+      requestId,
+      method: req.method,
+      url: req.url,
+      statusCode: res.statusCode,
+      duration,
+      userId: req.user?.id
+    });
+
+    return originalJson.call(this, data);
+  };
+
+  next();
+};
+```
+
+## Error Tracking & Monitoring
+```javascript
+// ✅ Global error handler
+const errorHandler = (err, req, res, next) => {
+  const error = {
+    message: err.message,
+    stack: err.stack,
+    statusCode: err.statusCode || 500,
+    requestId: req.requestId,
+    userId: req.user?.id,
+    url: req.url,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  };
+
+  // Log error with full context
+  logger.error('Unhandled error', error);
+
+  // Send user-friendly response
+  const isProduction = process.env.NODE_ENV === 'production';
+  res.status(error.statusCode).json({
+    success: false,
+    message: isProduction ? 'Sunucu hatası' : err.message,
+    requestId: req.requestId,
+    ...(isProduction ? {} : { stack: err.stack })
+  });
+};
+
+// ✅ Async error wrapper
+const asyncErrorHandler = (fn) => {
+  return (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};
+
+// ✅ Database error monitoring
+const dbErrorMonitor = () => {
+  mongoose.connection.on('error', (err) => {
+    logger.error('Database connection error', {
+      error: err.message,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  mongoose.connection.on('disconnected', () => {
+    logger.warn('Database disconnected', {
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  mongoose.connection.on('reconnected', () => {
+    logger.info('Database reconnected', {
+      timestamp: new Date().toISOString()
+    });
+  });
+};
+```
+
+## Performance Monitoring
+```javascript
+// ✅ API performance tracking
+const performanceMonitor = {
+  trackAPICall: (endpoint, duration, statusCode, userId = null) => {
+    const isSlowQuery = duration > 1000; // > 1 second
+    
+    const logData = {
+      endpoint,
+      duration,
+      statusCode,
+      userId,
+      slow: isSlowQuery,
+      timestamp: new Date().toISOString()
+    };
+
+    if (isSlowQuery) {
+      logger.warn('Slow API call detected', logData);
+    } else {
+      logger.info('API performance', logData);
+    }
+
+    // Store performance metrics
+    PerformanceMetric.create({
+      endpoint,
+      duration,
+      statusCode,
+      userId,
+      timestamp: new Date()
+    }).catch(err => {
+      logger.error('Failed to store performance metric', { error: err.message });
+    });
+  },
+
+  trackDatabaseQuery: (operation, collection, duration, resultCount = 0) => {
+    const isSlowQuery = duration > 100; // > 100ms
+
+    const logData = {
+      operation,
+      collection,
+      duration,
+      resultCount,
+      slow: isSlowQuery,
+      timestamp: new Date().toISOString()
+    };
+
+    if (isSlowQuery) {
+      logger.warn('Slow database query', logData);
+    }
+
+    return logData;
+  },
+
+  trackMemoryUsage: () => {
+    const memUsage = process.memoryUsage();
+    const memData = {
+      rss: Math.round(memUsage.rss / 1024 / 1024), // MB
+      heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024),
+      heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024),
+      external: Math.round(memUsage.external / 1024 / 1024),
+      timestamp: new Date().toISOString()
+    };
+
+    // Alert if memory usage is high
+    if (memData.heapUsed > 500) { // > 500MB
+      logger.warn('High memory usage detected', memData);
+    }
+
+    return memData;
+  }
+};
+
+// ✅ Performance middleware
+const performanceMiddleware = (req, res, next) => {
+  const startTime = process.hrtime.bigint();
+  
+  res.on('finish', () => {
+    const endTime = process.hrtime.bigint();
+    const duration = Number(endTime - startTime) / 1000000; // Convert to milliseconds
+    
+    performanceMonitor.trackAPICall(
+      `${req.method} ${req.route?.path || req.url}`,
+      duration,
+      res.statusCode,
+      req.user?.id
+    );
+  });
+
+  next();
+};
+```
+
+## User Activity Tracking
+```javascript
+// ✅ Activity logging schema
+const ActivityLogSchema = new mongoose.Schema({
+  kullaniciId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  islem: {
+    type: String,
+    required: true,
+    enum: [
+      'login',
+      'logout',
+      'create',
+      'update', 
+      'delete',
+      'view',
+      'download',
+      'upload'
+    ]
+  },
+  modul: {
+    type: String,
+    required: true, // users, tasks, inventory, etc.
+  },
+  detay: {
+    type: String,
+    required: true
+  },
+  hedefId: {
+    type: mongoose.Schema.Types.ObjectId,
+    // Reference to the affected object
+  },
+  eskiDeger: mongoose.Schema.Types.Mixed,
+  yeniDeger: mongoose.Schema.Types.Mixed,
+  ipAdresi: String,
+  userAgent: String,
+  tarih: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const ActivityLog = mongoose.model('ActivityLog', ActivityLogSchema);
+
+// ✅ Activity logger utility
+const activityLogger = {
+  log: async (kullaniciId, islem, modul, detay, options = {}) => {
+    try {
+      const activity = new ActivityLog({
+        kullaniciId,
+        islem,
+        modul,
+        detay,
+        hedefId: options.hedefId,
+        eskiDeger: options.eskiDeger,
+        yeniDeger: options.yeniDeger,
+        ipAdresi: options.ipAdresi,
+        userAgent: options.userAgent
+      });
+
+      await activity.save();
+
+      logger.info('User activity logged', {
+        kullaniciId,
+        islem,
+        modul,
+        detay,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      logger.error('Failed to log activity', {
+        error: error.message,
+        kullaniciId,
+        islem,
+        modul
+      });
+    }
+  },
+
+  middleware: (islem, modul) => {
+    return (req, res, next) => {
+      const originalJson = res.json;
+      
+      res.json = function(data) {
+        // Log successful operations
+        if (res.statusCode < 400 && req.user) {
+          const detay = `${islem} işlemi başarılı`;
+          
+          activityLogger.log(
+            req.user.id,
+            islem,
+            modul,
+            detay,
+            {
+              ipAdresi: req.ip,
+              userAgent: req.headers['user-agent']
+            }
+          );
+        }
+
+        return originalJson.call(this, data);
+      };
+
+      next();
+    };
+  }
+};
+```
+
+## System Health Monitoring
+```javascript
+// ✅ Health check endpoints
+const healthCheck = {
+  // Basic health check
+  basic: async (req, res) => {
+    const health = {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV,
+      version: process.env.npm_package_version || '1.0.0'
+    };
+
+    res.json(health);
+  },
+
+  // Detailed health check
+  detailed: async (req, res) => {
+    const checks = {
+      database: await checkDatabase(),
+      memory: checkMemory(),
+      disk: await checkDiskSpace(),
+      dependencies: await checkDependencies()
+    };
+
+    const allHealthy = Object.values(checks).every(check => check.status === 'healthy');
+    const overallStatus = allHealthy ? 'healthy' : 'unhealthy';
+
+    res.status(allHealthy ? 200 : 503).json({
+      status: overallStatus,
+      timestamp: new Date().toISOString(),
+      checks
+    });
+  }
+};
+
+// ✅ Individual health checks
+const checkDatabase = async () => {
+  try {
+    await mongoose.connection.db.admin().ping();
+    return {
+      status: 'healthy',
+      message: 'Database connection successful',
+      responseTime: Date.now()
+    };
+  } catch (error) {
+    return {
+      status: 'unhealthy',
+      message: 'Database connection failed',
+      error: error.message
+    };
+  }
+};
+
+const checkMemory = () => {
+  const memUsage = process.memoryUsage();
+  const heapUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+  const heapTotalMB = Math.round(memUsage.heapTotal / 1024 / 1024);
+  const usage = (heapUsedMB / heapTotalMB) * 100;
+
+  return {
+    status: usage < 90 ? 'healthy' : 'warning',
+    message: `Memory usage: ${heapUsedMB}MB / ${heapTotalMB}MB (${usage.toFixed(1)}%)`,
+    metrics: {
+      heapUsed: heapUsedMB,
+      heapTotal: heapTotalMB,
+      usage: usage
+    }
+  };
+};
+
+// ✅ Performance alerts
+const alertSystem = {
+  checkThresholds: () => {
+    const memUsage = process.memoryUsage();
+    const heapUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+
+    // Memory alert
+    if (heapUsedMB > 500) {
+      logger.error('ALERT: High memory usage', {
+        heapUsedMB,
+        threshold: 500,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // CPU alert (if available)
+    if (process.cpuUsage) {
+      const cpuUsage = process.cpuUsage();
+      const userCPU = cpuUsage.user / 1000000; // Convert to seconds
+      
+      if (userCPU > 10) { // > 10 seconds
+        logger.warn('ALERT: High CPU usage', {
+          userCPU,
+          threshold: 10,
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+  },
+
+  scheduleChecks: () => {
+    // Check every 5 minutes
+    setInterval(() => {
+      alertSystem.checkThresholds();
+    }, 5 * 60 * 1000);
+  }
+};
+```
+
+## Log Management
+```javascript
+// ✅ Log aggregation and search
+const logManager = {
+  searchLogs: async (filters) => {
+    const {
+      level,
+      startDate,
+      endDate,
+      userId,
+      endpoint,
+      limit = 100,
+      offset = 0
+    } = filters;
+
+    // Build query based on filters
+    // This would integrate with your log storage solution
+    // (e.g., Elasticsearch, MongoDB, or file-based search)
+    
+    const query = {};
+    if (level) query.level = level;
+    if (userId) query.userId = userId;
+    if (endpoint) query.endpoint = { $regex: endpoint, $options: 'i' };
+    if (startDate || endDate) {
+      query.timestamp = {};
+      if (startDate) query.timestamp.$gte = startDate;
+      if (endDate) query.timestamp.$lte = endDate;
+    }
+
+    return await LogEntry.find(query)
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .skip(offset);
+  },
+
+  cleanup: async (retentionDays = 30) => {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
+
+    try {
+      // Archive old activity logs
+      const oldLogs = await ActivityLog.find({
+        tarih: { $lt: cutoffDate }
+      });
+
+      if (oldLogs.length > 0) {
+        // Move to archive collection or export to file
+        await ArchivedActivityLog.insertMany(oldLogs);
+        await ActivityLog.deleteMany({
+          tarih: { $lt: cutoffDate }
+        });
+
+        logger.info('Log cleanup completed', {
+          archivedCount: oldLogs.length,
+          cutoffDate,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+    } catch (error) {
+      logger.error('Log cleanup failed', {
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+};
+
+// ✅ Real-time monitoring dashboard data
+const monitoringAPI = {
+  getMetrics: async (req, res) => {
+    try {
+      const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+      const metrics = {
+        requests: await getRequestMetrics(last24Hours),
+        errors: await getErrorMetrics(last24Hours),
+        performance: await getPerformanceMetrics(last24Hours),
+        users: await getUserActivityMetrics(last24Hours)
+      };
+
+      res.json(metrics);
+
+    } catch (error) {
+      logger.error('Failed to get monitoring metrics', { error: error.message });
+      res.status(500).json({ error: 'Metrik verileri alınamadı' });
+    }
+  }
+};
+```
+
+## Scheduled Monitoring Tasks
+```javascript
+// ✅ Cron jobs for monitoring
+const cron = require('node-cron');
+
+// Daily log cleanup (2 AM)
+cron.schedule('0 2 * * *', async () => {
+  logger.info('Starting daily log cleanup');
+  await logManager.cleanup(30);
+});
+
+// Hourly health checks
+cron.schedule('0 * * * *', async () => {
+  const health = await healthCheck.detailed({}, { 
+    json: (data) => data,
+    status: () => ({ json: (data) => data })
+  });
+  
+  if (health.status === 'unhealthy') {
+    logger.error('System health check failed', health);
+  }
+});
+
+// Memory monitoring every 15 minutes
+cron.schedule('*/15 * * * *', () => {
+  const memData = performanceMonitor.trackMemoryUsage();
+  
+  // Store metrics for trending
+  PerformanceMetric.create({
+    type: 'memory',
+    data: memData,
+    timestamp: new Date()
+  }).catch(err => {
+    logger.error('Failed to store memory metric', { error: err.message });
+  });
+});
+```
+

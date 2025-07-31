@@ -25,7 +25,10 @@ const setOnaylayabilirTrue = async () => {
     // Paketlemeci ve Usta için onaylayabilir'i true yap
     let updated = false;
     ortaciRole.checklistYetkileri.forEach(yetki => {
-      if (yetki.hedefRol.toString() === paketlemeciId || yetki.hedefRol.toString() === ustaId) {
+      if (
+        yetki.hedefRol.toString() === paketlemeciId ||
+        yetki.hedefRol.toString() === ustaId
+      ) {
         if (yetki.gorebilir === true && yetki.onaylayabilir !== true) {
           yetki.onaylayabilir = true;
           updated = true;
@@ -46,7 +49,10 @@ const setOnaylayabilirTrue = async () => {
 
       console.log('🔍 Güncellenmiş yetkileri:');
       updatedRole.checklistYetkileri.forEach((yetki, _index) => {
-        if (yetki.hedefRol.ad === 'Paketlemeci' || yetki.hedefRol.ad === 'Usta') {
+        if (
+          yetki.hedefRol.ad === 'Paketlemeci' ||
+          yetki.hedefRol.ad === 'Usta'
+        ) {
           console.log(
             `✅ ${yetki.hedefRol.ad} - gorebilir=${yetki.gorebilir} onaylayabilir=${yetki.onaylayabilir}`,
           );

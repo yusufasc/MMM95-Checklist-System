@@ -44,7 +44,10 @@ const addEnvanterToOrtaci = async () => {
     }
 
     // Ortacı rolünün güncel modüllerini listele
-    const updatedRole = await Role.findOne({ ad: 'Ortacı' }).populate('moduller.modul', 'ad');
+    const updatedRole = await Role.findOne({ ad: 'Ortacı' }).populate(
+      'moduller.modul',
+      'ad',
+    );
 
     console.log('📦 Ortacı rolünün modülleri:');
     updatedRole.moduller.forEach((modulePermission, index) => {

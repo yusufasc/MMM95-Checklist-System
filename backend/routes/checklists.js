@@ -8,18 +8,53 @@ const router = express.Router();
 // @route   GET /api/checklists
 // @desc    Tüm checklist şablonlarını listele
 // @access  Private (Checklist Yönetimi modülü erişim yetkisi)
-router.get('/', auth, checkModulePermission('Checklist Yönetimi'), async (req, res) => {
-  try {
-    const checklists = await ChecklistTemplate.find()
-      .populate('hedefRol', 'ad')
-      .populate('hedefDepartman', 'ad');
+router.get(
+  '/',
+  auth,
+  checkModulePermission('Checklist Yönetimi'),
+  async (req, res) => {
+    try {
+      const checklists = await ChecklistTemplate.find()
+        .populate('hedefRol', 'ad')
+        .populate('hedefDepartman', 'ad');
 
-    res.json(checklists);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send('Sunucu hatası');
-  }
-});
+      res.json(checklists);
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send('Sunucu hatası');
+    }
+  },
+);
+
+// @route   GET /api/checklists/:id
+// @desc    Belirli bir checklist şablonu getir
+// @access  Private (Checklist Yönetimi modülü erişim yetkisi)
+router.get(
+  '/:id',
+  auth,
+  checkModulePermission('Checklist Yönetimi'),
+  async (req, res) => {
+    try {
+      const checklist = await ChecklistTemplate.findById(req.params.id)
+        .populate('hedefRol', 'ad')
+        .populate('hedefDepartman', 'ad');
+
+      if (!checklist) {
+        return res
+          .status(404)
+          .json({ message: 'Checklist şablonu bulunamadı' });
+      }
+
+      res.json(checklist);
+    } catch (error) {
+      console.error('Checklist getirme hatası:', error.message);
+      if (error.kind === 'ObjectId') {
+        return res.status(400).json({ message: 'Geçersiz checklist ID' });
+      }
+      res.status(500).send('Sunucu hatası');
+    }
+  },
+);
 
 // @route   POST /api/checklists
 // @desc    Yeni checklist şablonu ekle
@@ -30,7 +65,22 @@ router.post(
   checkModulePermission('Checklist Yönetimi', 'duzenleyebilir'),
   async (req, res) => {
     try {
-      const { ad, tur, hedefRol, hedefDepartman, maddeler, periyot, isTuru } = req.body;
+      const {
+        ad,
+        tur,
+        hedefRol,
+        hedefDepartman,
+        maddeler,
+        periyot,
+        isTuru,
+        kontrolPuani,
+        degerlendirmeSaatleri,
+        degerlendirmePeriyodu,
+        degerlendirmeGunleri,
+        degerlendirmeSikligi,
+        aktif,
+        degerlendirmeRolleri,
+      } = req.body;
 
       console.log('📋 Yeni checklist oluşturuluyor:', {
         ad,
@@ -38,6 +88,8 @@ router.post(
         hedefRol,
         hedefDepartman,
         periyot,
+        kontrolPuani,
+        degerlendirmeRolleri,
       });
 
       const checklist = new ChecklistTemplate({
@@ -48,6 +100,13 @@ router.post(
         maddeler,
         periyot,
         isTuru,
+        kontrolPuani,
+        degerlendirmeSaatleri,
+        degerlendirmePeriyodu,
+        degerlendirmeGunleri,
+        degerlendirmeSikligi,
+        aktif,
+        degerlendirmeRolleri,
       });
 
       await checklist.save();
@@ -66,18 +125,27 @@ router.post(
       });
 
       // Yeni checklist oluşturulduğunda sadece rutin checklistler için tüm kullanıcılara görev oluştur
-      // İşe bağlı checklistler Yaptım sayfasından manuel olarak oluşturulacak
+      // İşe bağlı checklistler WorkTasks sayfasından manuel olarak oluşturulacak
       if (populatedChecklist.tur === 'rutin') {
         try {
-          console.log('🔧 Rutin checklist için otomatik görev oluşturma başlatılıyor...');
+          console.log(
+            '🔧 Rutin checklist için otomatik görev oluşturma başlatılıyor...',
+          );
           const taskCount = await createTasksForAllUsers(populatedChecklist);
-          console.log(`✅ Rutin checklist oluşturuldu ve ${taskCount} görev atandı`);
+          console.log(
+            `✅ Rutin checklist oluşturuldu ve ${taskCount} görev atandı`,
+          );
         } catch (taskError) {
-          console.error('Görevler oluşturulurken hata (checklist yine de kaydedildi):', taskError);
+          console.error(
+            'Görevler oluşturulurken hata (checklist yine de kaydedildi):',
+            taskError,
+          );
           // Checklist oluşturuldu ama görevler oluşturulamadı, yine de başarılı response döndür
         }
       } else {
-        console.log('📋 İşe bağlı checklist oluşturuldu - otomatik görev oluşturulmayacak');
+        console.log(
+          '📋 Olay bazlı (işe bağlı) checklist oluşturuldu - WorkTasks sayfasından manuel başlatılacak',
+        );
       }
 
       res.status(201).json(populatedChecklist);
@@ -97,7 +165,22 @@ router.put(
   checkModulePermission('Checklist Yönetimi', 'duzenleyebilir'),
   async (req, res) => {
     try {
-      const { ad, tur, hedefRol, hedefDepartman, maddeler, periyot, isTuru } = req.body;
+      const {
+        ad,
+        tur,
+        hedefRol,
+        hedefDepartman,
+        maddeler,
+        periyot,
+        isTuru,
+        kontrolPuani,
+        degerlendirmeSaatleri,
+        degerlendirmePeriyodu,
+        degerlendirmeGunleri,
+        degerlendirmeSikligi,
+        aktif,
+        degerlendirmeRolleri,
+      } = req.body;
 
       const checklist = await ChecklistTemplate.findByIdAndUpdate(
         req.params.id,
@@ -109,6 +192,13 @@ router.put(
           maddeler,
           periyot,
           isTuru,
+          kontrolPuani,
+          degerlendirmeSaatleri,
+          degerlendirmePeriyodu,
+          degerlendirmeGunleri,
+          degerlendirmeSikligi,
+          aktif,
+          degerlendirmeRolleri,
           guncellemeTarihi: Date.now(),
         },
         { new: true },
@@ -117,7 +207,9 @@ router.put(
         .populate('hedefDepartman', 'ad');
 
       if (!checklist) {
-        return res.status(404).json({ message: 'Checklist şablonu bulunamadı' });
+        return res
+          .status(404)
+          .json({ message: 'Checklist şablonu bulunamadı' });
       }
 
       res.json(checklist);
@@ -145,10 +237,14 @@ router.delete(
       // Önce checklist'in var olup olmadığını kontrol et
       const checklist = await ChecklistTemplate.findById(checklistId);
       if (!checklist) {
-        return res.status(404).json({ message: 'Checklist şablonu bulunamadı' });
+        return res
+          .status(404)
+          .json({ message: 'Checklist şablonu bulunamadı' });
       }
 
-      console.log(`🗑️ Checklist siliniyor: ${checklist.ad} (ID: ${checklistId})`);
+      console.log(
+        `🗑️ Checklist siliniyor: ${checklist.ad} (ID: ${checklistId})`,
+      );
 
       // Bu checklist'e bağlı aktif görevleri kontrol et
       const activeTasks = await Task.find({
@@ -172,7 +268,9 @@ router.delete(
       });
 
       if (completedTasks > 0) {
-        console.log(`📊 ${completedTasks} tamamlanmış görev bulundu - bunlar korunacak`);
+        console.log(
+          `📊 ${completedTasks} tamamlanmış görev bulundu - bunlar korunacak`,
+        );
       }
 
       // Checklist'i sil
@@ -212,14 +310,20 @@ router.delete(
       // Önce checklist'in var olup olmadığını kontrol et
       const checklist = await ChecklistTemplate.findById(checklistId);
       if (!checklist) {
-        return res.status(404).json({ message: 'Checklist şablonu bulunamadı' });
+        return res
+          .status(404)
+          .json({ message: 'Checklist şablonu bulunamadı' });
       }
 
-      console.log(`🗑️ Checklist zorla siliniyor: ${checklist.ad} (ID: ${checklistId})`);
+      console.log(
+        `🗑️ Checklist zorla siliniyor: ${checklist.ad} (ID: ${checklistId})`,
+      );
 
       // Bu checklist'e bağlı tüm görevleri bul (aktif ve tamamlanmış)
       const allTasks = await Task.find({ checklist: checklistId });
-      const activeTasks = allTasks.filter(task => ['bekliyor', 'devamEdiyor'].includes(task.durum));
+      const activeTasks = allTasks.filter(task =>
+        ['bekliyor', 'devamEdiyor'].includes(task.durum),
+      );
       const completedTasks = allTasks.filter(task =>
         ['tamamlandi', 'onaylandi', 'iadeEdildi'].includes(task.durum),
       );
@@ -272,7 +376,9 @@ router.delete(
 // Yardımcı fonksiyon: Checklist için tüm kullanıcılara görev oluştur
 const createTasksForAllUsers = async checklist => {
   try {
-    console.log(`📋 ${checklist.ad} için tüm kullanıcılara görev oluşturuluyor...`);
+    console.log(
+      `📋 ${checklist.ad} için tüm kullanıcılara görev oluşturuluyor...`,
+    );
 
     // Hedef role ve departmana sahip tüm aktif kullanıcıları bul
     const users = await User.find({

@@ -12,7 +12,9 @@ async function createUserMachine() {
     let category = await InventoryCategory.findById(categoryId);
 
     if (!category) {
-      console.log(`❌ Kullanıcının verdiği kategori ID bulunamadı: ${categoryId}`);
+      console.log(
+        `❌ Kullanıcının verdiği kategori ID bulunamadı: ${categoryId}`,
+      );
 
       // Makina kategorisini kullan
       category = await InventoryCategory.findOne({
@@ -22,7 +24,9 @@ async function createUserMachine() {
 
       if (category) {
         categoryId = category._id;
-        console.log(`✅ Makina kategorisi bulundu: ${category.ad} (${categoryId})`);
+        console.log(
+          `✅ Makina kategorisi bulundu: ${category.ad} (${categoryId})`,
+        );
       } else {
         console.log('❌ Makina kategorisi de bulunamadı');
         return;
@@ -30,7 +34,9 @@ async function createUserMachine() {
     }
 
     // mak-zf01 makinesini kontrol et
-    const existingMachine = await InventoryItem.findOne({ envanterKodu: 'mak-zf01' });
+    const existingMachine = await InventoryItem.findOne({
+      envanterKodu: 'mak-zf01',
+    });
     if (existingMachine) {
       console.log('ℹ️  mak-zf01 makinesi zaten mevcut');
       return;
@@ -77,7 +83,9 @@ async function createUserMachine() {
       barkod: '123123123',
       oncelikSeviyesi: 'orta',
       aktif: true,
-      olusturanKullanici: new mongoose.Types.ObjectId('6837446e342f89c51d006421'),
+      olusturanKullanici: new mongoose.Types.ObjectId(
+        '6837446e342f89c51d006421',
+      ),
       olusturmaTarihi: new Date('2025-05-29T08:00:49.896Z'),
       guncellemeTarihi: new Date('2025-05-29T08:04:32.226Z'),
     });
@@ -86,10 +94,9 @@ async function createUserMachine() {
     console.log('✅ mak-zf01 makinesi başarıyla oluşturuldu');
 
     // Oluşturulan makineyi kontrol et
-    const createdMachine = await InventoryItem.findOne({ envanterKodu: 'mak-zf01' }).populate(
-      'kategoriId',
-      'ad',
-    );
+    const createdMachine = await InventoryItem.findOne({
+      envanterKodu: 'mak-zf01',
+    }).populate('kategoriId', 'ad');
 
     console.log('\n📋 Oluşturulan makine:');
     console.log(`  - Envanter Kodu: ${createdMachine.envanterKodu}`);

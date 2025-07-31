@@ -1,0 +1,257 @@
+{
+  // ===== TERMINAL AYARLARI =====
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.profiles.windows": {
+    "PowerShell": {
+      "source": "PowerShell",
+      "args": ["-NoExit", "-ExecutionPolicy", "Bypass"]
+    },
+    "Command Prompt": {
+      "path": [
+        "${env:windir}\\Sysnative\\cmd.exe",
+        "${env:windir}\\System32\\cmd.exe"
+      ]
+    },
+    "Git Bash": {
+      "source": "Git Bash"
+    }
+  },
+  "terminal.integrated.commandsToSkipShell": [],
+  "terminal.integrated.allowChords": false,
+  "terminal.integrated.persistentSessionReviveProcess": "onExit",
+  "terminal.integrated.enableMultiLinePasteWarning": false,
+  "terminal.integrated.copyOnSelection": true,
+  "terminal.integrated.rightClickBehavior": "copyPaste",
+  "terminal.integrated.shellIntegration.enabled": true,
+  "terminal.integrated.shellIntegration.decorationsEnabled": "both",
+  "terminal.integrated.smoothScrolling": true,
+  "terminal.integrated.fastScrollSensitivity": 5,
+  "terminal.integrated.mouseWheelScrollSensitivity": 3,
+  "terminal.integrated.scrollback": 10000,
+
+  // ===== NODE.JS VE NPM AYARLARI - PERFORMANCE OPTIMIZED =====
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "typescript.suggest.autoImports": false,
+  "typescript.updateImportsOnFileMove.enabled": "never",
+  "typescript.workspaceSymbols.enabled": false,
+  "npm.enableRunFromFolder": true,
+  "npm.enableScriptExplorer": true,
+  "npm.scriptExplorerAction": "run",
+  "npm.runSilent": false,
+  "npm.packageManager": "npm",
+  "debug.terminal.clearBeforeReusing": true,
+
+  // ===== CURSOR AI AYARLARI - PERFORMANCE OPTIMIZED =====
+  "cursor.chat.maxContextLength": 50000,
+  "cursor.chat.alwaysSearchWeb": false,
+  "cursor.general.enableTooltips": false,
+  "cursor.composer.enableAutoSave": true,
+  "cursor.composer.showRelatedFiles": false,
+  "cursor.chat.enableCodeBlocks": true,
+  "cursor.chat.enableFileTree": false,
+  "cursor.chat.maxFileSize": 500000,
+  "cursor.composer.maxContextLength": 80000,
+
+  // ===== AI RULE COORDINATION SYSTEM =====
+  "cursor.aiRuleCoordination.enabled": true,
+  "cursor.aiRuleCoordination.autoActivation": true,
+  "cursor.aiRuleCoordination.maxActiveRules": 4,
+  "cursor.aiRuleCoordination.contextSensitive": true,
+  "cursor.aiRuleCoordination.fallbackRule": "core-cursor.mdc",
+  "cursor.chat.enableSmartContext": true,
+  "cursor.composer.autoIncludeRelevantFiles": false,
+  "cursor.chat.enableStreamResponse": true,
+
+  // ===== GELİŞTİRME ARAÇLARI =====
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.fixAll.eslint": "explicit"
+  },
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.formatOnType": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": true,
+  "editor.trimAutoWhitespace": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+
+  // ===== ESLINT VE PRETTIER - PERFORMANCE OPTIMIZED =====
+  "eslint.enable": true,
+  "eslint.run": "onSave",
+  "eslint.format.enable": true,
+  "eslint.lintTask.enable": true,
+  "eslint.workingDirectories": ["frontend/src", "backend/src"],
+  "eslint.options": {
+    "cache": true,
+    "cacheLocation": ".eslintcache"
+  },
+  "prettier.enable": true,
+  "prettier.requireConfig": false,
+  "prettier.useEditorConfig": false,
+
+  // ===== JAVASCRIPT/TYPESCRIPT =====
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // ===== MONGODB VE DATABASE =====
+  "mongodb.connectionSaving": "Global",
+  "mongodb.defaultLimit": 10,
+  "mongodb.confirmRunAll": false,
+
+  // ===== GIT ENTEGRASYONU - PERFORMANCE OPTIMIZED =====
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false,
+  "git.autofetch": false,
+  "git.autofetchPeriod": 600,
+  "git.enableStatusBarSync": true,
+  "scm.defaultViewMode": "tree",
+  "scm.alwaysShowActions": true,
+
+  // ===== PERFORMANS AYARLARI - MASSIVE OPTIMIZATION =====
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/npm-debug.log*": true,
+    "**/yarn-error.log*": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/coverage/**": true,
+    "**/.cache/**": true,
+    "**/.eslintcache": true,
+    "**/tmp/**": true,
+    "**/temp/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/.git/logs/**": true,
+    "**/.vscode/**": true,
+    "**/.cursor/**": true,
+    "**/.idea/**": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/*.log": true,
+    "**/logs/**": true,
+    "**/*.db": true,
+    "**/*.sqlite*": true,
+    "**/docs/**": true,
+    "**/*.coverage": true,
+    "**/junit.xml": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/tmp": true,
+    "**/.cache": true,
+    "**/.eslintcache": true,
+    "**/logs/**": true,
+    "**/*.log": true,
+    "**/coverage/**": true,
+    "**/.env*": false
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/tmp": true,
+    "**/.cache": true,
+    "**/.eslintcache": true,
+    "**/Thumbs.db": true
+  },
+
+  // ===== DOSYA TÜRÜ İLİŞKİLENDİRMELERİ =====
+  "files.associations": {
+    "*.mdc": "markdown",
+    "*.env*": "properties",
+    ".env.local": "properties",
+    ".env.development": "properties",
+    ".env.production": "properties",
+    "Dockerfile*": "dockerfile",
+    "*.json": "jsonc"
+  },
+
+  // ===== AĞIR DOSYALARI İYİLEŞTİRME - OPTIMIZED =====
+  "editor.largeFileOptimizations": true,
+  "editor.maxFileSize": 10,
+  "diffEditor.maxFileSize": 25,
+  "editor.semanticHighlighting.enabled": false,
+  "editor.bracketPairColorization.enabled": false,
+
+  // ===== WORKSPACE GÜVENLİK =====
+  "security.workspace.trust.untrustedFiles": "open",
+  "security.workspace.trust.banner": "never",
+  "security.workspace.trust.startupPrompt": "never",
+  "security.workspace.trust.enabled": false,
+
+  // ===== BREADCRUMB VE NAVİGASYON =====
+  "breadcrumbs.enabled": true,
+  "breadcrumbs.showFiles": true,
+  "breadcrumbs.showModules": true,
+  "breadcrumbs.showNamespaces": true,
+  "breadcrumbs.showClasses": true,
+  "breadcrumbs.showFunctions": true,
+
+  // ===== MINIMAP VE GÖRÜNÜM =====
+  "editor.minimap.enabled": true,
+  "editor.minimap.showSlider": "always",
+  "editor.minimap.renderCharacters": false,
+  "workbench.tree.indent": 20,
+  "workbench.list.smoothScrolling": true,
+  "workbench.startupEditor": "welcomePage",
+
+  // ===== İNTELLİSENSE VE AUTO-COMPLETE =====
+  "editor.quickSuggestions": {
+    "other": "on",
+    "comments": "on",
+    "strings": "on"
+  },
+  "editor.suggestOnTriggerCharacters": true,
+  "editor.acceptSuggestionOnCommitCharacter": true,
+  "editor.acceptSuggestionOnEnter": "on",
+  "editor.suggest.insertMode": "replace",
+  "editor.suggest.snippetsPreventQuickSuggestions": false,
+  "editor.parameterHints.enabled": true,
+  "editor.hover.enabled": true,
+  "editor.hover.delay": 300,
+
+  // ===== TÜRKİ KARAKTER DESTEĞİ =====
+  "files.encoding": "utf8",
+  "files.autoGuessEncoding": true,
+
+  // ===== EMMET DESTEĞİ =====
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact",
+    "typescript": "typescriptreact"
+  },
+  "emmet.triggerExpansionOnTab": true,
+  "emmet.showExpandedAbbreviation": "always",
+
+  // ===== PROBLEM PANEL =====
+  "problems.showCurrentInStatus": true,
+  "problems.sortOrder": "severity",
+  "problems.decorations.enabled": true
+}

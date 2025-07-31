@@ -1,0 +1,30 @@
+{
+  "watch": [
+    "routes",
+    "models",
+    "middleware",
+    "middlewares",
+    "services",
+    "controllers",
+    "config",
+    "utils",
+    "server.js"
+  ],
+  "ignore": [
+    "node_modules/**/*",
+    "scripts/**/*",
+    "logs/**/*",
+    "*.log",
+    "*.json",
+    ".git/**/*",
+    "temp-*",
+    "*.prettierrc*",
+    "eslint.config.js",
+    "package*.json"
+  ],
+  "ext": "js",
+  "delay": 2000,
+  "env": {
+    "NODE_ENV": "development"
+  }
+}

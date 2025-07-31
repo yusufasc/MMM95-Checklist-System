@@ -20,7 +20,9 @@ async function createTestHRTemplate() {
     }
 
     // Mevcut şablonu kontrol et
-    const existingTemplate = await HRTemplate.findOne({ ad: 'Genel Personel Değerlendirme' });
+    const existingTemplate = await HRTemplate.findOne({
+      ad: 'Genel Personel Değerlendirme',
+    });
     if (existingTemplate) {
       console.log('✅ Test şablonu zaten mevcut');
       console.log('Şablon ID:', existingTemplate._id);

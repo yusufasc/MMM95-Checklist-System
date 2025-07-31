@@ -7,19 +7,24 @@ const router = express.Router();
 // @route   GET /api/machines
 // @desc    Tüm makinaları listele
 // @access  Private (Envanter Yönetimi modülü erişim yetkisi)
-router.get('/', auth, checkModulePermission('Envanter Yönetimi'), async (req, res) => {
-  try {
-    const machines = await Machine.find()
-      .populate('departman', 'ad')
-      .populate('sorumluRoller', 'ad')
-      .sort({ makinaNo: 1 });
+router.get(
+  '/',
+  auth,
+  checkModulePermission('Envanter Yönetimi'),
+  async (req, res) => {
+    try {
+      const machines = await Machine.find()
+        .populate('departman', 'ad')
+        .populate('sorumluRoller', 'ad')
+        .sort({ makinaNo: 1 });
 
-    res.json(machines);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send('Sunucu hatası');
-  }
-});
+      res.json(machines);
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send('Sunucu hatası');
+    }
+  },
+);
 
 // @route   GET /api/machines/my-accessible
 // @desc    Kullanıcının erişebileceği makinaları listele
@@ -60,12 +65,15 @@ router.post(
   checkModulePermission('Envanter Yönetimi', 'duzenleyebilir'),
   async (req, res) => {
     try {
-      const { ad, makinaNo, departman, sorumluRoller, durum, aciklama } = req.body;
+      const { ad, makinaNo, departman, sorumluRoller, durum, aciklama } =
+        req.body;
 
       // Makina numarası benzersiz mi kontrol et
       const existingMachine = await Machine.findOne({ makinaNo });
       if (existingMachine) {
-        return res.status(400).json({ message: 'Bu makina numarası zaten kullanılıyor' });
+        return res
+          .status(400)
+          .json({ message: 'Bu makina numarası zaten kullanılıyor' });
       }
 
       const machine = new Machine({
@@ -101,7 +109,8 @@ router.put(
   checkModulePermission('Envanter Yönetimi', 'duzenleyebilir'),
   async (req, res) => {
     try {
-      const { ad, makinaNo, departman, sorumluRoller, durum, aciklama } = req.body;
+      const { ad, makinaNo, departman, sorumluRoller, durum, aciklama } =
+        req.body;
 
       // Makina numarası benzersiz mi kontrol et (kendisi hariç)
       const existingMachine = await Machine.findOne({
@@ -109,7 +118,9 @@ router.put(
         _id: { $ne: req.params.id },
       });
       if (existingMachine) {
-        return res.status(400).json({ message: 'Bu makina numarası zaten kullanılıyor' });
+        return res
+          .status(400)
+          .json({ message: 'Bu makina numarası zaten kullanılıyor' });
       }
 
       const machine = await Machine.findByIdAndUpdate(

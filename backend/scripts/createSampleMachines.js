@@ -163,7 +163,9 @@ async function createSampleMachines() {
         machine.hesaplaDataKalitesiSkoru();
         await machine.save();
 
-        console.log(`✅ ${machineData.envanterKodu} - ${machineData.ad} eklendi`);
+        console.log(
+          `✅ ${machineData.envanterKodu} - ${machineData.ad} eklendi`,
+        );
         createdCount++;
       } else {
         console.log(`ℹ️  ${machineData.envanterKodu} zaten mevcut`);

@@ -4,7 +4,8 @@ require('dotenv').config();
 const getRealMachineIds = async () => {
   try {
     // MongoDB'a bağlan
-    const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/mmm-checklist';
+    const mongoURI =
+      process.env.MONGO_URI || 'mongodb://localhost:27017/mmm-checklist';
     await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -37,7 +38,9 @@ const getRealMachineIds = async () => {
       });
 
       // İlk 3 makina ID'sini al
-      const firstThreeMachineIds = machines.slice(0, 3).map(m => m._id.toString());
+      const firstThreeMachineIds = machines
+        .slice(0, 3)
+        .map(m => m._id.toString());
       console.log('\n🎯 İlk 3 Makina ID\'si:');
       firstThreeMachineIds.forEach((id, index) => {
         console.log(`${index + 1}. ${id}`);

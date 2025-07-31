@@ -22,14 +22,44 @@ const updateModules = async () => {
     // Modül güncellemeleri
     const moduleUpdates = [
       { ad: 'Dashboard', ikon: 'Dashboard', route: '/dashboard', aktif: true },
-      { ad: 'Kullanıcı Yönetimi', ikon: 'People', route: '/users', aktif: true },
+      {
+        ad: 'Kullanıcı Yönetimi',
+        ikon: 'People',
+        route: '/users',
+        aktif: true,
+      },
       { ad: 'Rol Yönetimi', ikon: 'Security', route: '/roles', aktif: true },
-      { ad: 'Departman Yönetimi', ikon: 'Business', route: '/departments', aktif: true },
-      { ad: 'Checklist Yönetimi', ikon: 'PlaylistAddCheck', route: '/checklists', aktif: true },
-      { ad: 'Görev Yönetimi', ikon: 'Assignment', route: '/tasks', aktif: true },
+      {
+        ad: 'Departman Yönetimi',
+        ikon: 'Business',
+        route: '/departments',
+        aktif: true,
+      },
+      {
+        ad: 'Checklist Yönetimi',
+        ikon: 'PlaylistAddCheck',
+        route: '/checklists',
+        aktif: true,
+      },
+      {
+        ad: 'Görev Yönetimi',
+        ikon: 'Assignment',
+        route: '/tasks',
+        aktif: true,
+      },
       { ad: 'Yaptım', ikon: 'Build', route: '/worktasks', aktif: true },
-      { ad: 'Envanter Yönetimi', ikon: 'Inventory2', route: '/inventory', aktif: true },
-      { ad: 'Kalite Kontrol', ikon: 'FactCheck', route: '/quality-control', aktif: true },
+      {
+        ad: 'Envanter Yönetimi',
+        ikon: 'Inventory2',
+        route: '/inventory',
+        aktif: true,
+      },
+      {
+        ad: 'Kalite Kontrol',
+        ikon: 'FactCheck',
+        route: '/quality-control',
+        aktif: true,
+      },
       {
         ad: 'Kalite Kontrol Yönetimi',
         ikon: 'AdminPanelSettings',
@@ -43,8 +73,18 @@ const updateModules = async () => {
         route: '/hr-management',
         aktif: true,
       },
-      { ad: 'Kontrol Bekleyenler', ikon: 'HourglassEmpty', route: '/control-pending', aktif: true },
-      { ad: 'Performans', ikon: 'Analytics', route: '/performance', aktif: true },
+      {
+        ad: 'Kontrol Bekleyenler',
+        ikon: 'HourglassEmpty',
+        route: '/control-pending',
+        aktif: true,
+      },
+      {
+        ad: 'Performans',
+        ikon: 'Analytics',
+        route: '/performance',
+        aktif: true,
+      },
     ];
 
     // Her modülü güncelle
