@@ -28,6 +28,9 @@ jspm_packages/
 # Optional npm cache directory
 .npm
 
+# Environment files (local copies for development)
+*.env.local
+
 # Optional eslint cache
 .eslintcache
 
