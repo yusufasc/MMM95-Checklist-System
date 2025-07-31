@@ -102,6 +102,39 @@
     "problems.sortOrder": "severity",
     "problems.showCurrentInStatus": false,
     "files.enableTrash": false,
+    
+    // ===== CSPELL CONFIGURATION =====
+    "cSpell.enabled": true,
+    "cSpell.language": "en,tr",
+    "cSpell.enableFiletypes": [
+      "javascript",
+      "javascriptreact", 
+      "typescript",
+      "typescriptreact",
+      "json",
+      "jsonc"
+    ],
+    "cSpell.ignorePaths": [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/.git/**",
+      "**/.github/**",
+      "**/docs/**",
+      "**/tools/**",
+      "**/scripts/**",
+      "**/*.md",
+      "**/*.config.js",
+      "**/*.config.json",
+      "**/package-lock.json",
+      "**/yarn.lock",
+      "**/.cursor/**",
+      "**/.vscode/**"
+    ],
+    "cSpell.allowCompoundWords": true,
+    "cSpell.caseSensitive": false,
+    "cSpell.showStatus": true,
+    "cSpell.checkLimit": 1000,
 
     // ===== FILE WATCHING =====
     "files.watcherExclude": {
