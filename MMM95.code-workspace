@@ -95,8 +95,23 @@
       "line-length": false,
       "MD013": false,
       "MD033": false,
-      "MD041": false
+      "MD041": false,
+      "MD022": false
     },
+    "markdownlint.ignore": [
+      "**/.github/**",
+      "**/docs/**",
+      "**/README.md",
+      "**/CHANGELOG.md",
+      "**/LICENSE",
+      "**/SECURITY.md",
+      "**/*TEMPLATE.md",
+      "**/*QUICK-START.md",
+      "**/*RULE-*.md",
+      "**/.cursor/**",
+      "**/tools/**",
+      "**/scripts/**"
+    ],
     
     // ===== SADECE ÖNEMLİ DOSYALAR İÇİN PROBLEM TRACKING =====
     "problems.sortOrder": "severity",

@@ -1,143 +1,144 @@
-# 🚀 Pull Request
+﻿# ğŸš€ Pull Request
 
-## 📋 Description / Açıklama
+## ğŸ“‹ Description / AÃ§Ä±klama
 
-<!-- Bu PR'da neler değişti? Kısa ve net açıklama -->
+<!-- Bu PR'da neler deÄŸiÅŸti? KÄ±sa ve net aÃ§Ä±klama -->
 
-### 🎯 Type of Change / Değişiklik Türü
+### ğŸ¯ Type of Change / DeÄŸiÅŸiklik TÃ¼rÃ¼
 
-- [ ] 🐛 Bug fix / Hata düzeltmesi
-- [ ] ✨ New feature / Yeni özellik
-- [ ] 🔄 Refactoring / Kod iyileştirmesi
-- [ ] 📚 Documentation / Dökümantasyon
-- [ ] 🎨 UI/UX improvement / Arayüz iyileştirmesi
-- [ ] ⚡ Performance improvement / Performans iyileştirmesi
-- [ ] 🔒 Security improvement / Güvenlik iyileştirmesi
-- [ ] 🧪 Test addition/improvement / Test ekleme/iyileştirme
+- [ ] ğŸ› Bug fix / Hata dÃ¼zeltmesi
+- [ ] âœ¨ New feature / Yeni Ã¶zellik
+- [ ] ğŸ”„ Refactoring / Kod iyileÅŸtirmesi
+- [ ] ğŸ“š Documentation / DÃ¶kÃ¼mantasyon
+- [ ] ğŸ¨ UI/UX improvement / ArayÃ¼z iyileÅŸtirmesi
+- [ ] âš¡ Performance improvement / Performans iyileÅŸtirmesi
+- [ ] ğŸ”’ Security improvement / GÃ¼venlik iyileÅŸtirmesi
+- [ ] ğŸ§ª Test addition/improvement / Test ekleme/iyileÅŸtirme
 
-## 🔗 Related Issue / İlgili Issue
+## ğŸ”— Related Issue / Ä°lgili Issue
 
 <!-- Closes #123, Fixes #456, Related to #789 -->
 
-## 📋 Changes Made / Yapılan Değişiklikler
+## ğŸ“‹ Changes Made / YapÄ±lan DeÄŸiÅŸiklikler
 
-### 🚀 Backend Changes / Backend Değişiklikleri
-- [ ] API endpoints modified / API endpoint'leri değiştirildi
-- [ ] Database schema changes / Veritabanı şema değişiklikleri
+### ğŸš€ Backend Changes / Backend DeÄŸiÅŸiklikleri
+
+- [ ] API endpoints modified / API endpoint'leri deÄŸiÅŸtirildi
+- [ ] Database schema changes / VeritabanÄ± ÅŸema deÄŸiÅŸiklikleri
 - [ ] New middleware added / Yeni middleware eklendi
-- [ ] Authentication/Authorization changes / Kimlik doğrulama değişiklikleri
-- [ ] Business logic updates / İş mantığı güncellemeleri
+- [ ] Authentication/Authorization changes / Kimlik doÄŸrulama deÄŸiÅŸiklikleri
+- [ ] Business logic updates / Ä°ÅŸ mantÄ±ÄŸÄ± gÃ¼ncellemeleri
 
-### 🎨 Frontend Changes / Frontend Değişiklikleri
-- [ ] New components added / Yeni bileşenler eklendi
-- [ ] UI/UX improvements / Arayüz iyileştirmeleri
-- [ ] State management changes / State yönetimi değişiklikleri
-- [ ] API integration updates / API entegrasyonu güncellemeleri
+### ğŸ¨ Frontend Changes / Frontend DeÄŸiÅŸiklikleri
+- [ ] New components added / Yeni bileÅŸenler eklendi
+- [ ] UI/UX improvements / ArayÃ¼z iyileÅŸtirmeleri
+- [ ] State management changes / State yÃ¶netimi deÄŸiÅŸiklikleri
+- [ ] API integration updates / API entegrasyonu gÃ¼ncellemeleri
 - [ ] Mobile responsiveness / Mobil uyumluluk
 
-### 📚 Documentation Changes / Dökümantasyon Değişiklikleri
-- [ ] README updated / README güncellendi
-- [ ] API documentation / API dökümantasyonu
-- [ ] Code comments / Kod yorumları
-- [ ] User guide / Kullanıcı kılavuzu
+### ğŸ“š Documentation Changes / DÃ¶kÃ¼mantasyon DeÄŸiÅŸiklikleri
+- [ ] README updated / README gÃ¼ncellendi
+- [ ] API documentation / API dÃ¶kÃ¼mantasyonu
+- [ ] Code comments / Kod yorumlarÄ±
+- [ ] User guide / KullanÄ±cÄ± kÄ±lavuzu
 
-## 🧪 Testing / Test Etme
+## ğŸ§ª Testing / Test Etme
 
-### ✅ Tests Completed / Tamamlanan Testler
-- [ ] Unit tests pass / Unit testler geçiyor
-- [ ] Integration tests pass / Entegrasyon testleri geçiyor
-- [ ] Manual testing completed / Manuel test tamamlandı
-- [ ] Browser compatibility tested / Tarayıcı uyumluluğu test edildi
-- [ ] Mobile testing completed / Mobil test tamamlandı
+### âœ… Tests Completed / Tamamlanan Testler
+- [ ] Unit tests pass / Unit testler geÃ§iyor
+- [ ] Integration tests pass / Entegrasyon testleri geÃ§iyor
+- [ ] Manual testing completed / Manuel test tamamlandÄ±
+- [ ] Browser compatibility tested / TarayÄ±cÄ± uyumluluÄŸu test edildi
+- [ ] Mobile testing completed / Mobil test tamamlandÄ±
 
-### 🔍 Test Cases / Test Senaryoları
+### ğŸ” Test Cases / Test SenaryolarÄ±
 
-<!-- Test edilen senaryoları listeleyin -->
+<!-- Test edilen senaryolarÄ± listeleyin -->
 
 1. **Senaryo 1:**
-   - Steps / Adımlar: 
+   - Steps / AdÄ±mlar: 
    - Expected / Beklenen: 
-   - Actual / Gerçek: 
+   - Actual / GerÃ§ek: 
 
 2. **Senaryo 2:**
-   - Steps / Adımlar: 
+   - Steps / AdÄ±mlar: 
    - Expected / Beklenen: 
-   - Actual / Gerçek: 
+   - Actual / GerÃ§ek: 
 
-## 📸 Screenshots / Ekran Görüntüleri
+## ğŸ“¸ Screenshots / Ekran GÃ¶rÃ¼ntÃ¼leri
 
 <!-- Before/After screenshots varsa ekleyin -->
 
-### Before / Önce
-<!-- Eski halin ekran görüntüsü -->
+### Before / Ã–nce
+<!-- Eski halin ekran gÃ¶rÃ¼ntÃ¼sÃ¼ -->
 
 ### After / Sonra  
-<!-- Yeni halin ekran görüntüsü -->
+<!-- Yeni halin ekran gÃ¶rÃ¼ntÃ¼sÃ¼ -->
 
-## ⚡ Performance Impact / Performans Etkisi
+## âš¡ Performance Impact / Performans Etkisi
 
 - [ ] No performance impact / Performans etkisi yok
-- [ ] Performance improved / Performans iyileşti
+- [ ] Performance improved / Performans iyileÅŸti
 - [ ] Minimal performance impact / Minimal performans etkisi
 - [ ] Performance impact analyzed / Performans etkisi analiz edildi
 
-### 📊 Performance Metrics / Performans Metrikleri
+### ğŸ“Š Performance Metrics / Performans Metrikleri
 
-<!-- Varsa performans ölçümleri -->
+<!-- Varsa performans Ã¶lÃ§Ã¼mleri -->
 
 - **Bundle size:** <!-- Before: X MB, After: Y MB -->
 - **Load time:** <!-- Before: X ms, After: Y ms -->
 - **API response:** <!-- Before: X ms, After: Y ms -->
 
-## 🔒 Security Considerations / Güvenlik Değerlendirmesi
+## ğŸ”’ Security Considerations / GÃ¼venlik DeÄŸerlendirmesi
 
-- [ ] No security impact / Güvenlik etkisi yok
-- [ ] Security reviewed / Güvenlik gözden geçirildi
+- [ ] No security impact / GÃ¼venlik etkisi yok
+- [ ] Security reviewed / GÃ¼venlik gÃ¶zden geÃ§irildi
 - [ ] Input validation added / Input validasyon eklendi
-- [ ] Authentication/Authorization checked / Kimlik doğrulama kontrol edildi
+- [ ] Authentication/Authorization checked / Kimlik doÄŸrulama kontrol edildi
 
-## 📋 Checklist / Kontrol Listesi
+## ğŸ“‹ Checklist / Kontrol Listesi
 
-### 🔍 Code Quality / Kod Kalitesi
-- [ ] Code follows project style guidelines / Kod proje stil kurallarına uygun
-- [ ] Self-review completed / Self-review tamamlandı
-- [ ] Code is properly commented / Kod doğru yorumlanmış
-- [ ] No commented-out code / Yorum satırına alınmış kod yok
+### ğŸ” Code Quality / Kod Kalitesi
+- [ ] Code follows project style guidelines / Kod proje stil kurallarÄ±na uygun
+- [ ] Self-review completed / Self-review tamamlandÄ±
+- [ ] Code is properly commented / Kod doÄŸru yorumlanmÄ±ÅŸ
+- [ ] No commented-out code / Yorum satÄ±rÄ±na alÄ±nmÄ±ÅŸ kod yok
 - [ ] No console.log statements / console.log ifadeleri yok
 
-### 📚 Documentation / Dökümantasyon
-- [ ] Relevant documentation updated / İlgili dökümantasyon güncellendi
-- [ ] API changes documented / API değişiklikleri dökümante edildi
-- [ ] Breaking changes noted / Breaking değişiklikler belirtildi
+### ğŸ“š Documentation / DÃ¶kÃ¼mantasyon
+- [ ] Relevant documentation updated / Ä°lgili dÃ¶kÃ¼mantasyon gÃ¼ncellendi
+- [ ] API changes documented / API deÄŸiÅŸiklikleri dÃ¶kÃ¼mante edildi
+- [ ] Breaking changes noted / Breaking deÄŸiÅŸiklikler belirtildi
 
-### 🧪 Testing / Test
-- [ ] Existing tests pass / Mevcut testler geçiyor
-- [ ] New tests added for new functionality / Yeni işlevler için testler eklendi
+### ğŸ§ª Testing / Test
+- [ ] Existing tests pass / Mevcut testler geÃ§iyor
+- [ ] New tests added for new functionality / Yeni iÅŸlevler iÃ§in testler eklendi
 - [ ] Test coverage maintained / Test coverage korundu
 
-### 🚀 Deployment / Deployment
-- [ ] Environment variables updated (if needed) / Environment variables güncellendi (gerekirse)
-- [ ] Database migrations included (if needed) / Veritabanı migration'ları dahil edildi (gerekirse)
-- [ ] Ready for production / Production'a hazır
+### ğŸš€ Deployment / Deployment
+- [ ] Environment variables updated (if needed) / Environment variables gÃ¼ncellendi (gerekirse)
+- [ ] Database migrations included (if needed) / VeritabanÄ± migration'larÄ± dahil edildi (gerekirse)
+- [ ] Ready for production / Production'a hazÄ±r
 
-## 🎯 Deployment Notes / Deployment Notları
+## ğŸ¯ Deployment Notes / Deployment NotlarÄ±
 
-<!-- Özel deployment adımları varsa buraya yazın -->
+<!-- Ã–zel deployment adÄ±mlarÄ± varsa buraya yazÄ±n -->
 
-### 🔄 Migration Requirements / Migration Gereksinimleri
+### ğŸ”„ Migration Requirements / Migration Gereksinimleri
 
-<!-- Veritabanı migration'ları veya özel adımlar -->
+<!-- VeritabanÄ± migration'larÄ± veya Ã¶zel adÄ±mlar -->
 
-### ⚙️ Configuration Changes / Konfigürasyon Değişiklikleri
+### âš™ï¸ Configuration Changes / KonfigÃ¼rasyon DeÄŸiÅŸiklikleri
 
-<!-- Environment variable'lar veya config değişiklikleri -->
+<!-- Environment variable'lar veya config deÄŸiÅŸiklikleri -->
 
-## 👥 Reviewers / İnceleyenler
+## ğŸ‘¥ Reviewers / Ä°nceleyenler
 
-<!-- @yusufasc veya diğer reviewer'ları mention edin -->
+<!-- @yusufasc veya diÄŸer reviewer'larÄ± mention edin -->
 
-**Requested reviewers / İnceleme talep edilen kişiler:** @yusufasc
+**Requested reviewers / Ä°nceleme talep edilen kiÅŸiler:** @yusufasc
 
-## 📝 Additional Notes / Ek Notlar
+## ğŸ“ Additional Notes / Ek Notlar
 
-<!-- Diğer önemli bilgiler, gelecek planlar, limitasyonlar -->
+<!-- DiÄŸer Ã¶nemli bilgiler, gelecek planlar, limitasyonlar -->
