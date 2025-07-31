@@ -1,0 +1,68 @@
+# MMM95 - ESLint Ignore Patterns
+
+# Node Modules
+node_modules/
+**/node_modules/
+
+# Build Output
+build/
+dist/
+**/build/
+**/dist/
+
+# Documentation Files
+*.md
+**/*.md
+README.md
+CHANGELOG.md
+LICENSE
+
+# GitHub Files
+.github/
+.github/**/*
+**/.github/**
+
+# Documentation Folder
+docs/
+docs/**/*
+
+# Tools and Scripts
+tools/
+tools/**/*
+scripts/
+scripts/**/*
+backend/scripts/
+
+# Configuration Files
+*.config.js
+jest.config.js
+webpack.config.js
+babel.config.js
+
+# AI Rules
+.cursor/
+.cursor/**/*
+AI-RULE-SYSTEM-QUICK-START.md
+
+# Package Files
+package.json
+package-lock.json
+
+# Environment Files
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Cache and Logs
+.cache/
+logs/
+*.log
+
+# Test Coverage
+coverage/
+.nyc_output/
+
+# Temporary Files
+tmp/
+temp/

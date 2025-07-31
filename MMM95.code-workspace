@@ -43,6 +43,22 @@
     // ===== ESLINT MULTI-ROOT =====
     "eslint.workingDirectories": ["backend", "frontend"],
     "eslint.format.enable": true,
+    "eslint.enable": true,
+    "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+    "eslint.options": {
+      "ignorePattern": [
+        "**/*.md",
+        "**/.github/**",
+        "**/docs/**",
+        "**/scripts/**",
+        "**/tools/**",
+        "**/*.config.js",
+        "**/CHANGELOG.md",
+        "**/README.md",
+        "**/LICENSE",
+        "**/.cursor/**"
+      ]
+    },
 
     // ===== SEARCH EXCLUSIONS =====
     "search.exclude": {
@@ -53,13 +69,39 @@
       "**/coverage": true,
       "**/logs": true,
       "**/.cache": true,
-      "**/tmp": true
+      "**/tmp": true,
+      "**/.github/**": true,
+      "**/docs/**": true,
+      "**/tools/**": true,
+      "**/*.md": true,
+      "**/CHANGELOG.md": true,
+      "**/README.md": true,
+      "**/LICENSE": true
     },
 
     // ===== .ENV FILES FORCE ENABLE =====
     "files.exclude": {
       "**/.env": false
     },
+
+    // ===== PROBLEM MATCHERS EXCLUDE =====
+    "problems.decorations.enabled": true,
+    "typescript.validate.enable": true,
+    "javascript.validate.enable": true,
+    
+    // ===== MARKDOWN LINTING CONTROL =====
+    "markdownlint.config": {
+      "extends": "markdownlint/style/prettier",
+      "line-length": false,
+      "MD013": false,
+      "MD033": false,
+      "MD041": false
+    },
+    
+    // ===== SADECE ÖNEMLİ DOSYALAR İÇİN PROBLEM TRACKING =====
+    "problems.sortOrder": "severity",
+    "problems.showCurrentInStatus": false,
+    "files.enableTrash": false,
 
     // ===== FILE WATCHING =====
     "files.watcherExclude": {

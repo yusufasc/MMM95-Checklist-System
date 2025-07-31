@@ -1,154 +1,63 @@
 {
-  // ===== WORKSPACE SPESİFİK AYARLAR =====
-  "typescript.preferences.includePackageJsonAutoImports": "on",
-  "typescript.suggest.autoImports": true,
-  "typescript.updateImportsOnFileMove.enabled": "always",
-
-  // ===== MMM CHECKLIST PROJESİ AYARLARI =====
-  "emmet.includeLanguages": {
-    "javascript": "javascriptreact"
+  // ===== GEREKSİZ DOSYA HATALARINI ENGELLE =====
+  "files.associations": {
+    "*.md": "markdown",
+    "*.mdc": "markdown"
   },
-
-  // ===== ESLINT AYARLARI =====
-  "eslint.workingDirectories": ["backend", "frontend"],
-  "eslint.format.enable": true,
-  "eslint.lintTask.enable": true,
-
-  // ===== NODE.JS ENVIRONMENT =====
-  "nodejs.enableTelemetry": false,
-  "npm.enableRunFromFolder": true,
-
-  // ===== DEBUG AYARLARI =====
-  "debug.allowBreakpointsEverywhere": true,
-  "debug.inlineValues": "on",
-  "debug.showInStatusBar": "always",
-
-  // ===== MONGODB EXTENSION =====
-  "mongodb.connectionSaving": "Workspace",
-  "mongodb.defaultLimit": 20,
-
-  // ===== GIT IGNORE PATTERNS =====
-  "files.exclude": {
-    "**/node_modules": true,
-    "**/dist": true,
-    "**/build": true,
-    "**/.env": false,
-    "**/.env.local": false,
-    "**/.env.development": false,
-    "**/.env.production": false
-  },
-
-  // ===== SEARCH PATTERNS =====
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/dist": true,
-    "**/build": true,
-    "**/.git": true,
-    "**/coverage": true,
-    "**/logs": true
-  },
-
-  // ===== MARKDOWNLINT AYARLARI =====
-  "markdownlint.config": {
-    "default": true,
-    "line-length": false,
-    "no-duplicate-header": false,
-    "no-trailing-punctuation": false,
-    "no-inline-html": false,
-    "no-bare-urls": false,
-    "fenced-code-language": false,
-    "first-line-h1": false,
-    "no-emphasis-as-heading": false
-  },
+  
+  // ===== PROBLEM TRACKING EXCLUDE =====
+  "problems.decorations.enabled": false,
+  "typescript.suggest.includeCompletionsForModuleExports": false,
+  
+  // ===== MARKDOWNLINT DISABLE =====
   "markdownlint.ignore": [
-    "README-PROMPT-DEVELOPMENT.md",
-    "**/node_modules/**",
-    "**/dist/**",
-    "**/build/**"
+    "**/.github/**",
+    "**/docs/**", 
+    "**/README.md",
+    "**/CHANGELOG.md",
+    "**/LICENSE",
+    "**/SECURITY.md",
+    "**/*TEMPLATE.md",
+    "**/*QUICK-START.md",
+    "**/*RULE-*.md"
   ],
-
-  // ===== CSPELL TÜRKÇE DİL DESTEĞİ =====
-  "cSpell.language": "en,tr",
-  "cSpell.dictionaries": [
-    "tr-tr",
-    "turkish-words",
-    "technical-words",
-    "project-words"
-  ],
-  "cSpell.allowCompoundWords": true,
-  "cSpell.caseSensitive": false,
-  "cSpell.ignorePaths": [
-    "**/node_modules/**",
-    "**/dist/**",
-    "**/build/**",
-    "**/*.log",
-    "**/coverage/**"
-  ],
-  "cSpell.words": [
-    "checklistlerde",
-    "sisteminde",
-    "kullanicilar",
-    "kategoriler",
-    "makinalarda",
-    "degerlendirme",
-    "puanlama",
-    "onaylama",
-    "modulleri",
-    "middleware",
-    "endpoint",
-    "backend",
-    "frontend",
-    "typescript",
-    "eslint",
-    "nodejs",
-    "mongodb",
-    "envanter",
-    "worktask",
-    "checklist",
-    "kontrol",
-    "makina",
-    "kullanici",
-    "yetki",
-    "modul",
-    "gorev",
-    "puan",
-    "degerlendirme",
-    "onay",
-    "template",
-    "bonus",
-    "kalite",
-    "performans",
-    "aktiflik",
-    "dashboard",
-    "raporlama",
-    "notification",
-    "middleware",
-    "helper",
-    "formatter",
-    "validator",
-    "scheduler",
-    "logger",
-    "debugger",
-    "optimizer",
-    "cache",
-    "session",
-    "authentication",
-    "authorization",
-    "admin"
-  ],
-  "cSpell.ignoreRegExpList": [
-    "\\b\\w*[çğıöşüÇĞIİÖŞÜ]\\w*\\b",
-    "\\b[a-zA-ZçğıöşüÇĞIİÖŞÜ]+ları?\\b",
-    "\\b[a-zA-ZçğıöşüÇĞIİÖŞÜ]+leri?\\b",
-    "\\b[a-zA-ZçğıöşüÇĞIİÖŞÜ]+larını?\\b",
-    "\\b[a-zA-ZçğıöşüÇĞIİÖŞÜ]+lerini?\\b",
-    "\\b[a-zA-ZçğıöşüÇĞIİÖŞÜ]+ması?\\b",
-    "\\b[a-zA-ZçğıöşüÇĞIİÖŞÜ]+mesi?\\b",
-    "\\b[a-zA-ZçğıöşüÇĞIİÖŞÜ]+ında?\\b",
-    "\\b[a-zA-ZçğıöşüÇĞIİÖŞÜ]+inde?\\b",
-    "\\b[a-zA-ZçğıöşüÇĞIİÖŞÜ]+ını?\\b",
-    "\\b[a-zA-ZçğıöşüÇĞIİÖŞÜ]+ini?\\b",
-    "/\\*\\s*[^*]*\\s*\\*/",
-    "//\\s*.*$"
-  ]
+  
+  // ===== ESLINT IGNORE PATTERNS =====
+  "eslint.workingDirectories": ["backend", "frontend"],
+  "eslint.options": {
+    "ignorePattern": [
+      "**/*.md",
+      "**/.github/**",
+      "**/docs/**",
+      "**/tools/**",
+      "**/scripts/**",
+      "**/*.config.js",
+      "**/CHANGELOG.md",
+      "**/README.md",
+      "**/LICENSE"
+    ]
+  },
+  
+  // ===== TYPESCRIPT IGNORE =====
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "typescript.validate.enable": false,
+  
+  // ===== JSON SCHEMA DISABLE =====
+  "json.validate.enable": false,
+  "yaml.validate": false,
+  
+  // ===== FILE WATCHING EXCLUDE =====
+  "files.watcherExclude": {
+    "**/.github/**": true,
+    "**/docs/**": true,
+    "**/tools/**": true,
+    "**/*.md": true,
+    "**/CHANGELOG.md": true,
+    "**/README.md": true,
+    "**/LICENSE": true
+  },
+  
+  // ===== PROBLEM EXCLUDE =====
+  "problems.sortOrder": "severity",
+  "problems.showCurrentInStatus": false
 }

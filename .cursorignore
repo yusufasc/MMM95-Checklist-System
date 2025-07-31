@@ -1,0 +1,61 @@
+# MMM95 - Cursor AI Ignore Patterns
+
+# Build Output
+build/
+dist/
+**/build/
+**/dist/
+
+# Node Modules
+node_modules/
+**/node_modules/
+
+# Cache
+.cache/
+**/.cache/
+.parcel-cache/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Documentation (Cursor should not analyze these)
+docs/
+**/*.md
+README.md
+CHANGELOG.md
+LICENSE
+SECURITY.md
+
+# GitHub Templates
+.github/
+.github/**/*
+
+# Tools and Scripts (AI should not modify these)
+tools/
+scripts/
+backend/scripts/
+
+# Configuration Files
+*.config.js
+jest.config.js
+webpack.config.js
+
+# Package Files
+package-lock.json
+
+# Test Coverage
+coverage/
+.nyc_output/
+
+# Temporary Files
+tmp/
+temp/
+
+# IDE Files
+.vscode/
+.idea/
+
+# Git
+.git/

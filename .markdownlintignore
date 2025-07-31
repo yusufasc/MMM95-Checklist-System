@@ -1,35 +1,47 @@
-# Markdownlint ignore file
-# Bu dosyalar markdownlint tarafından taranmayacak
+# MMM95 - Gereksiz Markdown Lint Engelleme
 
-# Development ve geçici dosyalar
-README-PROMPT-DEVELOPMENT.md
+# GitHub Templates
+.github/
+.github/**/*
+.github/workflows/
+.github/ISSUE_TEMPLATE/
+.github/PULL_REQUEST_TEMPLATE.md
+.github/SECURITY.md
 
-# Node modules ve vendor dosyaları
+# Documentation
+docs/
+docs/**/*
+README.md
+CHANGELOG.md
+LICENSE
+
+# AI Rules ve Tools
+.cursor/
+.cursor/**/*
+AI-RULE-SYSTEM-QUICK-START.md
+tools/
+tools/**/*
+
+# Scripts
+scripts/
+backend/scripts/
+
+# Build/Config Files
+*.config.js
+*.config.json
+package.json
+package-lock.json
+
+# Node Modules
 node_modules/
-**/node_modules/**
+frontend/node_modules/
+backend/node_modules/
 
-# Build ve dist klasörleri
-dist/
-build/
-**/dist/**
-**/build/**
-
-# Geçici dosyalar
-*.tmp
-*.temp
-temp/
-tmp/
-
-# IDE ve editor dosyaları
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Log dosyaları
-*.log
-logs/
-
-# Cache dosyaları
-.cache/
-*.cache
+# Özel Exclude Patterns
+**/*TEMPLATE.md
+**/*QUICK-START.md
+**/*RULE-*.md
+**/*SECURITY.md
+**/*CHANGELOG.md
+**/*README.md
+**/*LICENSE
