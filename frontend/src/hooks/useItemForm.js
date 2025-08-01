@@ -125,11 +125,12 @@ export const useItemForm = ({
       ) {
         const newDynamicFields = {};
         templates.forEach(template => {
+          const fieldName = template.ad || template.alanAdi;
           if (
             template.varsayilanDeger !== undefined &&
             template.varsayilanDeger !== null
           ) {
-            newDynamicFields[template.alanAdi] = template.varsayilanDeger;
+            newDynamicFields[fieldName] = template.varsayilanDeger;
           }
         });
         setFormData(prev => ({
@@ -244,12 +245,15 @@ export const useItemForm = ({
     }
 
     for (const template of categoryFieldTemplates) {
+      const fieldName = template.ad || template.alanAdi;
+      const isRequired =
+        template.gerekli !== undefined ? template.gerekli : template.zorunlu;
       if (
-        template.zorunlu &&
-        (!formData.dinamikAlanlar[template.alanAdi] ||
-          formData.dinamikAlanlar[template.alanAdi].toString().trim() === '')
+        isRequired &&
+        (!formData.dinamikAlanlar[fieldName] ||
+          formData.dinamikAlanlar[fieldName].toString().trim() === '')
       ) {
-        setError(`${template.alanAdi} alanı zorunludur`);
+        setError(`${fieldName} alanı zorunludur`);
         return false;
       }
     }

@@ -337,11 +337,11 @@ const QualityScores = ({ qualityScores, loading, error }) => {
               <Typography variant='h4'>
                 {qualityScores.length > 0
                   ? Math.round(
-                      qualityScores.reduce(
-                        (sum, item) => sum + (item.puanlar?.toplam || 0),
-                        0,
-                      ) / qualityScores.length,
-                    )
+                    qualityScores.reduce(
+                      (sum, item) => sum + (item.puanlar?.toplam || 0),
+                      0,
+                    ) / qualityScores.length,
+                  )
                   : 0}
               </Typography>
             </CardContent>
@@ -520,9 +520,9 @@ const QualityScores = ({ qualityScores, loading, error }) => {
                       %
                       {item.puanlar?.maksimum
                         ? Math.round(
-                            (item.puanlar?.toplam / item.puanlar?.maksimum) *
+                          (item.puanlar?.toplam / item.puanlar?.maksimum) *
                               100,
-                          )
+                        )
                         : 0}{' '}
                       Başarı
                     </Typography>
@@ -662,8 +662,8 @@ const QualityScores = ({ qualityScores, loading, error }) => {
                               %
                               {detay.maksimumPuan
                                 ? Math.round(
-                                    (detay.puan / detay.maksimumPuan) * 100,
-                                  )
+                                  (detay.puan / detay.maksimumPuan) * 100,
+                                )
                                 : 0}
                             </Typography>
                           </Box>

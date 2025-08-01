@@ -89,7 +89,7 @@ export const DATE_FILTER_LABELS = {
   [DATE_FILTER_OPTIONS.CUSTOM]: 'Özel Tarih',
 };
 
-// Modules
+// Modules - seedData.js ile senkronize edildi (15 modül)
 export const MODULES = {
   DASHBOARD: 'Dashboard',
   USER_MANAGEMENT: 'Kullanıcı Yönetimi',
@@ -97,8 +97,17 @@ export const MODULES = {
   DEPARTMENT_MANAGEMENT: 'Departman Yönetimi',
   CHECKLIST_MANAGEMENT: 'Checklist Yönetimi',
   TASK_MANAGEMENT: 'Görev Yönetimi',
+  YAPTIM: 'Yaptım',
+  INVENTORY_MANAGEMENT: 'Envanter Yönetimi',
+  QUALITY_CONTROL: 'Kalite Kontrol',
+  QUALITY_CONTROL_MANAGEMENT: 'Kalite Kontrol Yönetimi',
+  HR: 'İnsan Kaynakları',
+  HR_MANAGEMENT: 'İnsan Kaynakları Yönetimi',
   CONTROL_PENDING: 'Kontrol Bekleyenler',
   PERFORMANCE: 'Performans',
+  MY_ACTIVITY: 'Kişisel Aktivite',
+  // Yeni modül için hazırlık
+  MEETING_MANAGEMENT: 'Toplantı Yönetimi', // PLANLANIYOR
 };
 
 // Permission Types

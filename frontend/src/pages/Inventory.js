@@ -1,34 +1,34 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
-  Container,
-  Typography,
-  Box,
-  Button,
+  Dashboard as DashboardIcon,
+  Inventory as InventoryIcon,
+} from '@mui/icons-material';
+import {
   Alert,
   Backdrop,
+  Box,
+  Button,
   CircularProgress,
+  Container,
+  Typography,
 } from '@mui/material';
-import {
-  Inventory as InventoryIcon,
-  Dashboard as DashboardIcon,
-} from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useInventoryData } from '../hooks/useInventoryData';
 
 // Components
-import CategoryDialog from '../components/Inventory/CategoryDialog';
-import ItemDialog from '../components/Inventory/ItemDialog';
-import FieldTemplateDialog from '../components/Inventory/FieldTemplateDialog';
-import ExcelUploadDialog from '../components/Inventory/ExcelUploadDialog';
 import DashboardCards from '../components/Dashboard/DashboardCards';
+import CategoryDialog from '../components/Inventory/CategoryDialog';
+import ExcelUploadDialog from '../components/Inventory/ExcelUploadDialog';
+import FieldTemplateDialog from '../components/Inventory/FieldTemplateDialog';
+import InventoryActions from '../components/Inventory/InventoryActions';
 import InventoryFilters from '../components/Inventory/InventoryFilters';
 import InventoryTable from '../components/Inventory/InventoryTable';
-import InventoryActions from '../components/Inventory/InventoryActions';
+import ItemDialog from '../components/Inventory/ItemDialog';
 
 const Inventory = () => {
   const { hasModulePermission } = useAuth();
 
-  // Custom hook ile tüm data ve işlemler
+  // Custom hook ile tÃ¼m data ve iÅŸlemler
   const {
     loading,
     categories,
@@ -79,18 +79,18 @@ const Inventory = () => {
   const [selectedItem, setSelectedItem] = useState(null);
 
   // Yetki kontrolleri
-  const canEdit = hasModulePermission('Envanter Yönetimi', 'duzenleyebilir');
-  const canView = hasModulePermission('Envanter Yönetimi');
+  const canEdit = hasModulePermission('Envanter YÃ¶netimi', 'duzenleyebilir');
+  const canView = hasModulePermission('Envanter YÃ¶netimi');
 
   if (!canView) {
     return (
       <Container maxWidth='xl' sx={{ mt: 4, mb: 4 }}>
-        <Alert severity='error'>Bu sayfaya erişim yetkiniz yok.</Alert>
+        <Alert severity='error'>Bu sayfaya eriÅŸim yetkiniz yok.</Alert>
       </Container>
     );
   }
 
-  // Dialog işlemleri
+  // Dialog iÅŸlemleri
   const handleCategoryCreate = () => {
     setSelectedCategory(null);
     setCategoryDialogOpen(true);
@@ -103,7 +103,7 @@ const Inventory = () => {
 
   const handleItemCreate = async () => {
     if (categories.length === 0) {
-      setError('Önce en az bir kategori oluşturmalısınız');
+      setError('Ã–nce en az bir kategori oluÅŸturmalÄ±sÄ±nÄ±z');
       return;
     }
     setSelectedItem(null);
@@ -111,7 +111,7 @@ const Inventory = () => {
   };
 
   const handleItemEdit = async item => {
-    console.log('🎯 handleItemEdit called with item:', item);
+    console.log('ğŸ¯ handleItemEdit called with item:', item);
 
     try {
       setSelectedItem(item);
@@ -122,24 +122,24 @@ const Inventory = () => {
           typeof item.kategoriId === 'object'
             ? item.kategoriId._id
             : item.kategoriId;
-        console.log('🔧 Field templates yükleniyor, categoryId:', categoryId);
+        console.log('ğŸ”§ Field templates yÃ¼kleniyor, categoryId:', categoryId);
         console.log(
-          '🔍 loadFieldTemplates function type:',
+          'ğŸ” loadFieldTemplates function type:',
           typeof loadFieldTemplates,
         );
-        console.log('🔍 loadFieldTemplates function:', loadFieldTemplates);
+        console.log('ğŸ” loadFieldTemplates function:', loadFieldTemplates);
 
-        console.log('⏳ About to call loadFieldTemplates...');
+        console.log('â³ About to call loadFieldTemplates...');
         await loadFieldTemplates(categoryId);
-        console.log('✅ loadFieldTemplates completed successfully');
+        console.log('âœ… loadFieldTemplates completed successfully');
       }
 
       setItemDialogOpen(true);
-      console.log('✅ Item dialog opened successfully');
+      console.log('âœ… Item dialog opened successfully');
     } catch (error) {
-      console.error('❌ Error in handleItemEdit:', error);
-      console.error('🔍 Error stack:', error.stack);
-      setError('Field templates yüklenirken hata oluştu: ' + error.message);
+      console.error('âŒ Error in handleItemEdit:', error);
+      console.error('ğŸ” Error stack:', error.stack);
+      setError('Field templates yÃ¼klenirken hata oluÅŸtu: ' + error.message);
     }
   };
 
@@ -184,10 +184,10 @@ const Inventory = () => {
             <InventoryIcon
               sx={{ mr: 2, verticalAlign: 'middle', color: '#1976d2' }}
             />
-            Envanter Yönetimi
+            Envanter YÃ¶netimi
           </Typography>
           <Typography variant='subtitle1' color='text.secondary'>
-            Ekipman ve envanter kayıtlarınızı yönetin
+            Ekipman ve envanter kayÄ±tlarÄ±nÄ±zÄ± yÃ¶netin
           </Typography>
         </Box>
 
@@ -254,6 +254,7 @@ const Inventory = () => {
           <InventoryTable
             loading={loading}
             items={items}
+            fieldTemplates={fieldTemplates}
             pagination={pagination}
             sortConfig={sortConfig}
             selectedItems={selectedItems}
@@ -330,7 +331,7 @@ const Inventory = () => {
         categories={categories}
         onUploadSuccess={result => {
           setSuccess(
-            `${result.basariliSayisi} öğe başarıyla yüklendi. ${result.hataSayisi} hata oluştu.`,
+            `${result.basariliSayisi} Ã¶ÄŸe baÅŸarÄ±yla yÃ¼klendi. ${result.hataSayisi} hata oluÅŸtu.`,
           );
         }}
       />
@@ -339,3 +340,4 @@ const Inventory = () => {
 };
 
 export default Inventory;
+

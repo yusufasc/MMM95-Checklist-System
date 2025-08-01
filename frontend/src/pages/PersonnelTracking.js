@@ -571,6 +571,30 @@ const PersonnelTracking = () => {
                     sx={{ fontWeight: 600, mb: 1, pr: 5 }}
                   >
                     {item.machine.ad}
+                    {/* Makina numarası varsa göster */}
+                    {(item.machine.dinamikAlanlar?.['Makina Numarası'] ||
+                      item.machine.dinamikAlanlar?.['makina numarası'] ||
+                      item.machine.dinamikAlanlar?.makinaNo ||
+                      item.machine.kod?.match(/\d+/)) && (
+                      <Typography
+                        component='span'
+                        sx={{
+                          ml: 1,
+                          px: 1.5,
+                          py: 0.5,
+                          bgcolor: 'info.main',
+                          color: 'white',
+                          borderRadius: 2,
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {item.machine.dinamikAlanlar?.['Makina Numarası'] ||
+                          item.machine.dinamikAlanlar?.['makina numarası'] ||
+                          item.machine.dinamikAlanlar?.makinaNo ||
+                          item.machine.kod?.match(/\d+/)?.[0]}
+                      </Typography>
+                    )}
                   </Typography>
 
                   <Typography
@@ -580,6 +604,88 @@ const PersonnelTracking = () => {
                   >
                     {item.machine.envanterKodu} • {item.machine.kategori}
                   </Typography>
+
+                  {/* Dinamik Alanlar - Model Kodu / Tipi */}
+                  {item.machine.dinamikAlanlar && (
+                    <Box sx={{ mb: 2 }}>
+                      {/* Model Kodu / Tipi - Daha prominently göster */}
+                      {(item.machine.dinamikAlanlar['Model Kodu / Tipi'] ||
+                        item.machine.dinamikAlanlar['model kodu / tipi'] ||
+                        item.machine.dinamikAlanlar.modelKodu ||
+                        item.machine.dinamikAlanlar['Model Type']) && (
+                        <Box sx={{ mb: 1 }}>
+                          <Typography
+                            variant='body1'
+                            sx={{
+                              fontWeight: 600,
+                              color: 'primary.main',
+                              bgcolor: 'primary.100',
+                              px: 2,
+                              py: 1,
+                              borderRadius: 2,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 1,
+                              mb: 1,
+                              border: '1px solid',
+                              borderColor: 'primary.200',
+                            }}
+                          >
+                            <span role='img' aria-label='tool'>
+                              🔧
+                            </span>
+                            {item.machine.dinamikAlanlar['Model Kodu / Tipi'] ||
+                              item.machine.dinamikAlanlar[
+                                'model kodu / tipi'
+                              ] ||
+                              item.machine.dinamikAlanlar.modelKodu ||
+                              item.machine.dinamikAlanlar['Model Type']}
+                          </Typography>
+                        </Box>
+                      )}
+
+                      {/* Üretici Firma */}
+                      {(item.machine.dinamikAlanlar['Üretici Firma'] ||
+                        item.machine.dinamikAlanlar['üretici firma'] ||
+                        item.machine.dinamikAlanlar.ureticiFirma) && (
+                        <Typography
+                          variant='caption'
+                          sx={{
+                            display: 'block',
+                            color: 'text.secondary',
+                          }}
+                        >
+                          <span role='img' aria-label='location'>
+                            📍
+                          </span>{' '}
+                          {item.machine.dinamikAlanlar['Üretici Firma'] ||
+                            item.machine.dinamikAlanlar['üretici firma'] ||
+                            item.machine.dinamikAlanlar.ureticiFirma}
+                        </Typography>
+                      )}
+
+                      {/* Motor Gücü */}
+                      {(item.machine.dinamikAlanlar['Motor Gücü (kW)'] ||
+                        item.machine.dinamikAlanlar['motor gücü (kw)'] ||
+                        item.machine.dinamikAlanlar.motorGucu) && (
+                        <Typography
+                          variant='caption'
+                          sx={{
+                            display: 'block',
+                            color: 'text.secondary',
+                          }}
+                        >
+                          <span role='img' aria-label='power'>
+                            ⚡
+                          </span>{' '}
+                          {item.machine.dinamikAlanlar['Motor Gücü (kW)'] ||
+                            item.machine.dinamikAlanlar['motor gücü (kw)'] ||
+                            item.machine.dinamikAlanlar.motorGucu}{' '}
+                          kW
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
 
                   {item.lastKalipChange ? (
                     <Box>
@@ -784,49 +890,49 @@ const PersonnelTracking = () => {
                         {/* Kalıp Değişim Süresi Hesaplama */}
                         {item.lastKalipChange.makinaDurmaSaati &&
                           item.lastKalipChange.yeniKalipAktifSaati && (
-                            <Box
-                              sx={{
-                                p: 1,
-                                bgcolor: 'primary.50',
-                                borderRadius: 0.5,
-                                border: '1px solid',
-                                borderColor: 'primary.200',
-                              }}
+                          <Box
+                            sx={{
+                              p: 1,
+                              bgcolor: 'primary.50',
+                              borderRadius: 0.5,
+                              border: '1px solid',
+                              borderColor: 'primary.200',
+                            }}
+                          >
+                            <Typography
+                              variant='caption'
+                              color='primary.main'
+                              sx={{ fontWeight: 600 }}
                             >
-                              <Typography
-                                variant='caption'
-                                color='primary.main'
-                                sx={{ fontWeight: 600 }}
-                              >
                                 Değişim Süresi:
-                              </Typography>
-                              <Typography
-                                variant='body2'
-                                sx={{ fontWeight: 600, color: 'primary.main' }}
-                              >
-                                {(() => {
-                                  const durma = new Date(
-                                    item.lastKalipChange.makinaDurmaSaati,
-                                  );
-                                  const baslama = new Date(
-                                    item.lastKalipChange.yeniKalipAktifSaati,
-                                  );
-                                  const farkMs = baslama - durma;
-                                  const farkDakika = Math.round(
-                                    farkMs / (1000 * 60),
-                                  );
+                            </Typography>
+                            <Typography
+                              variant='body2'
+                              sx={{ fontWeight: 600, color: 'primary.main' }}
+                            >
+                              {(() => {
+                                const durma = new Date(
+                                  item.lastKalipChange.makinaDurmaSaati,
+                                );
+                                const baslama = new Date(
+                                  item.lastKalipChange.yeniKalipAktifSaati,
+                                );
+                                const farkMs = baslama - durma;
+                                const farkDakika = Math.round(
+                                  farkMs / (1000 * 60),
+                                );
 
-                                  if (farkDakika < 60) {
-                                    return `${farkDakika} dakika`;
-                                  } else {
-                                    const saat = Math.floor(farkDakika / 60);
-                                    const dakika = farkDakika % 60;
-                                    return `${saat}s ${dakika}dk`;
-                                  }
-                                })()}
-                              </Typography>
-                            </Box>
-                          )}
+                                if (farkDakika < 60) {
+                                  return `${farkDakika} dakika`;
+                                } else {
+                                  const saat = Math.floor(farkDakika / 60);
+                                  const dakika = farkDakika % 60;
+                                  return `${saat}s ${dakika}dk`;
+                                }
+                              })()}
+                            </Typography>
+                          </Box>
+                        )}
                       </Box>
 
                       {/* Tamamlanma Tarihi */}
@@ -1312,47 +1418,47 @@ const PersonnelTracking = () => {
                     <TableCell>
                       {history.makinaDurmaSaati &&
                       history.yeniKalipAktifSaati ? (
-                        <Chip
-                          label={(() => {
-                            const durma = new Date(history.makinaDurmaSaati);
-                            const baslama = new Date(
-                              history.yeniKalipAktifSaati,
-                            );
-                            const farkMs = baslama - durma;
-                            const farkDakika = Math.round(farkMs / (1000 * 60));
+                          <Chip
+                            label={(() => {
+                              const durma = new Date(history.makinaDurmaSaati);
+                              const baslama = new Date(
+                                history.yeniKalipAktifSaati,
+                              );
+                              const farkMs = baslama - durma;
+                              const farkDakika = Math.round(farkMs / (1000 * 60));
 
-                            if (farkDakika < 60) {
-                              return `${farkDakika}dk`;
-                            } else {
-                              const saat = Math.floor(farkDakika / 60);
-                              const dakika = farkDakika % 60;
-                              return `${saat}s ${dakika}dk`;
-                            }
-                          })()}
-                          size='small'
-                          color={(() => {
-                            const durma = new Date(history.makinaDurmaSaati);
-                            const baslama = new Date(
-                              history.yeniKalipAktifSaati,
-                            );
-                            const farkDakika = Math.round(
-                              (baslama - durma) / (1000 * 60),
-                            );
+                              if (farkDakika < 60) {
+                                return `${farkDakika}dk`;
+                              } else {
+                                const saat = Math.floor(farkDakika / 60);
+                                const dakika = farkDakika % 60;
+                                return `${saat}s ${dakika}dk`;
+                              }
+                            })()}
+                            size='small'
+                            color={(() => {
+                              const durma = new Date(history.makinaDurmaSaati);
+                              const baslama = new Date(
+                                history.yeniKalipAktifSaati,
+                              );
+                              const farkDakika = Math.round(
+                                (baslama - durma) / (1000 * 60),
+                              );
 
-                            if (farkDakika > 120) {
-                              return 'error';
-                            }
-                            if (farkDakika > 60) {
-                              return 'warning';
-                            }
-                            return 'success';
-                          })()}
-                        />
-                      ) : (
-                        <Typography variant='body2' color='text.secondary'>
+                              if (farkDakika > 120) {
+                                return 'error';
+                              }
+                              if (farkDakika > 60) {
+                                return 'warning';
+                              }
+                              return 'success';
+                            })()}
+                          />
+                        ) : (
+                          <Typography variant='body2' color='text.secondary'>
                           -
-                        </Typography>
-                      )}
+                          </Typography>
+                        )}
                     </TableCell>
                     <TableCell>
                       <Typography variant='body2' sx={{ fontSize: '0.8rem' }}>
@@ -1781,8 +1887,8 @@ const PersonnelTracking = () => {
                         <Typography variant='body2' color='text.secondary'>
                           {person.guncellemeTarihi
                             ? new Date(
-                                person.guncellemeTarihi,
-                              ).toLocaleDateString('tr-TR')
+                              person.guncellemeTarihi,
+                            ).toLocaleDateString('tr-TR')
                             : 'Henüz giriş yapmamış'}
                         </Typography>
                       </TableCell>
@@ -1945,8 +2051,8 @@ const PersonnelTracking = () => {
                 <Typography variant='body2' color='text.secondary'>
                   {person.guncellemeTarihi
                     ? new Date(person.guncellemeTarihi).toLocaleDateString(
-                        'tr-TR',
-                      )
+                      'tr-TR',
+                    )
                     : 'Henüz giriş yapmamış'}
                 </Typography>
               </TableCell>

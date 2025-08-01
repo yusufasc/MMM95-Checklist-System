@@ -210,17 +210,17 @@ const ChecklistCard = memo(({ checklist, onClick }) => {
             {/* Estimated Time */}
             {checklist.tahminiSure &&
               typeof checklist.tahminiSure === 'number' && (
-                <Chip
-                  label={`~${checklist.tahminiSure} dk`}
-                  size='small'
-                  variant='outlined'
-                  sx={{
-                    borderColor: categoryColor,
-                    color: categoryColor,
-                    fontWeight: 500,
-                  }}
-                />
-              )}
+              <Chip
+                label={`~${checklist.tahminiSure} dk`}
+                size='small'
+                variant='outlined'
+                sx={{
+                  borderColor: categoryColor,
+                  color: categoryColor,
+                  fontWeight: 500,
+                }}
+              />
+            )}
           </Box>
         </CardContent>
       </Card>

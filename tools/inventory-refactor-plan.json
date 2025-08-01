@@ -1,0 +1,34 @@
+{
+  "timestamp": "2025-06-10T12:01:53.307Z",
+  "originalFile": "../backend/routes/inventory.js",
+  "originalLines": 394,
+  "status": "analysis_complete",
+  "plannedFiles": [
+    {
+      "file": "..\\backend\\routes\\inventory-categories.js",
+      "category": "categories",
+      "description": "Kategori ve şablon yönetimi"
+    },
+    {
+      "file": "..\\backend\\routes\\inventory-items.js",
+      "category": "items",
+      "description": "Envanter öğe yönetimi"
+    },
+    {
+      "file": "..\\backend\\routes\\inventory-export.js",
+      "category": "export",
+      "description": "İçe/Dışa aktarma işlemleri"
+    },
+    {
+      "file": "..\\backend\\routes\\inventory-machines.js",
+      "category": "machines",
+      "description": "Makina ve kalıp entegrasyonu"
+    }
+  ],
+  "nextSteps": [
+    "1. Route implementasyonlarini manuel olarak tasi",
+    "2. Test et ve debug yap",
+    "3. Middleware'leri kontrol et",
+    "4. Import path'lerini guncelle"
+  ]
+}

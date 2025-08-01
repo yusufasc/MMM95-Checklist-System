@@ -331,8 +331,8 @@ const HREvaluationDialog = ({ open, onClose, template, onSuccess }) => {
                   <strong>Başarı Oranı:</strong> %
                   {calculateMaxScore() > 0
                     ? Math.round(
-                        (calculateTotalScore() / calculateMaxScore()) * 100,
-                      )
+                      (calculateTotalScore() / calculateMaxScore()) * 100,
+                    )
                     : 0}
                 </Typography>
               </Grid>

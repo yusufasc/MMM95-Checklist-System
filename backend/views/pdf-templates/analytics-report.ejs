@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        /* 🎨 MMM95 Professional PDF Styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #fff;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .header .meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+
+        .kpi-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .kpi-change {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .kpi-change.positive {
+            color: #4caf50;
+        }
+
+        .kpi-change.negative {
+            color: #f44336;
+        }
+
+        .chart-section {
+            margin: 30px 0;
+            page-break-inside: avoid;
+        }
+
+        .chart-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e3f2fd;
+            padding-bottom: 10px;
+        }
+
+        .chart-container {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 300px;
+        }
+
+        .summary-section {
+            background: #f5f5f5;
+            border-left: 4px solid #1976d2;
+            padding: 20px;
+            border-radius: 0 8px 8px 0;
+            margin: 30px 0;
+        }
+
+        .summary-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 15px;
+        }
+
+        .summary-list {
+            list-style: none;
+        }
+
+        .summary-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .summary-list li:last-child {
+            border-bottom: none;
+        }
+
+        .summary-list li strong {
+            color: #333;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .data-table th {
+            background: #1976d2;
+            color: white;
+            font-weight: 600;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .footer {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        /* 📊 Chart Styles */
+        .chart-placeholder {
+            background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+                        linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+                        linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* 🎯 Status Indicators */
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .status-warning {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-error {
+            background: #ffebee;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <!-- 📊 Report Header -->
+    <div class="header">
+        <h1><%= title %></h1>
+        <div class="subtitle"><%= companyName %></div>
+        <div class="meta">
+            <span>📅 Rapor Tarihi: <%= generatedAt %></span>
+            <span>📊 Analiz Dönemi: <%= period %></span>
+            <span>📋 Rapor Tipi: <%= reportType %></span>
+        </div>
+    </div>
+
+    <!-- 📈 KPI Dashboard -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-value"><%= data.totalMeetings || 0 %></div>
+            <div class="kpi-label">Toplam Toplantı</div>
+            <% if (data.meetingChange) { %>
+                <div class="kpi-change <%= data.meetingChange > 0 ? 'positive' : 'negative' %>">
+                    <%= data.meetingChange > 0 ? '↗' : '↘' %> <%= Math.abs(data.meetingChange) %>%
+                </div>
+            <% } %>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-value"><%= data.totalTasks || 0 %></div>
+            <div class="kpi-label">Oluşturulan Görev</div>
+            <% if (data.taskChange) { %>
+                <div class="kpi-change <%= data.taskChange > 0 ? 'positive' : 'negative' %>">
+                    <%= data.taskChange > 0 ? '↗' : '↘' %> <%= Math.abs(data.taskChange) %>%
+                </div>
+            <% } %>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-value"><%= data.activeUsers || 0 %></div>
+            <div class="kpi-label">Aktif Kullanıcı</div>
+            <% if (data.userChange) { %>
+                <div class="kpi-change <%= data.userChange > 0 ? 'positive' : 'negative' %>">
+                    <%= data.userChange > 0 ? '↗' : '↘' %> <%= Math.abs(data.userChange) %>%
+                </div>
+            <% } %>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-value"><%= data.completionRate || 0 %>%</div>
+            <div class="kpi-label">Tamamlanma Oranı</div>
+            <div class="kpi-change <%= (data.completionRate || 0) > 70 ? 'positive' : 'negative' %>">
+                <%= (data.completionRate || 0) > 70 ? '✅ İyi' : '⚠️ Dikkat' %>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📊 Meeting Frequency Chart -->
+    <div class="chart-section">
+        <h2 class="chart-title">📅 Toplantı Frekansı Analizi</h2>
+        <div class="chart-container">
+            <% if (data.meetingFrequency && data.meetingFrequency.length > 0) { %>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Toplantı Sayısı</th>
+                            <th>Katılımcı</th>
+                            <th>Ortalama Süre</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% data.meetingFrequency.forEach(item => { %>
+                            <tr>
+                                <td><%= item.date %></td>
+                                <td><%= item.count %></td>
+                                <td><%= item.participants || '-' %></td>
+                                <td><%= item.duration || '-' %> dk</td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <div class="chart-placeholder">
+                    📊 Bu dönemde toplantı verisi bulunamadı
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- 👥 Department Performance -->
+    <div class="chart-section">
+        <h2 class="chart-title">🏢 Departman Performansı</h2>
+        <div class="chart-container">
+            <% if (data.departmentStats && data.departmentStats.length > 0) { %>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Departman</th>
+                            <th>Toplantı</th>
+                            <th>Görev</th>
+                            <th>Tamamlanma</th>
+                            <th>Durum</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% data.departmentStats.forEach(dept => { %>
+                            <tr>
+                                <td><%= dept.name %></td>
+                                <td><%= dept.meetings %></td>
+                                <td><%= dept.tasks %></td>
+                                <td><%= dept.completion %>%</td>
+                                <td>
+                                    <span class="status-indicator <%= dept.completion > 80 ? 'status-success' : dept.completion > 60 ? 'status-warning' : 'status-error' %>">
+                                        <%= dept.completion > 80 ? 'Mükemmel' : dept.completion > 60 ? 'İyi' : 'Geliştirilmeli' %>
+                                    </span>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <div class="chart-placeholder">
+                    🏢 Departman performans verisi bulunamadı
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- 📋 Executive Summary -->
+    <div class="summary-section">
+        <h2 class="summary-title">📋 Yönetici Özeti</h2>
+        <ul class="summary-list">
+            <li><strong>Toplam Analiz Edilen Kayıt:</strong> <%= (data.totalMeetings || 0) + (data.totalTasks || 0) %> adet</li>
+            <li><strong>En Aktif Gün:</strong> <%= data.mostActiveDay || 'Bilgi yok' %></li>
+            <li><strong>Ortalama Toplantı Süresi:</strong> <%= data.avgMeetingDuration || 'Hesaplanmadı' %> dakika</li>
+            <li><strong>En Çok Görev Üreten Toplantı:</strong> <%= data.mostProductiveMeeting || 'Veri yok' %></li>
+            <li><strong>Sistem Kullanım Oranı:</strong> <%= data.systemUsage || 0 %>%</li>
+        </ul>
+    </div>
+
+    <!-- 🎯 Recommendations -->
+    <div class="summary-section">
+        <h2 class="summary-title">🎯 Öneriler ve Aksiyon Planı</h2>
+        <ul class="summary-list">
+            <% if ((data.completionRate || 0) < 70) { %>
+                <li><strong>Tamamlanma Oranı İyileştirme:</strong> Görev takibi ve hatırlatma sistemini güçlendirin</li>
+            <% } %>
+            <% if ((data.meetingFrequency || []).length < 5) { %>
+                <li><strong>Toplantı Planlaması:</strong> Düzenli toplantı takvimi oluşturun</li>
+            <% } %>
+            <% if (data.systemUsage < 80) { %>
+                <li><strong>Kullanıcı Eğitimi:</strong> Sistem kullanımını artırmak için eğitim programı düzenleyin</li>
+            <% } %>
+            <li><strong>Veri Kalitesi:</strong> Raporlama ve analiz için veri girişi standartlarını belirleyin</li>
+            <li><strong>Otomatizasyon:</strong> Tekrarlayan işlemleri otomatize etmeyi değerlendirin</li>
+        </ul>
+    </div>
+
+    <!-- 📄 Footer -->
+    <div class="footer">
+        <p>Bu rapor MMM95 Endüstriyel Ekipman Yönetim Sistemi tarafından otomatik olarak oluşturulmuştur.</p>
+        <p>Rapor tarihi: <%= generatedAt %> | Gizlilik derecesi: Dahili Kullanım</p>
+    </div>
+</body>
+</html>

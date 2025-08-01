@@ -99,28 +99,28 @@ const TaskCard = memo(
     // Format dates with proper localization and error handling
     const createdDate = task.createdAt
       ? (() => {
-          try {
-            return formatDistanceToNow(new Date(task.createdAt), {
-              addSuffix: true,
-              locale: tr,
-            });
-          } catch (error) {
-            return 'Geçersiz tarih';
-          }
-        })()
+        try {
+          return formatDistanceToNow(new Date(task.createdAt), {
+            addSuffix: true,
+            locale: tr,
+          });
+        } catch (error) {
+          return 'Geçersiz tarih';
+        }
+      })()
       : 'Bilinmiyor';
 
     const completedDate = task.tamamlanmaZamani
       ? (() => {
-          try {
-            return formatDistanceToNow(new Date(task.tamamlanmaZamani), {
-              addSuffix: true,
-              locale: tr,
-            });
-          } catch (error) {
-            return 'Geçersiz tarih';
-          }
-        })()
+        try {
+          return formatDistanceToNow(new Date(task.tamamlanmaZamani), {
+            addSuffix: true,
+            locale: tr,
+          });
+        } catch (error) {
+          return 'Geçersiz tarih';
+        }
+      })()
       : null;
 
     return (

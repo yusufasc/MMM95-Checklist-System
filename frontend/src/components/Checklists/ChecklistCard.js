@@ -160,26 +160,26 @@ const ChecklistCard = ({
           {/* Değerlendirme Saatleri */}
           {checklist.degerlendirmeSaatleri &&
             checklist.degerlendirmeSaatleri.length > 0 && (
-              <Box sx={{ mb: 2 }}>
-                <Typography variant='body2' color='text.secondary' gutterBottom>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant='body2' color='text.secondary' gutterBottom>
                   Değerlendirme Saatleri:
-                </Typography>
-                <Box
-                  sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, ml: 1 }}
-                >
-                  {checklist.degerlendirmeSaatleri.map((saat, idx) => (
-                    <Chip
-                      key={idx}
-                      label={saat.saat}
-                      size='small'
-                      variant='outlined'
-                      color='primary'
-                      sx={{ fontSize: '0.75rem' }}
-                    />
-                  ))}
-                </Box>
+              </Typography>
+              <Box
+                sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, ml: 1 }}
+              >
+                {checklist.degerlendirmeSaatleri.map((saat, idx) => (
+                  <Chip
+                    key={idx}
+                    label={saat.saat}
+                    size='small'
+                    variant='outlined'
+                    color='primary'
+                    sx={{ fontSize: '0.75rem' }}
+                  />
+                ))}
               </Box>
-            )}
+            </Box>
+          )}
 
           {/* Aktif Durumu */}
           <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>

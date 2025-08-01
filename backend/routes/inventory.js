@@ -92,38 +92,28 @@ router.post(
         try {
           const rowData = excelData[i];
 
-          // Excel header'larına göre akıllı field mapping
-          const headers = Object.keys(rowData);
+          // Excel sütun isimlerine göre mapping - FIXED for MMM95
+          console.log('📋 Excel row headers:', Object.keys(rowData));
 
-          // Plastik enjeksiyon makinası için özel mapping
-          let ad, kod, marka, model, detay;
+          // Kullanıcının Excel şablonundaki sütun isimleri
+          const kod =
+            rowData['Kod'] ||
+            rowData['kod'] ||
+            Math.random().toString(36).substr(2, 9);
+          const ad =
+            rowData['Ad'] ||
+            rowData['ad'] ||
+            rowData['Makine Adı'] ||
+            'Bilinmeyen Makina';
+          const marka =
+            rowData['Üretici Firma'] || rowData['üretici firma'] || '';
+          const model =
+            rowData['Model Kodu / Tipi'] || rowData['model kodu / tipi'] || '';
+          const seriNo = rowData['Seri No'] || rowData['seri no'] || '';
 
-          // Header değerlerine göre intelligent mapping
-          if (headers.length > 6) {
-            // Marka + Model kombinasyonu (HAİTİAN + ZAFİR + VE 1500II)
-            marka = rowData[headers[1]] || rowData[headers[5]]; // HAİTİAN
-            model = rowData[headers[2]]; // ZAFİR
-            detay = rowData[headers[6]]; // VE 1500II
-
-            ad = [marka, model, detay]
-              .filter(x => x && x !== '' && x !== 'undefined')
-              .join(' ');
-
-            // Kod: En uzun sayısal değeri bul (201515015031597)
-            kod =
-              headers
-                .map(h => rowData[h])
-                .find(val => val && /^[0-9]{10,}$/.test(val)) || // 10+ digit kod
-              rowData[headers[4]]; // Varsayılan 5. sütun
-          } else {
-            // Fallback: Basit mapping
-            ad = rowData[headers[1]] || 'Bilinmeyen Makina';
-            kod =
-              rowData[headers[0]] || Math.random().toString(36).substr(2, 9);
-            marka = ad;
-            model = '';
-            detay = '';
-          }
+          console.log(
+            `📋 Parsed fields - Kod: "${kod}", Ad: "${ad}", Marka: "${marka}", Model: "${model}"`,
+          );
 
           console.log(`📋 Satır ${i + 2}: Ad="${ad}", Kod="${kod}"`);
 
@@ -148,10 +138,46 @@ router.post(
             continue;
           }
 
-          // Ek field mapping
-          const durum = rowData[headers[3]] || 'aktif'; // "Aktif" sütunu
+          // Durum field mapping - Excel sütun ismine göre
+          let durum = 'aktif'; // Default değer
+          const durumValue =
+            rowData['Durum'] || rowData['durum'] || rowData['DURUM'];
+
+          // Excel'den gelen değeri enum'a map et
+          if (durumValue) {
+            const durumStr = String(durumValue).toLowerCase().trim();
+            if (
+              [
+                'aktif',
+                'bakim',
+                'arizali',
+                'hurda',
+                'yedek',
+                'kirada',
+              ].includes(durumStr)
+            ) {
+              durum = durumStr;
+            } else if (
+              // Sayısal değerler için özel mapping (varsa)
+              durumStr === '112' ||
+              durumStr === '1' ||
+              durumStr === 'active'
+            ) {
+              durum = 'aktif';
+            } else if (durumStr === '0' || durumStr === 'inactive') {
+              durum = 'hurda';
+            }
+            // Diğer durumlar için default 'aktif' kullan
+          }
           const aciklama =
-            [marka, model, detay].filter(x => x).join(' - ') || '';
+            rowData['Açıklama'] ||
+            rowData['açıklama'] ||
+            [marka, model, seriNo].filter(x => x).join(' - ') ||
+            '';
+
+          console.log(
+            `📋 Satır ${i + 2}: Final - Ad="${ad}", Kod="${kod}", Durum="${durum}"`,
+          );
 
           // InventoryItem verisi hazırla
           const itemData = {
@@ -166,13 +192,52 @@ router.post(
             olusturanKullanici: req.user.id,
           };
 
-          // Dinamik alanları ekle
+          // Dinamik alanları ekle - Excel sütun isimleriyle match
           templates.forEach(template => {
-            const fieldName = template.alanAdi;
-            if (fieldName && rowData[fieldName] !== undefined) {
-              itemData.dinamikAlanlar[fieldName] = rowData[fieldName];
+            const templateFieldName =
+              template.alanAdi || template.ad || template.alan;
+
+            // Excel sütun ismi ile template field name match etmeye çalış
+            let excelValue = null;
+            let matchedColumn = null;
+
+            // Exact match dene
+            if (rowData[templateFieldName] !== undefined) {
+              excelValue = rowData[templateFieldName];
+              matchedColumn = templateFieldName;
+            } else {
+              // Case insensitive match dene
+              const excelColumns = Object.keys(rowData);
+              const matchedCol = excelColumns.find(
+                col =>
+                  col.toLowerCase().trim() ===
+                  templateFieldName.toLowerCase().trim(),
+              );
+              if (matchedCol && rowData[matchedCol] !== undefined) {
+                excelValue = rowData[matchedCol];
+                matchedColumn = matchedCol;
+              }
+            }
+
+            if (
+              excelValue !== null &&
+              excelValue !== undefined &&
+              excelValue !== ''
+            ) {
+              itemData.dinamikAlanlar[templateFieldName] = excelValue;
+              console.log(
+                `✅ Matched "${templateFieldName}" = "${excelValue}" (from Excel column: "${matchedColumn}")`,
+              );
+            } else {
+              console.log(
+                `❌ No match for template field "${templateFieldName}"`,
+              );
             }
           });
+
+          console.log(
+            `📋 Satır ${i + 2}: Dinamik alanlar eklendi - ${Object.keys(itemData.dinamikAlanlar).length} alan`,
+          );
 
           validItems.push(itemData);
           basariliSayisi++;
@@ -200,8 +265,11 @@ router.post(
       });
     } catch (error) {
       console.error('❌ Excel import error:', error);
+      console.error('❌ Error stack:', error.stack);
       res.status(500).json({
         message: 'Excel import hatası: ' + error.message,
+        error: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       });
     }
   },
@@ -243,46 +311,57 @@ router.get(
       const ExcelJS = require('exceljs');
       console.log('✅ ExcelJS loaded');
 
-      // Excel başlıkları oluştur
-      const headers = ['Kod', 'Ad', 'Açıklama', 'Durum'];
+      // MMM95 - Kullanıcı belirlenen kesin 20 sütun
+      const headers = [
+        'Kod',
+        'Ad',
+        'Açıklama',
+        'Durum',
+        'Makine Adı',
+        'Seri No',
+        'Üretici Firma',
+        'Model Kodu / Tipi',
+        'Üretim Yılı',
+        'Motor Gücü (kW)',
+        'Rezistans Gücü (Toplam W)',
+        'Mengene Açılma Mesafesi (mm)',
+        'Mengene En (mm)',
+        'Mengene Boy (mm)',
+        'Enjeksiyon Hacmi (cm³)',
+        'Enjeksiyon Basıncı (bar)',
+        'Vida Çapı (mm)',
+        'Vida L/D Oranı',
+        'Kapanma Kuvveti (kN / ton)',
+        'Bakım Sorumlusu',
+      ];
+      console.log('📋 MMM95 Fixed Headers created:', headers.length, 'columns');
 
-      // Dinamik alanları ekle
-      templates.forEach(template => {
-        const fieldName = template.alanAdi || template.ad || template.alan;
-        if (fieldName) {
-          headers.push(fieldName);
-        }
-      });
-      console.log('📋 Headers created:', headers);
-
-      // Örnek veri satırı oluştur
+      // MMM95 - Örnek veri satırı - Kullanıcının Excel'indeki değerler
       const exampleData = {
-        Kod: 'MAKINA001',
-        Ad: 'Örnek Makina',
-        Açıklama: 'Açıklama metni',
+        Kod: '201515015031597',
+        Ad: 'HAİTİAN ZAFİR VE 1500II',
+        Açıklama: 'Plastik Enjeksiyon Makinası',
         Durum: 'Aktif',
+        'Makine Adı': 'VE 1500II',
+        'Seri No': '201515015031597',
+        'Üretici Firma': 'HAİTİAN',
+        'Model Kodu / Tipi': 'VE 1500II',
+        'Üretim Yılı': '2015',
+        'Motor Gücü (kW)': '73',
+        'Rezistans Gücü (Toplam W)': '22600',
+        'Mengene Açılma Mesafesi (mm)': '520',
+        'Mengene En (mm)': '520',
+        'Mengene Boy (mm)': '470',
+        'Enjeksiyon Hacmi (cm³)': '173',
+        'Enjeksiyon Basıncı (bar)': '247',
+        'Vida Çapı (mm)': '36',
+        'Vida L/D Oranı': '25',
+        'Kapanma Kuvveti (kN / ton)': '1500',
+        'Bakım Sorumlusu': 'Teknik Ekip',
       };
 
-      // Dinamik alanlar için örnek değerler
-      templates.forEach(template => {
-        const fieldName = template.alanAdi || template.ad || template.alan;
-        const fieldType = template.alanTipi || template.tip;
-
-        if (!fieldName) {
-          return;
-        }
-
-        if (fieldType === 'number') {
-          exampleData[fieldName] = 100;
-        } else if (fieldType === 'date') {
-          exampleData[fieldName] = new Date().toISOString().split('T')[0];
-        } else if (fieldType === 'select' && template.secenekler?.length > 0) {
-          exampleData[fieldName] = template.secenekler[0];
-        } else {
-          exampleData[fieldName] = `Örnek ${fieldName}`;
-        }
-      });
-      console.log('📋 Example data created');
+      // Not: Artık dinamik değer oluşturmuyoruz, sabit template kullanıyoruz
+      console.log('📋 Example data created for MMM95 template');
 
       // Excel dosyası oluştur
       console.log('📊 Creating Excel workbook...');

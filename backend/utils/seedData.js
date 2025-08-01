@@ -58,6 +58,12 @@ const seedData = async () => {
         route: '/tasks',
         aktif: true,
       },
+      {
+        ad: 'Toplantı Yönetimi',
+        ikon: 'Groups',
+        route: '/meetings',
+        aktif: true,
+      },
       { ad: 'Yaptım', ikon: 'Build', route: '/worktasks', aktif: true },
       {
         ad: 'Envanter Yönetimi',
@@ -145,6 +151,11 @@ const seedData = async () => {
           gorebilir: true,
           duzenleyebilir: false,
         },
+        {
+          moduleName: 'Toplantı Yönetimi',
+          gorebilir: true,
+          duzenleyebilir: false,
+        },
         { moduleName: 'Yaptım', gorebilir: true, duzenleyebilir: false },
         {
           moduleName: 'Kontrol Bekleyenler',
@@ -169,6 +180,11 @@ const seedData = async () => {
           moduleName: 'Görev Yönetimi',
           gorebilir: true,
           duzenleyebilir: false,
+        },
+        {
+          moduleName: 'Toplantı Yönetimi',
+          gorebilir: true,
+          duzenleyebilir: true,
         },
         { moduleName: 'Yaptım', gorebilir: true, duzenleyebilir: false },
         {
@@ -200,6 +216,11 @@ const seedData = async () => {
           gorebilir: true,
           duzenleyebilir: false,
         },
+        {
+          moduleName: 'Toplantı Yönetimi',
+          gorebilir: true,
+          duzenleyebilir: false,
+        },
         { moduleName: 'Yaptım', gorebilir: true, duzenleyebilir: false },
         {
           moduleName: 'Kontrol Bekleyenler',
@@ -223,6 +244,11 @@ const seedData = async () => {
         { moduleName: 'Kalite Kontrol', gorebilir: true, duzenleyebilir: true },
         {
           moduleName: 'Kalite Kontrol Yönetimi',
+          gorebilir: true,
+          duzenleyebilir: true,
+        },
+        {
+          moduleName: 'Toplantı Yönetimi',
           gorebilir: true,
           duzenleyebilir: true,
         },

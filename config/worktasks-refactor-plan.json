@@ -1,0 +1,34 @@
+{
+  "timestamp": "2025-06-02T16:19:30.039Z",
+  "originalFile": "frontend/src/pages/WorkTasks.js",
+  "originalLines": 1770,
+  "status": "analysis_complete",
+  "customHooks": [
+    {
+      "name": "useWorkTaskUI",
+      "description": "Dialog ve UI state yönetimi",
+      "priority": "medium",
+      "stateCount": 4,
+      "functionCount": 0
+    },
+    {
+      "name": "useWorkTaskData",
+      "description": "Veri yükleme ve yönetimi",
+      "priority": "high",
+      "stateCount": 7,
+      "functionCount": 0
+    }
+  ],
+  "plannedComponents": [
+    "WorkTaskList.js",
+    "WorkTaskForm.js",
+    "WorkTaskFilters.js"
+  ],
+  "nextSteps": [
+    "1. Custom hook'lari WorkTasks.js'e import et",
+    "2. Component'lari WorkTasks.js'den ayir",
+    "3. State'leri custom hook'lara tasi",
+    "4. Fonksiyonlari ilgili hook'lara tasi",
+    "5. Test et ve debug yap"
+  ]
+}

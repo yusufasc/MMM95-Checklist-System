@@ -347,8 +347,8 @@ const UstaDashboard = () => {
                               <AccessTimeIcon sx={{ fontSize: 12, mr: 0.5 }} />
                               {task.tamamlanmaTarihi
                                 ? new Date(
-                                    task.tamamlanmaTarihi,
-                                  ).toLocaleDateString('tr-TR')
+                                  task.tamamlanmaTarihi,
+                                ).toLocaleDateString('tr-TR')
                                 : 'Tarih yok'}
                             </Typography>
                           </Box>
@@ -623,8 +623,8 @@ const UstaDashboard = () => {
                           <Typography variant='subtitle2' fontWeight='bold'>
                             {score.tarih
                               ? new Date(score.tarih).toLocaleDateString(
-                                  'tr-TR',
-                                )
+                                'tr-TR',
+                              )
                               : 'Tarih yok'}
                           </Typography>
                           <Typography variant='body2' color='text.secondary'>

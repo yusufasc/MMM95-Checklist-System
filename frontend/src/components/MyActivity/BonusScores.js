@@ -387,20 +387,20 @@ const BonusScores = ({ bonusScores = [], loading = false }) => {
                     )}
                     {bonus.makina &&
                       bonus.makina !== 'Bonus Değerlendirmesi' && (
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            mb: 1,
-                          }}
-                        >
-                          <BusinessIcon sx={{ fontSize: 18, color: '#666' }} />
-                          <Typography variant='body2'>
-                            <strong>Makina:</strong> {bonus.makina}
-                          </Typography>
-                        </Box>
-                      )}
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          mb: 1,
+                        }}
+                      >
+                        <BusinessIcon sx={{ fontSize: 18, color: '#666' }} />
+                        <Typography variant='body2'>
+                          <strong>Makina:</strong> {bonus.makina}
+                        </Typography>
+                      </Box>
+                    )}
                   </Paper>
                 </Grid>
 

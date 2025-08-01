@@ -35,11 +35,14 @@ export const useChecklistsData = () => {
     async formData => {
       try {
         setError('');
-        await checklistsAPI.create(formData);
+        console.log('🚀 Frontend: Checklist oluşturuluyor...', formData);
+        const response = await checklistsAPI.create(formData);
+        console.log('✅ Frontend: Checklist başarıyla oluşturuldu', response);
         setSuccess('Checklist şablonu başarıyla eklendi');
         await loadData();
         return true;
       } catch (error) {
+        console.error('❌ Frontend: Checklist oluşturma hatası:', error);
         setError(
           error.response?.data?.message || 'İşlem sırasında hata oluştu',
         );

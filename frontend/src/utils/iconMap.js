@@ -15,6 +15,7 @@ import {
   Engineering as EngineeringIcon,
   Circle as DefaultIcon,
   Star as StarIcon,
+  Groups as GroupsIcon,
 } from '@mui/icons-material';
 
 /**
@@ -36,6 +37,7 @@ export const iconMap = {
   TaskIcon: <TaskIcon />,
   EngineeringIcon: <EngineeringIcon />,
   StarIcon: <StarIcon />,
+  GroupsIcon: <GroupsIcon />,
 };
 
 /**

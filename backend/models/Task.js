@@ -142,6 +142,49 @@ const TaskSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
+  // ===== TOPLANTI MODÜLÜ ENTEGRASYONu (GÜVENLİ EKLENTİ) =====
+  kaynakToplanti: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Meeting',
+    required: false, // Mevcut görevleri bozmamak için optional
+  },
+  toplantiBaglantisi: {
+    tip: {
+      type: String,
+      enum: ['gündem', 'karar', 'aksiyon'], // Toplantıdan nasıl türetildiği
+      required: false,
+    },
+    referansId: {
+      type: String, // Meeting.gundem veya Meeting.kararlar array'inden hangisi
+      required: false,
+    },
+  },
+  toplantıNotlari: [
+    {
+      icerik: {
+        type: String,
+        required: true,
+      },
+      olusturan: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+      },
+      tarih: {
+        type: Date,
+        default: Date.now,
+      },
+      gizli: {
+        type: Boolean,
+        default: false,
+      },
+    },
+  ],
+  meetingGoreviMi: {
+    type: Boolean,
+    default: false, // Meeting'den türetilen görevleri ayırmak için
+  },
+  // ===== SON TOPLANTI ENTEGRASYONU =====
 });
 
 // Pre-save hook - durum değişikliklerini logla

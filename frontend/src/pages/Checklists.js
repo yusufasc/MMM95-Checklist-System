@@ -85,11 +85,14 @@ const Checklists = () => {
   }, [success, error, clearMessages]);
 
   const handleSubmit = async () => {
+    console.log('🎯 handleSubmit çağrıldı');
     const validationError = validateForm();
     if (validationError) {
+      console.log('❌ Validation hatası:', validationError);
       return;
     }
 
+    console.log('📝 Form verileri:', formData);
     const success = editMode
       ? await updateChecklist(editingId, formData)
       : await createChecklist(formData);

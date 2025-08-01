@@ -786,17 +786,83 @@ router.get('/kalip-degisim', auth, async (req, res) => {
   try {
     console.log('🔄 Kalıp değişim takibi verileri getiriliyor...');
 
-    // Tüm makinaları getir (InventoryItem'dan)
-    const allMachines = await InventoryItem.find({
-      $or: [
-        { kategori: { $regex: /makina/i } },
-        { 'dinamikAlanlar.kategori': { $regex: /makina/i } },
-      ],
-    })
-      .select('ad kod envanterKodu kategori dinamikAlanlar')
+    // Tüm InventoryItem'ları getir - daha sonra manuel filtreleme yapacağız
+    const allInventoryItems = await InventoryItem.find({})
+      .populate('kategoriId', 'ad')
+      .select('ad kod envanterKodu kategori kategoriId dinamikAlanlar')
       .sort({ ad: 1 });
 
+    console.log(`📋 Toplam ${allInventoryItems.length} InventoryItem bulundu`);
+
+    // Manuel filtreleme - makina olabilecek her şeyi dahil et
+    const allMachines = allInventoryItems.filter(item => {
+      const ad = (item.ad || '').toLowerCase();
+      const kategori = (item.kategori || '').toLowerCase();
+      const kategoriIdAd = (item.kategoriId?.ad || '').toLowerCase();
+
+      // Dinamik alanlar kontrolü
+      const dinamikKategori =
+        item.dinamikAlanlar?.kategori?.toLowerCase() || '';
+      const dinamikAd =
+        item.dinamikAlanlar?.['Makine Adı']?.toLowerCase() ||
+        item.dinamikAlanlar?.['makine adı']?.toLowerCase() ||
+        '';
+
+      // Geniş makina tanımı - herhangi birinde geçen
+      const makinaKeywords = [
+        'makina',
+        'makine',
+        'machine',
+        'enjeksiyon',
+        'injection',
+        'equipment',
+        'plastik',
+        'haitian',
+      ];
+
+      return makinaKeywords.some(
+        keyword =>
+          ad.includes(keyword) ||
+          kategori.includes(keyword) ||
+          kategoriIdAd.includes(keyword) ||
+          dinamikKategori.includes(keyword) ||
+          dinamikAd.includes(keyword),
+      );
+    });
+
     console.log(`🏭 Toplam ${allMachines.length} makina bulundu`);
+
+    // Debug: İlk 3 makina detaylarını göster
+    if (allMachines.length > 0) {
+      console.log('🔍 İlk makina örneği:');
+      console.log({
+        id: allMachines[0]._id,
+        ad: allMachines[0].ad,
+        kod: allMachines[0].kod,
+        kategori: allMachines[0].kategori,
+        kategoriId: allMachines[0].kategoriId,
+        dinamikAlanlar: allMachines[0].dinamikAlanlar,
+      });
+    } else {
+      console.log(
+        '❌ Hiç makina bulunamadı! Test için inventory listesi kontrol edilecek...',
+      );
+
+      // Test amaçlı: Toplam InventoryItem sayısını kontrol et
+      const totalInventoryItems = await InventoryItem.countDocuments();
+      console.log(`📊 Toplam InventoryItem sayısı: ${totalInventoryItems}`);
+
+      // Test amaçlı: İlk 5 InventoryItem'ı getir
+      const sampleItems = await InventoryItem.find({})
+        .limit(5)
+        .select('ad kod kategori kategoriId dinamikAlanlar');
+      console.log('📋 Örnek InventoryItem\'lar:');
+      sampleItems.forEach((item, index) => {
+        console.log(
+          `  ${index + 1}. ${item.ad} - kategori: ${item.kategori}, kod: ${item.kod}`,
+        );
+      });
+    }
 
     // Her makina için en son kalıp değişim görevi bilgisini getir
     const machineKalipData = await Promise.all(
@@ -840,6 +906,7 @@ router.get('/kalip-degisim', auth, async (req, res) => {
               kod: machine.kod || machine.envanterKodu,
               envanterKodu: machine.envanterKodu,
               kategori: kategori,
+              dinamikAlanlar: machine.dinamikAlanlar || {},
             },
             lastKalipChange: lastKalipTask
               ? {
@@ -898,6 +965,7 @@ router.get('/kalip-degisim', auth, async (req, res) => {
               kod: machine.kod || machine.envanterKodu,
               envanterKodu: machine.envanterKodu,
               kategori: 'Bilinmiyor',
+              dinamikAlanlar: machine.dinamikAlanlar || {},
             },
             lastKalipChange: null,
           };

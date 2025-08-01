@@ -385,53 +385,53 @@ const ControlPending = React.memo(() => {
       {typeof process !== 'undefined' &&
         process.env?.NODE_ENV === 'development' &&
         controlData && (
-          <Paper sx={{ p: 2, mb: 2, bgcolor: 'info.50', borderRadius: 2 }}>
-            <Typography variant='h6' gutterBottom>
-              <span role='img' aria-label='incele'>
+        <Paper sx={{ p: 2, mb: 2, bgcolor: 'info.50', borderRadius: 2 }}>
+          <Typography variant='h6' gutterBottom>
+            <span role='img' aria-label='incele'>
                 🔍
-              </span>{' '}
+            </span>{' '}
               Debug Bilgileri & İstatistikler
-            </Typography>
-            <Typography variant='body2'>
+          </Typography>
+          <Typography variant='body2'>
               Toplam görev: {stats.total} | Filtrelenmiş: {stats.filtered}
-            </Typography>
-            <Typography variant='body2'>
+          </Typography>
+          <Typography variant='body2'>
               Bekliyor: {stats.tamamlandi} | Onaylandı: {stats.onaylandi} |
               Reddedildi: {stats.reddedildi}
-            </Typography>
-            <Typography variant='body2'>
-              <span role='img' aria-label='hedef'>
+          </Typography>
+          <Typography variant='body2'>
+            <span role='img' aria-label='hedef'>
                 🎯
-              </span>{' '}
+            </span>{' '}
               ControlData Keys: {Object.keys(controlData).join(', ')}
-            </Typography>
-            <Typography variant='body2'>
-              <span role='img' aria-label='hedef'>
+          </Typography>
+          <Typography variant='body2'>
+            <span role='img' aria-label='hedef'>
                 🎯
-              </span>{' '}
+            </span>{' '}
               FilteredAndSortedData Keys:{' '}
-              {filteredAndSortedData
-                ? Object.keys(filteredAndSortedData).join(', ')
-                : 'null'}
-            </Typography>
-            {Object.entries(controlData).map(([machineKey, machineData]) => {
-              const workTasks = machineData.tasks.filter(
-                t => t.taskType === 'worktask',
-              );
-              const normalTasks = machineData.tasks.filter(
-                t => t.taskType !== 'worktask',
-              );
-              return (
-                <Typography key={machineKey} variant='body2'>
-                  <span role='img' aria-label='arac'>
+            {filteredAndSortedData
+              ? Object.keys(filteredAndSortedData).join(', ')
+              : 'null'}
+          </Typography>
+          {Object.entries(controlData).map(([machineKey, machineData]) => {
+            const workTasks = machineData.tasks.filter(
+              t => t.taskType === 'worktask',
+            );
+            const normalTasks = machineData.tasks.filter(
+              t => t.taskType !== 'worktask',
+            );
+            return (
+              <Typography key={machineKey} variant='body2'>
+                <span role='img' aria-label='arac'>
                     🔧
-                  </span>{' '}
-                  {machineKey}: {machineData.tasks.length} görev (
-                  {normalTasks.length} Task + {workTasks.length} WorkTask)
-                </Typography>
-              );
-            })}
-            {filteredAndSortedData &&
+                </span>{' '}
+                {machineKey}: {machineData.tasks.length} görev (
+                {normalTasks.length} Task + {workTasks.length} WorkTask)
+              </Typography>
+            );
+          })}
+          {filteredAndSortedData &&
               Object.entries(filteredAndSortedData).map(
                 ([machineKey, machineData]) => {
                   return (
@@ -449,61 +449,61 @@ const ControlPending = React.memo(() => {
                   );
                 },
               )}
-          </Paper>
-        )}
+        </Paper>
+      )}
 
       {/* Machine-based Tasks */}
       {filteredAndSortedData && Object.keys(filteredAndSortedData).length > 0
         ? Object.entries(filteredAndSortedData)
-            .filter(([, machineData]) => machineData.tasks.length > 0) // Sadece görev olan makinaları göster
-            .map(([machineKey, machineData]) => (
-              <MachineSection
-                key={machineKey}
-                machineKey={machineKey}
-                machineData={machineData}
-                hasChecklistPermission={hasChecklistPermission}
-                onScoreTask={handleScoreTask}
-                isMobile={isMobile}
-              />
-            ))
+          .filter(([, machineData]) => machineData.tasks.length > 0) // Sadece görev olan makinaları göster
+          .map(([machineKey, machineData]) => (
+            <MachineSection
+              key={machineKey}
+              machineKey={machineKey}
+              machineData={machineData}
+              hasChecklistPermission={hasChecklistPermission}
+              onScoreTask={handleScoreTask}
+              isMobile={isMobile}
+            />
+          ))
         : selectedMachines.length > 0 && (
-            <Paper
-              sx={{
-                p: { xs: 3, md: 5 },
-                textAlign: 'center',
-                bgcolor:
+          <Paper
+            sx={{
+              p: { xs: 3, md: 5 },
+              textAlign: 'center',
+              bgcolor:
                   stats.filtered === 0 && stats.total > 0
                     ? 'warning.50'
                     : 'success.50',
-                borderRadius: 3,
-              }}
-            >
-              <Typography variant='h6' gutterBottom>
-                <span
-                  role='img'
-                  aria-label={
-                    stats.filtered === 0 && stats.total > 0
-                      ? 'filtre'
-                      : 'başarılı'
-                  }
-                >
-                  {stats.filtered === 0 && stats.total > 0 ? '🔍' : '✅'}
-                </span>{' '}
-                {stats.filtered === 0 && stats.total > 0
-                  ? 'Filtrelere uygun görev bulunamadı'
-                  : activeTab === 0
-                    ? 'Puanlama bekleyen görev bulunmuyor'
-                    : 'Puanlanmış görev bulunmuyor'}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                {stats.filtered === 0 && stats.total > 0
-                  ? `Toplam ${stats.total} görev var ama filtrelere uygun görev bulunamadı. Filtreleri değiştirmeyi deneyin.`
-                  : activeTab === 0
-                    ? 'Tüm görevler kontrol edilmiş durumda.'
-                    : 'Henüz onaylanmış görev bulunmuyor.'}
-              </Typography>
-            </Paper>
-          )}
+              borderRadius: 3,
+            }}
+          >
+            <Typography variant='h6' gutterBottom>
+              <span
+                role='img'
+                aria-label={
+                  stats.filtered === 0 && stats.total > 0
+                    ? 'filtre'
+                    : 'başarılı'
+                }
+              >
+                {stats.filtered === 0 && stats.total > 0 ? '🔍' : '✅'}
+              </span>{' '}
+              {stats.filtered === 0 && stats.total > 0
+                ? 'Filtrelere uygun görev bulunamadı'
+                : activeTab === 0
+                  ? 'Puanlama bekleyen görev bulunmuyor'
+                  : 'Puanlanmış görev bulunmuyor'}
+            </Typography>
+            <Typography variant='body2' color='text.secondary'>
+              {stats.filtered === 0 && stats.total > 0
+                ? `Toplam ${stats.total} görev var ama filtrelere uygun görev bulunamadı. Filtreleri değiştirmeyi deneyin.`
+                : activeTab === 0
+                  ? 'Tüm görevler kontrol edilmiş durumda.'
+                  : 'Henüz onaylanmış görev bulunmuyor.'}
+            </Typography>
+          </Paper>
+        )}
 
       {/* Score Dialog */}
       <ScoreDialog

@@ -1,0 +1,127 @@
+{
+  "timestamp": "2025-06-02T16:12:49.739Z",
+  "threshold": 500,
+  "totalLargeFiles": 24,
+  "files": [
+    {
+      "path": "backend\\routes\\inventory.js",
+      "lines": 2166,
+      "sizeKB": 65
+    },
+    {
+      "path": "frontend\\src\\pages\\HR.js",
+      "lines": 1837,
+      "sizeKB": 66
+    },
+    {
+      "path": "frontend\\src\\pages\\WorkTasks.js",
+      "lines": 1770,
+      "sizeKB": 66
+    },
+    {
+      "path": "frontend\\src\\pages\\ControlPending.js",
+      "lines": 1362,
+      "sizeKB": 53
+    },
+    {
+      "path": "frontend\\src\\pages\\Tasks.js",
+      "lines": 1234,
+      "sizeKB": 45
+    },
+    {
+      "path": "frontend\\src\\pages\\Checklists.js",
+      "lines": 1181,
+      "sizeKB": 39
+    },
+    {
+      "path": "frontend\\src\\pages\\Dashboard.js",
+      "lines": 1077,
+      "sizeKB": 37
+    },
+    {
+      "path": "frontend\\src\\components\\ItemDialog.js",
+      "lines": 1076,
+      "sizeKB": 35
+    },
+    {
+      "path": "frontend\\src\\pages\\HRManagement.js",
+      "lines": 1060,
+      "sizeKB": 37
+    },
+    {
+      "path": "frontend\\src\\pages\\Inventory.js",
+      "lines": 1013,
+      "sizeKB": 34
+    },
+    {
+      "path": "frontend\\src\\pages\\MyActivity.js",
+      "lines": 952,
+      "sizeKB": 34
+    },
+    {
+      "path": "frontend\\src\\components\\QualityControlStatistics.js",
+      "lines": 926,
+      "sizeKB": 39
+    },
+    {
+      "path": "frontend\\src\\components\\QualityControlEvaluation.js",
+      "lines": 925,
+      "sizeKB": 35
+    },
+    {
+      "path": "backend\\routes\\tasks.js",
+      "lines": 889,
+      "sizeKB": 29
+    },
+    {
+      "path": "backend\\routes\\qualityControl.js",
+      "lines": 820,
+      "sizeKB": 27
+    },
+    {
+      "path": "frontend\\src\\components\\QualityControlTemplates.js",
+      "lines": 819,
+      "sizeKB": 28
+    },
+    {
+      "path": "backend\\routes\\hr.js",
+      "lines": 816,
+      "sizeKB": 24
+    },
+    {
+      "path": "backend\\routes\\hrManagement.js",
+      "lines": 745,
+      "sizeKB": 21
+    },
+    {
+      "path": "frontend\\src\\pages\\UstaDashboard.js",
+      "lines": 709,
+      "sizeKB": 25
+    },
+    {
+      "path": "frontend\\src\\components\\Layout.js",
+      "lines": 692,
+      "sizeKB": 21
+    },
+    {
+      "path": "backend\\routes\\myActivity.js",
+      "lines": 637,
+      "sizeKB": 20
+    },
+    {
+      "path": "frontend\\src\\pages\\OrtaDashboard.js",
+      "lines": 603,
+      "sizeKB": 21
+    },
+    {
+      "path": "backend\\routes\\hr-management.js",
+      "lines": 543,
+      "sizeKB": 14
+    },
+    {
+      "path": "frontend\\src\\pages\\Performance.js",
+      "lines": 523,
+      "sizeKB": 17
+    }
+  ]
+}

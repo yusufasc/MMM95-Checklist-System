@@ -352,105 +352,105 @@ const ScoreDialog = ({
                 {/* Değişim Süresi */}
                 {selectedTask.makinaDurmaSaati &&
                   selectedTask.yeniKalipAktifSaati && (
-                    <Grid item xs={12} md={6}>
-                      <Box
+                  <Grid item xs={12} md={6}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        p: 2,
+                        bgcolor: 'rgba(255,255,255,0.1)',
+                        borderRadius: 2,
+                        backdropFilter: 'blur(10px)',
+                      }}
+                    >
+                      <Avatar
                         sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 2,
-                          p: 2,
-                          bgcolor: 'rgba(255,255,255,0.1)',
-                          borderRadius: 2,
-                          backdropFilter: 'blur(10px)',
+                          bgcolor: 'primary.main',
+                          width: 40,
+                          height: 40,
                         }}
                       >
-                        <Avatar
-                          sx={{
-                            bgcolor: 'primary.main',
-                            width: 40,
-                            height: 40,
-                          }}
+                        <ScheduleIcon />
+                      </Avatar>
+                      <Box>
+                        <Typography
+                          variant='subtitle2'
+                          sx={{ opacity: 0.8, mb: 0.5 }}
                         >
-                          <ScheduleIcon />
-                        </Avatar>
-                        <Box>
-                          <Typography
-                            variant='subtitle2'
-                            sx={{ opacity: 0.8, mb: 0.5 }}
-                          >
                             Değişim Süresi
-                          </Typography>
-                          <Typography
-                            variant='body1'
-                            sx={{ fontWeight: 'bold' }}
-                          >
-                            {(() => {
-                              const durma = new Date(
-                                selectedTask.makinaDurmaSaati,
-                              );
-                              const baslama = new Date(
-                                selectedTask.yeniKalipAktifSaati,
-                              );
-                              const farkMs = baslama - durma;
-                              const farkDakika = Math.round(
-                                farkMs / (1000 * 60),
-                              );
+                        </Typography>
+                        <Typography
+                          variant='body1'
+                          sx={{ fontWeight: 'bold' }}
+                        >
+                          {(() => {
+                            const durma = new Date(
+                              selectedTask.makinaDurmaSaati,
+                            );
+                            const baslama = new Date(
+                              selectedTask.yeniKalipAktifSaati,
+                            );
+                            const farkMs = baslama - durma;
+                            const farkDakika = Math.round(
+                              farkMs / (1000 * 60),
+                            );
 
-                              if (farkDakika < 60) {
-                                return `${farkDakika} dakika`;
-                              } else {
-                                const saat = Math.floor(farkDakika / 60);
-                                const dakika = farkDakika % 60;
-                                return `${saat}s ${dakika}dk`;
-                              }
-                            })()}
-                          </Typography>
-                          <Chip
-                            size='small'
-                            label={(() => {
-                              const durma = new Date(
-                                selectedTask.makinaDurmaSaati,
-                              );
-                              const baslama = new Date(
-                                selectedTask.yeniKalipAktifSaati,
-                              );
-                              const farkDakika = Math.round(
-                                (baslama - durma) / (1000 * 60),
-                              );
+                            if (farkDakika < 60) {
+                              return `${farkDakika} dakika`;
+                            } else {
+                              const saat = Math.floor(farkDakika / 60);
+                              const dakika = farkDakika % 60;
+                              return `${saat}s ${dakika}dk`;
+                            }
+                          })()}
+                        </Typography>
+                        <Chip
+                          size='small'
+                          label={(() => {
+                            const durma = new Date(
+                              selectedTask.makinaDurmaSaati,
+                            );
+                            const baslama = new Date(
+                              selectedTask.yeniKalipAktifSaati,
+                            );
+                            const farkDakika = Math.round(
+                              (baslama - durma) / (1000 * 60),
+                            );
 
-                              if (farkDakika <= 60) {
-                                return 'Hızlı';
-                              }
-                              if (farkDakika <= 120) {
-                                return 'Normal';
-                              }
-                              return 'Yavaş';
-                            })()}
-                            color={(() => {
-                              const durma = new Date(
-                                selectedTask.makinaDurmaSaati,
-                              );
-                              const baslama = new Date(
-                                selectedTask.yeniKalipAktifSaati,
-                              );
-                              const farkDakika = Math.round(
-                                (baslama - durma) / (1000 * 60),
-                              );
+                            if (farkDakika <= 60) {
+                              return 'Hızlı';
+                            }
+                            if (farkDakika <= 120) {
+                              return 'Normal';
+                            }
+                            return 'Yavaş';
+                          })()}
+                          color={(() => {
+                            const durma = new Date(
+                              selectedTask.makinaDurmaSaati,
+                            );
+                            const baslama = new Date(
+                              selectedTask.yeniKalipAktifSaati,
+                            );
+                            const farkDakika = Math.round(
+                              (baslama - durma) / (1000 * 60),
+                            );
 
-                              if (farkDakika <= 60) {
-                                return 'success';
-                              }
-                              if (farkDakika <= 120) {
-                                return 'warning';
-                              }
-                              return 'error';
-                            })()}
-                            sx={{ mt: 0.5, color: 'white' }}
-                          />
-                        </Box>
+                            if (farkDakika <= 60) {
+                              return 'success';
+                            }
+                            if (farkDakika <= 120) {
+                              return 'warning';
+                            }
+                            return 'error';
+                          })()}
+                          sx={{ mt: 0.5, color: 'white' }}
+                        />
                       </Box>
-                    </Grid>
-                  )}
+                    </Box>
+                  </Grid>
+                )}
 
                 {/* Kalıp Bilgileri */}
                 {(selectedTask.indirilenKalip ||

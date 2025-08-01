@@ -10,7 +10,6 @@ module.exports = {
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
     'plugin:jsx-a11y/recommended',
-    'prettier', // Prettier formatting rules disable
   ],
   plugins: ['react', 'react-hooks', 'jsx-a11y'],
   parserOptions: {
@@ -26,16 +25,16 @@ module.exports = {
     },
   },
   rules: {
-    // ===== PRETTIER FORMATTING RULES (DISABLED) =====
-    indent: 'off', // Prettier handles indentation
-    quotes: 'off', // Prettier handles quotes
-    semi: 'off', // Prettier handles semicolons
-    'comma-dangle': 'off', // Prettier handles trailing commas
-    'max-len': 'off', // Prettier handles line length
+    // ===== FORMATTING RULES =====
+    indent: ['warn', 2, { SwitchCase: 1 }],
+    quotes: ['error', 'single', { avoidEscape: true }],
+    semi: ['error', 'always'],
+    'comma-dangle': ['error', 'always-multiline'],
+    'max-len': ['warn', { code: 120, ignoreUrls: true }],
 
-    // React kuralları - React 17+ uyumlu
-    'react/jsx-uses-react': 'off', // React 17+ için gerekli değil
-    'react/react-in-jsx-scope': 'off', // React 17+ için gerekli değil
+    // React kuralları - MMM95 Projesi için React import ZORUNLU
+    'react/jsx-uses-react': 'error', // React import zorunlu - MMM95
+    'react/react-in-jsx-scope': 'error', // React import zorunlu - MMM95
     'react/jsx-uses-vars': 'error',
     'react/jsx-no-undef': 'error',
     'react/jsx-no-duplicate-props': 'error',
@@ -106,10 +105,6 @@ module.exports = {
     eqeqeq: ['error', 'always'],
     curly: ['error', 'all'],
     'brace-style': ['error', '1tbs'],
-    indent: ['warn', 2, { SwitchCase: 1 }],
-    quotes: ['error', 'single', { avoidEscape: true }],
-    semi: ['error', 'always'],
-    'comma-dangle': ['error', 'always-multiline'],
     'object-curly-spacing': ['error', 'always'],
     'array-bracket-spacing': ['error', 'never'],
     'key-spacing': ['error', { beforeColon: false, afterColon: true }],

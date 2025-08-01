@@ -31,8 +31,10 @@ import {
   Settings as SettingsIcon,
   Logout as LogoutIcon,
   Build as BuildIcon,
+  Notifications as NotificationsIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import { inventoryAPI } from '../services/api';
 
 // Import unified sidebar components - spageti kod çözümü
@@ -66,6 +68,8 @@ const Layout = () => {
     currentShift,
     endCurrentShift,
   } = useAuth();
+
+  const { unreadCount, markAllAsRead } = useNotifications();
 
   const menuItems = getAccessibleMenuItems();
 
@@ -230,6 +234,18 @@ const Layout = () => {
             </Badge>
           )}
 
+          {/* Notification Badge */}
+          <IconButton
+            color='inherit'
+            onClick={() => markAllAsRead()}
+            sx={{ mr: { xs: 1, md: 2 } }}
+            title={`${unreadCount} okunmamış bildirim`}
+          >
+            <Badge badgeContent={unreadCount} color='error' max={99}>
+              <NotificationsIcon />
+            </Badge>
+          </IconButton>
+
           {/* User Info - Desktop Only */}
           {!isMobile && (
             <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
@@ -381,16 +397,29 @@ const Layout = () => {
               <Typography variant='body2' sx={{ fontWeight: 'bold' }}>
                 Aktif Makinalar:
               </Typography>
-              {selectedMachines.map(machine => (
-                <Chip
-                  key={machine._id}
-                  label={`${machine.kod} - ${machine.ad}`}
-                  color='primary'
-                  variant='outlined'
-                  size='small'
-                  sx={{ fontSize: '0.75rem' }}
-                />
-              ))}
+              {selectedMachines.map(machine => {
+                // Model Kodu / Tipi bilgisini al
+                const modelKodu =
+                  machine.dinamikAlanlar?.['Model Kodu / Tipi'] ||
+                  machine.dinamikAlanlar?.['model kodu / tipi'] ||
+                  machine.dinamikAlanlar?.modelKodu;
+
+                // Chip label'ını oluştur
+                const chipLabel = modelKodu
+                  ? `${machine.kod} - ${machine.ad} (${modelKodu})`
+                  : `${machine.kod} - ${machine.ad}`;
+
+                return (
+                  <Chip
+                    key={machine._id}
+                    label={chipLabel}
+                    color='primary'
+                    variant='outlined'
+                    size='small'
+                    sx={{ fontSize: '0.75rem' }}
+                  />
+                );
+              })}
               <Button
                 size='small'
                 variant='outlined'
@@ -521,13 +550,28 @@ const Layout = () => {
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {selected.map(value => {
                       const machine = machines.find(m => m._id === value);
-                      return machine ? (
+                      if (!machine) {
+                        return null;
+                      }
+
+                      // Model Kodu / Tipi bilgisini al
+                      const modelKodu =
+                        machine.dinamikAlanlar?.['Model Kodu / Tipi'] ||
+                        machine.dinamikAlanlar?.['model kodu / tipi'] ||
+                        machine.dinamikAlanlar?.modelKodu;
+
+                      // Chip label'ını oluştur
+                      const chipLabel = modelKodu
+                        ? `${machine.kod} - ${machine.ad} (${modelKodu})`
+                        : `${machine.kod} - ${machine.ad}`;
+
+                      return (
                         <Chip
                           key={machine._id}
-                          label={`${machine.kod} - ${machine.ad}`}
+                          label={chipLabel}
                           size='small'
                         />
-                      ) : null;
+                      );
                     })}
                   </Box>
                 )}
@@ -542,7 +586,38 @@ const Layout = () => {
                     <ListItemText
                       primary={`${machine.kod} - ${machine.ad}`}
                       secondary={
-                        machine.lokasyon ? `Lokasyon: ${machine.lokasyon}` : ''
+                        <>
+                          {/* Model Kodu / Tipi */}
+                          {(machine.dinamikAlanlar?.['Model Kodu / Tipi'] ||
+                            machine.dinamikAlanlar?.['model kodu / tipi'] ||
+                            machine.dinamikAlanlar?.modelKodu) && (
+                            <span style={{ color: '#1976d2', fontWeight: 500 }}>
+                              <span role='img' aria-label='tool'>
+                                🔧
+                              </span>{' '}
+                              {machine.dinamikAlanlar['Model Kodu / Tipi'] ||
+                                machine.dinamikAlanlar['model kodu / tipi'] ||
+                                machine.dinamikAlanlar.modelKodu}
+                            </span>
+                          )}
+                          {/* Lokasyon (eğer var ise) */}
+                          {machine.lokasyon && (
+                            <span
+                              style={{
+                                marginLeft: machine.dinamikAlanlar?.[
+                                  'Model Kodu / Tipi'
+                                ]
+                                  ? ' • '
+                                  : '',
+                              }}
+                            >
+                              <span role='img' aria-label='location'>
+                                📍
+                              </span>{' '}
+                              {machine.lokasyon}
+                            </span>
+                          )}
+                        </>
                       }
                     />
                   </MenuItem>

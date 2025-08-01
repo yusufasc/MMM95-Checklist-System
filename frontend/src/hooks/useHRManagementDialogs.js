@@ -41,13 +41,13 @@ export const useHRManagementDialogs = () => {
       // Backend'den gelen hedef rolleri ID'lere çevir
       const hedefRolIds = template.hedefRoller
         ? template.hedefRoller
-            .map(rol => {
-              if (typeof rol === 'object' && rol._id) {
-                return rol._id;
-              }
-              return rol;
-            })
-            .filter(Boolean)
+          .map(rol => {
+            if (typeof rol === 'object' && rol._id) {
+              return rol._id;
+            }
+            return rol;
+          })
+          .filter(Boolean)
         : [];
 
       setTemplateForm({

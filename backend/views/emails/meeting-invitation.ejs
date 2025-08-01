@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toplantı Daveti</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1976d2, #42a5f5);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px 20px;
+        }
+        
+        .meeting-info {
+            background: #f8f9fa;
+            border-left: 4px solid #1976d2;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .meeting-info h2 {
+            color: #1976d2;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .info-item {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            min-width: 120px;
+            display: inline-block;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+        
+        .agenda {
+            margin: 20px 0;
+        }
+        
+        .agenda h3 {
+            color: #1976d2;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .agenda-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .agenda-item {
+            background: #e3f2fd;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            border-left: 3px solid #1976d2;
+        }
+        
+        .buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 0 10px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #1976d2;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1565c0;
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .footer p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .info-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .info-label {
+                min-width: auto;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📅 Toplantı Daveti</h1>
+            <p><%= companyName %></p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <p>Merhaba,</p>
+            <p><strong><%= organizerName %></strong> tarafından düzenlenen toplantıya davet edildiniz.</p>
+
+            <!-- Meeting Information -->
+            <div class="meeting-info">
+                <h2><%= meeting.baslik %></h2>
+                
+                <div class="info-item">
+                    <span class="info-label">🗓️ Tarih:</span>
+                    <span class="info-value"><%= meetingDate %></span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">⏰ Saat:</span>
+                    <span class="info-value"><%= meetingTime %></span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">📍 Lokasyon:</span>
+                    <span class="info-value"><%= location %></span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">👤 Organizatör:</span>
+                    <span class="info-value"><%= organizerName %></span>
+                </div>
+                
+                <% if (meeting.kategori) { %>
+                <div class="info-item">
+                    <span class="info-label">🏷️ Kategori:</span>
+                    <span class="info-value"><%= meeting.kategori %></span>
+                </div>
+                <% } %>
+            </div>
+
+            <!-- Meeting Description -->
+            <% if (meeting.aciklama) { %>
+            <div style="margin: 20px 0;">
+                <h3 style="color: #1976d2; margin-bottom: 10px;">📝 Açıklama</h3>
+                <p style="background: #f8f9fa; padding: 15px; border-radius: 5px; color: #555;">
+                    <%= meeting.aciklama %>
+                </p>
+            </div>
+            <% } %>
+
+            <!-- Agenda -->
+            <% if (agenda && agenda.length > 0) { %>
+            <div class="agenda">
+                <h3>📋 Gündem</h3>
+                <ul class="agenda-list">
+                    <% agenda.forEach(function(item, index) { %>
+                    <li class="agenda-item">
+                        <strong><%= index + 1 %>.</strong> <%= item.baslik %>
+                        <% if (item.sure) { %>
+                        <span style="color: #666; font-size: 12px; float: right;">
+                            (<%= item.sure %> dk)
+                        </span>
+                        <% } %>
+                    </li>
+                    <% }); %>
+                </ul>
+            </div>
+            <% } %>
+
+            <!-- Action Buttons -->
+            <div class="buttons">
+                <a href="<%= meetingUrl %>" class="btn btn-primary">
+                    🔗 Toplantı Detaylarını Görüntüle
+                </a>
+            </div>
+
+            <!-- Additional Info -->
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin: 20px 0;">
+                <p style="margin: 0; color: #856404;">
+                    <strong>💡 Not:</strong> 
+                    Toplantıya katılım durumunuzu lütfen sisteme giriş yaparak güncelleyin.
+                    Herhangi bir sorunuz varsa organizatör ile iletişime geçebilirsiniz.
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong><%= companyName %></strong></p>
+            <p>Bu email otomatik olarak gönderilmiştir.</p>
+            <p style="font-size: 12px; color: #999;">
+                Eğer bu toplantıya katılamayacaksanız, lütfen organizatöre bilgi verin.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

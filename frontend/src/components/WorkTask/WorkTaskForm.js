@@ -166,11 +166,35 @@ const WorkTaskForm = ({
                   onChange={e => handleInputChange('makina', e.target.value)}
                   label='Makina'
                 >
-                  {makinalar.map(makina => (
-                    <MenuItem key={makina._id} value={makina._id}>
-                      {makina.kod} - {makina.ad}
-                    </MenuItem>
-                  ))}
+                  {makinalar.map(makina => {
+                    // Model Kodu / Tipi bilgisini al
+                    const modelKodu =
+                      makina.dinamikAlanlar?.['Model Kodu / Tipi'] ||
+                      makina.dinamikAlanlar?.['model kodu / tipi'] ||
+                      makina.dinamikAlanlar?.modelKodu;
+
+                    return (
+                      <MenuItem key={makina._id} value={makina._id}>
+                        <Box>
+                          <Typography variant='body2'>
+                            {makina.kod} - {makina.ad}
+                          </Typography>
+                          {modelKodu && (
+                            <Typography
+                              variant='caption'
+                              color='primary'
+                              sx={{ fontWeight: 500 }}
+                            >
+                              <span role='img' aria-label='tool'>
+                                🔧
+                              </span>{' '}
+                              {modelKodu}
+                            </Typography>
+                          )}
+                        </Box>
+                      </MenuItem>
+                    );
+                  })}
                 </Select>
               </FormControl>
             </Grid>
@@ -415,8 +439,8 @@ const WorkTaskForm = ({
                 <Typography variant='body1' gutterBottom>
                   {formData.makinaBaslatmaSaati
                     ? new Date(formData.makinaBaslatmaSaati).toLocaleString(
-                        'tr-TR',
-                      )
+                      'tr-TR',
+                    )
                     : 'Belirlenmemiş'}
                 </Typography>
               </Grid>

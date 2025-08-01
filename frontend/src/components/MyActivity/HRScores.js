@@ -235,11 +235,11 @@ const HRScores = ({ hrScores, loading, error }) => {
               <Typography variant='h4'>
                 {hrScores.length > 0
                   ? Math.round(
-                      hrScores.reduce(
-                        (sum, item) => sum + (item.puanlar?.toplam || 0),
-                        0,
-                      ) / hrScores.length,
-                    )
+                    hrScores.reduce(
+                      (sum, item) => sum + (item.puanlar?.toplam || 0),
+                      0,
+                    ) / hrScores.length,
+                  )
                   : 0}
               </Typography>
             </CardContent>
@@ -437,9 +437,9 @@ const HRScores = ({ hrScores, loading, error }) => {
                       {/* Mesai/devamsızlık saat detaylarını gizle */}
                       {item.tip === 'hr_mesai' || item.tip === 'hr_devamsizlik'
                         ? item.aciklama
-                            .replace(/\d+\s*(saat|gün|gun)/gi, '')
-                            .replace(/(\s*-\s*){2,}/g, ' - ')
-                            .trim()
+                          .replace(/\d+\s*(saat|gün|gun)/gi, '')
+                          .replace(/(\s*-\s*){2,}/g, ' - ')
+                          .trim()
                         : item.aciklama}
                     </Typography>
                   </Paper>
@@ -471,8 +471,8 @@ const HRScores = ({ hrScores, loading, error }) => {
                         const basariYuzdesi =
                           detay.maksimumPuan > 0
                             ? Math.round(
-                                (detay.puan / detay.maksimumPuan) * 100,
-                              )
+                              (detay.puan / detay.maksimumPuan) * 100,
+                            )
                             : 0;
                         const durum =
                           basariYuzdesi >= 90
@@ -644,17 +644,17 @@ const HRScores = ({ hrScores, loading, error }) => {
                             0,
                           ) > 0
                             ? Math.round(
-                                (item.sablonDetaylari.reduce(
-                                  (sum, detay) => sum + (detay.puan || 0),
-                                  0,
-                                ) /
+                              (item.sablonDetaylari.reduce(
+                                (sum, detay) => sum + (detay.puan || 0),
+                                0,
+                              ) /
                                   item.sablonDetaylari.reduce(
                                     (sum, detay) =>
                                       sum + (detay.maksimumPuan || 0),
                                     0,
                                   )) *
                                   100,
-                              )
+                            )
                             : 0}
                           %)
                         </span>

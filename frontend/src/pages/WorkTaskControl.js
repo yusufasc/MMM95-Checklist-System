@@ -145,8 +145,8 @@ const WorkTaskControl = () => {
     );
     const filteredTasks = getFilteredControlData
       ? Object.values(getFilteredControlData).flatMap(
-          machineData => machineData.tasks,
-        )
+        machineData => machineData.tasks,
+      )
       : [];
 
     return {
@@ -488,28 +488,28 @@ const WorkTaskControl = () => {
           {/* Debug Info (Development Only) */}
           {typeof process !== 'undefined' &&
             process.env?.NODE_ENV === 'development' && (
-              <Paper sx={{ p: 2, mb: 2, bgcolor: 'info.50', borderRadius: 2 }}>
-                <Typography variant='h6' gutterBottom>
-                  <AssessmentIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+            <Paper sx={{ p: 2, mb: 2, bgcolor: 'info.50', borderRadius: 2 }}>
+              <Typography variant='h6' gutterBottom>
+                <AssessmentIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
                   Debug - İşe Bağlı Görev İstatistikleri
-                </Typography>
-                <Typography variant='body2'>
+              </Typography>
+              <Typography variant='body2'>
                   Toplam makina: {Object.keys(controlData).length} |
                   Filtrelenmiş makina:{' '}
-                  {getFilteredControlData
-                    ? Object.keys(getFilteredControlData).length
-                    : 0}{' '}
+                {getFilteredControlData
+                  ? Object.keys(getFilteredControlData).length
+                  : 0}{' '}
                   | Aktif Tab: {activeTab === 0 ? 'Puanlanacak' : 'Puanlanmış'}
-                </Typography>
-                {Object.entries(controlData).map(
-                  ([machineKey, machineData]) => (
-                    <Typography key={machineKey} variant='body2'>
-                      {machineKey}: {machineData.tasks.length} WorkTask
-                    </Typography>
-                  ),
-                )}
-              </Paper>
-            )}
+              </Typography>
+              {Object.entries(controlData).map(
+                ([machineKey, machineData]) => (
+                  <Typography key={machineKey} variant='body2'>
+                    {machineKey}: {machineData.tasks.length} WorkTask
+                  </Typography>
+                ),
+              )}
+            </Paper>
+          )}
 
           {/* Tab Content */}
           <Box sx={{ mt: 2 }}>
@@ -562,77 +562,77 @@ const WorkTaskControl = () => {
             {/* Machine-based WorkTasks */}
             {!getFilteredControlData ||
             Object.keys(getFilteredControlData).length === 0 ? (
-              <Paper sx={{ p: 4, textAlign: 'center', bgcolor: 'grey.50' }}>
-                {activeTab === 0 ? (
-                  <ScheduleIcon
-                    sx={{ fontSize: 60, color: 'grey.400', mb: 2 }}
-                  />
-                ) : (
-                  <CheckCircleIcon
-                    sx={{ fontSize: 60, color: 'grey.400', mb: 2 }}
-                  />
-                )}
-                <Typography variant='h6' color='text.secondary' gutterBottom>
-                  {activeTab === 0
-                    ? 'Puanlanacak Görev Bulunmuyor'
-                    : 'Puanlanmış Görev Bulunmuyor'}
-                </Typography>
-                <Typography variant='body2' color='text.secondary'>
-                  {activeTab === 0
-                    ? 'Seçtiğiniz makinelerde puanlama bekleyen kalıp değişim görevi bulunamadı.'
-                    : 'Seçtiğiniz makinelerde puanlanmış kalıp değişim görevi bulunamadı.'}
-                </Typography>
-              </Paper>
-            ) : (
-              Object.entries(getFilteredControlData).map(
-                ([machineKey, machineData]) => (
-                  <Paper key={machineKey} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-                    {/* Machine Header */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                      <BuildIcon sx={{ mr: 2, color: 'primary.main' }} />
-                      <Box>
-                        <Typography variant='h6' sx={{ fontWeight: 'bold' }}>
-                          {machineData.machine?.ad || machineKey}
-                        </Typography>
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            mt: 0.5,
-                          }}
-                        >
-                          <Typography variant='body2' color='text.secondary'>
-                            Makina Kodu:{' '}
-                            {machineData.machine?.envanterKodu || 'N/A'}
+                <Paper sx={{ p: 4, textAlign: 'center', bgcolor: 'grey.50' }}>
+                  {activeTab === 0 ? (
+                    <ScheduleIcon
+                      sx={{ fontSize: 60, color: 'grey.400', mb: 2 }}
+                    />
+                  ) : (
+                    <CheckCircleIcon
+                      sx={{ fontSize: 60, color: 'grey.400', mb: 2 }}
+                    />
+                  )}
+                  <Typography variant='h6' color='text.secondary' gutterBottom>
+                    {activeTab === 0
+                      ? 'Puanlanacak Görev Bulunmuyor'
+                      : 'Puanlanmış Görev Bulunmuyor'}
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    {activeTab === 0
+                      ? 'Seçtiğiniz makinelerde puanlama bekleyen kalıp değişim görevi bulunamadı.'
+                      : 'Seçtiğiniz makinelerde puanlanmış kalıp değişim görevi bulunamadı.'}
+                  </Typography>
+                </Paper>
+              ) : (
+                Object.entries(getFilteredControlData).map(
+                  ([machineKey, machineData]) => (
+                    <Paper key={machineKey} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+                      {/* Machine Header */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                        <BuildIcon sx={{ mr: 2, color: 'primary.main' }} />
+                        <Box>
+                          <Typography variant='h6' sx={{ fontWeight: 'bold' }}>
+                            {machineData.machine?.ad || machineKey}
                           </Typography>
-                          <Chip
-                            label={`${machineData.tasks.length} ${activeTab === 0 ? 'Puanlanacak' : 'Puanlanmış'} Görev`}
-                            size='small'
-                            color={activeTab === 0 ? 'warning' : 'success'}
-                            variant='outlined'
-                          />
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                              mt: 0.5,
+                            }}
+                          >
+                            <Typography variant='body2' color='text.secondary'>
+                            Makina Kodu:{' '}
+                              {machineData.machine?.envanterKodu || 'N/A'}
+                            </Typography>
+                            <Chip
+                              label={`${machineData.tasks.length} ${activeTab === 0 ? 'Puanlanacak' : 'Puanlanmış'} Görev`}
+                              size='small'
+                              color={activeTab === 0 ? 'warning' : 'success'}
+                              variant='outlined'
+                            />
+                          </Box>
                         </Box>
                       </Box>
-                    </Box>
 
-                    {/* WorkTask Cards */}
-                    <Grid container spacing={2}>
-                      {machineData.tasks.map(task => (
-                        <Grid item xs={12} md={6} lg={4} key={task._id}>
-                          <TaskCard
-                            task={task}
-                            hasChecklistPermission={activeTab === 0} // Sadece puanlanacak görevlerde puanlama izni
-                            onScoreTask={openScoreDialog}
-                            isMobile={false}
-                          />
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </Paper>
-                ),
-              )
-            )}
+                      {/* WorkTask Cards */}
+                      <Grid container spacing={2}>
+                        {machineData.tasks.map(task => (
+                          <Grid item xs={12} md={6} lg={4} key={task._id}>
+                            <TaskCard
+                              task={task}
+                              hasChecklistPermission={activeTab === 0} // Sadece puanlanacak görevlerde puanlama izni
+                              onScoreTask={openScoreDialog}
+                              isMobile={false}
+                            />
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </Paper>
+                  ),
+                )
+              )}
           </Box>
         </>
       )}

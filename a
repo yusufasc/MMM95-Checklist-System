@@ -1,0 +1,18 @@
+warning: in the working copy of 'MMM95.code-workspace', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/routes/inventory.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/.eslintrc.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/config/apiConfig.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/hooks/useInventoryData.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/services/api.js', LF will be replaced by CRLF the next time Git touches it
+ .cursor/settings.json                              | 14 [32m++[m[31m--[m
+ MMM95.code-workspace                               | 20 [32m+++[m[31m--[m
+ backend/routes/inventory.js                        | 74 [32m++++++++++++++[m[31m----[m
+ frontend/.eslintrc.js                              |  6 [32m+[m[31m-[m
+ frontend/package.json                              |  2 [32m+[m[31m-[m
+ .../src/components/Inventory/InventoryTable.js     | 90 [32m++++++++++++++[m[31m--------[m
+ frontend/src/config/apiConfig.js                   |  2 [32m+[m[31m-[m
+ frontend/src/hooks/useInventoryData.js             |  6 [32m+[m[31m-[m
+ frontend/src/pages/Inventory.js                    | 66 [32m++++++++[m[31m--------[m
+ frontend/src/services/api.js                       |  2 [32m+[m[31m-[m
+ 10 files changed, 179 insertions(+), 103 deletions(-)

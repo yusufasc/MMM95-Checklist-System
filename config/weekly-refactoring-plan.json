@@ -1,0 +1,83 @@
+{
+  "week1": {
+    "title": "Kritik Dosyalar",
+    "files": [],
+    "estimatedHours": 12
+  },
+  "week2": {
+    "title": "Yüksek Öncelik",
+    "files": [
+      {
+        "path": "frontend\\src\\pages\\HR.js",
+        "lines": 1837,
+        "size": 67749,
+        "priority": "high",
+        "reasons": [
+          "1837 satır - yüksek öncelik"
+        ]
+      },
+      {
+        "path": "frontend\\src\\pages\\WorkTasks.js",
+        "lines": 1770,
+        "size": 67224,
+        "priority": "high",
+        "reasons": [
+          "1770 satır - yüksek öncelik"
+        ]
+      }
+    ],
+    "estimatedHours": 10
+  },
+  "week3": {
+    "title": "Orta Öncelik",
+    "files": [
+      {
+        "path": "frontend\\src\\pages\\ControlPending.js",
+        "lines": 1362,
+        "size": 54656,
+        "priority": "medium",
+        "reasons": [
+          "1362 satır - orta öncelik"
+        ]
+      },
+      {
+        "path": "frontend\\src\\pages\\Tasks.js",
+        "lines": 1234,
+        "size": 45661,
+        "priority": "medium",
+        "reasons": [
+          "1234 satır - orta öncelik"
+        ]
+      },
+      {
+        "path": "frontend\\src\\pages\\Checklists.js",
+        "lines": 1181,
+        "size": 39565,
+        "priority": "medium",
+        "reasons": [
+          "1181 satır - orta öncelik"
+        ]
+      },
+      {
+        "path": "frontend\\src\\pages\\Dashboard.js",
+        "lines": 1077,
+        "size": 37510,
+        "priority": "medium",
+        "reasons": [
+          "1077 satır - orta öncelik"
+        ]
+      }
+    ],
+    "estimatedHours": 8
+  },
+  "week4": {
+    "title": "Test ve Optimizasyon",
+    "files": [],
+    "estimatedHours": 6,
+    "tasks": [
+      "Refactor edilen dosyaları test et",
+      "ESLint kurallarını kontrol et",
+      "Performance ölçümü"
+    ]
+  }
+}

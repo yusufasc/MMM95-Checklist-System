@@ -212,9 +212,9 @@ class CrashReporter {
       timeOrigin: performance.timeOrigin,
       navigation: performance.navigation
         ? {
-            type: performance.navigation.type,
-            redirectCount: performance.navigation.redirectCount,
-          }
+          type: performance.navigation.type,
+          redirectCount: performance.navigation.redirectCount,
+        }
         : null,
     };
   }

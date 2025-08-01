@@ -342,8 +342,8 @@ const OrtaDashboard = () => {
                               <AccessTimeIcon sx={{ fontSize: 12, mr: 0.5 }} />
                               {task.tamamlanmaTarihi
                                 ? new Date(
-                                    task.tamamlanmaTarihi,
-                                  ).toLocaleDateString('tr-TR')
+                                  task.tamamlanmaTarihi,
+                                ).toLocaleDateString('tr-TR')
                                 : 'Tarih yok'}
                             </Typography>
                           </Box>

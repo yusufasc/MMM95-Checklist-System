@@ -71,10 +71,10 @@ const ModernDashboardCard = ({
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         '&:hover': onClick
           ? {
-              transform: 'translateY(-4px)',
-              boxShadow: `0 12px 40px ${alpha(currentColor.iconBg, 0.15)}`,
-              borderColor: alpha(currentColor.iconBg, 0.3),
-            }
+            transform: 'translateY(-4px)',
+            boxShadow: `0 12px 40px ${alpha(currentColor.iconBg, 0.15)}`,
+            borderColor: alpha(currentColor.iconBg, 0.3),
+          }
           : {},
       }}
     >

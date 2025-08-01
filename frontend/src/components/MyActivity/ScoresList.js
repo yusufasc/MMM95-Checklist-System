@@ -274,10 +274,10 @@ const ScoresList = ({
                         <strong>Tarih:</strong>{' '}
                         {score.degerlendirmeTarihi
                           ? format(
-                              new Date(score.degerlendirmeTarihi),
-                              'dd MMMM yyyy',
-                              { locale: tr },
-                            )
+                            new Date(score.degerlendirmeTarihi),
+                            'dd MMMM yyyy',
+                            { locale: tr },
+                          )
                           : 'Belirtilmemiş'}
                       </Typography>
                     </Box>

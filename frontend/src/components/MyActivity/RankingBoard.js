@@ -375,11 +375,11 @@ const RankingBoard = ({ user, filters }) => {
                   <Typography variant='h6' color='primary'>
                     {siralamalar.length > 0
                       ? Math.round(
-                          siralamalar.reduce(
-                            (sum, r) => sum + (r.toplamPuan || 0),
-                            0,
-                          ) / siralamalar.length,
-                        )
+                        siralamalar.reduce(
+                          (sum, r) => sum + (r.toplamPuan || 0),
+                          0,
+                        ) / siralamalar.length,
+                      )
                       : 0}
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>

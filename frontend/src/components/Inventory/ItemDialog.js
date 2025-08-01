@@ -88,9 +88,7 @@ const ItemDialog = ({
     setLoading(true);
     try {
       const submitData = { ...formData };
-      if (!submitData.envanterKodu?.trim()) {
-        delete submitData.envanterKodu;
-      }
+      // Backend otomatik kod oluşturacağı için silmeyelim
       await onSave(submitData);
       onClose();
     } catch (error) {

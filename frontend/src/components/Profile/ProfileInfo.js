@@ -107,14 +107,14 @@ const ProfileInfo = ({ user }) => {
                   <Typography component='div' sx={{ mt: 1 }}>
                     {user?.roller?.length > 0
                       ? user.roller.map(role => (
-                          <Chip
-                            key={role._id}
-                            label={role.ad}
-                            size='small'
-                            sx={{ mr: 1, mb: 1 }}
-                            color='primary'
-                          />
-                        ))
+                        <Chip
+                          key={role._id}
+                          label={role.ad}
+                          size='small'
+                          sx={{ mr: 1, mb: 1 }}
+                          color='primary'
+                        />
+                      ))
                       : 'Rol atanmamış'}
                   </Typography>
                 }
@@ -131,14 +131,14 @@ const ProfileInfo = ({ user }) => {
                   <Typography component='div' sx={{ mt: 1 }}>
                     {user?.departmanlar?.length > 0
                       ? user.departmanlar.map(dept => (
-                          <Chip
-                            key={dept._id}
-                            label={dept.ad}
-                            size='small'
-                            sx={{ mr: 1, mb: 1 }}
-                            color='secondary'
-                          />
-                        ))
+                        <Chip
+                          key={dept._id}
+                          label={dept.ad}
+                          size='small'
+                          sx={{ mr: 1, mb: 1 }}
+                          color='secondary'
+                        />
+                      ))
                       : 'Departman atanmamış'}
                   </Typography>
                 }

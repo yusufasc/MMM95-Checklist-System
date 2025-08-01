@@ -88,6 +88,8 @@ router.get(
         kategoriId,
         durum,
         search,
+        lokasyon,
+        sorumluKisi,
         sayfa = 1,
         limit = 20,
         sirala = 'olusturmaTarihi',
@@ -96,6 +98,13 @@ router.get(
 
       console.log('📦 Inventory items endpoint çağrıldı');
       console.log('Query parametreleri:', req.query);
+      console.log('🔍 Filtreleme parametreleri:', {
+        kategoriId,
+        durum,
+        search,
+        lokasyon,
+        sorumluKisi,
+      });
 
       // Parametreleri düzelt
       const page = parseInt(sayfa);
@@ -111,6 +120,14 @@ router.get(
 
       if (durum) {
         filter.durum = durum;
+      }
+
+      if (lokasyon) {
+        filter.lokasyon = { $regex: lokasyon, $options: 'i' };
+      }
+
+      if (sorumluKisi) {
+        filter.sorumluKisi = sorumluKisi;
       }
 
       // Arama filtresi - model field isimlerini kullan
@@ -168,7 +185,7 @@ router.get(
     try {
       const item = await InventoryItem.findById(req.params.id)
         .populate('kategoriId', 'ad renk ikon')
-        .populate('olusturanId', 'username email')
+        .populate('olusturanKullanici', 'username email')
         .populate('guncelleyenId', 'username email');
 
       if (!item) {
@@ -199,6 +216,9 @@ router.post(
   validateInventoryItem,
   async (req, res) => {
     try {
+      console.log('📦 POST /inventory/items çağrıldı');
+      console.log('🔍 Request body:', JSON.stringify(req.body, null, 2));
+
       const {
         kod,
         ad,
@@ -212,12 +232,27 @@ router.post(
         barkod,
       } = req.body;
 
-      // Kod benzersizlik kontrolü
-      if (kod) {
-        const existingItem = await InventoryItem.findOne({ envanterKodu: kod });
-        if (existingItem) {
-          return res.status(400).json({ message: 'Bu kod zaten kullanılıyor' });
-        }
+      // Envanter kodu otomatik oluştur veya kontrol et
+      let envanterKodu = kod;
+      if (!envanterKodu || envanterKodu.trim() === '') {
+        // Otomatik kod oluştur: kategori kısaltması + timestamp + random
+        const kategori = await InventoryCategory.findById(kategoriId);
+        const kategoriKisaltma = kategori
+          ? kategori.ad.substring(0, 3).toUpperCase()
+          : 'INV';
+        const timestamp = Date.now().toString().slice(-6); // Son 6 digit
+        const random = Math.floor(Math.random() * 100)
+          .toString()
+          .padStart(2, '0');
+        envanterKodu = `${kategoriKisaltma}-${timestamp}-${random}`;
+      }
+
+      // Envanter kodu benzersizlik kontrolü
+      const existingItem = await InventoryItem.findOne({ envanterKodu });
+      if (existingItem) {
+        return res
+          .status(400)
+          .json({ message: 'Bu envanter kodu zaten kullanılıyor' });
       }
 
       // QR kod benzersizlik kontrolü
@@ -241,17 +276,17 @@ router.post(
       }
 
       const item = new InventoryItem({
-        kod,
+        envanterKodu, // Otomatik oluşturulan veya gönderilen kod
         ad,
         aciklama,
         kategoriId,
-        durum: durum || 'Aktif',
+        durum: durum || 'aktif', // enum'a uygun küçük harf
         dinamikAlanlar: dinamikAlanlar || {},
         etiketler: etiketler || [],
         resimUrl,
         qrKodu,
         barkod,
-        olusturanId: req.user.id,
+        olusturanKullanici: req.user.id, // olusturanId -> olusturanKullanici field mapping
       });
 
       await item.save();
@@ -259,7 +294,7 @@ router.post(
       // Populate ile geri döndür
       const populatedItem = await InventoryItem.findById(item._id)
         .populate('kategoriId', 'ad renk ikon')
-        .populate('olusturanId', 'username');
+        .populate('olusturanKullanici', 'username');
 
       res.json(populatedItem);
     } catch (error) {
@@ -292,11 +327,13 @@ router.put(
       // Benzersizlik kontrolleri (kendi dışında)
       if (kod) {
         const existingItem = await InventoryItem.findOne({
-          kod,
+          envanterKodu: kod,
           _id: { $ne: req.params.id },
         });
         if (existingItem) {
-          return res.status(400).json({ message: 'Bu kod zaten kullanılıyor' });
+          return res
+            .status(400)
+            .json({ message: 'Bu envanter kodu zaten kullanılıyor' });
         }
       }
 
@@ -327,7 +364,7 @@ router.put(
       const item = await InventoryItem.findByIdAndUpdate(
         req.params.id,
         {
-          kod,
+          envanterKodu: kod, // kod -> envanterKodu field mapping
           ad,
           aciklama,
           durum,
@@ -336,8 +373,7 @@ router.put(
           resimUrl,
           qrKodu,
           barkod,
-          guncelleyenId: req.user.id,
-          guncellenmeTarihi: Date.now(),
+          guncellemeTarihi: Date.now(), // model field adını kullan
         },
         { new: true },
       )

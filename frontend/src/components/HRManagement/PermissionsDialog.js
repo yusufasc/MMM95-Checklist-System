@@ -184,145 +184,145 @@ const PermissionsDialog = ({
                 {/* Role Selection for User Management Permissions */}
                 {permission.hasRoleSelection &&
                   selectedPermissions[permission.key] && (
-                    <Box sx={{ mt: 2 }}>
-                      <Paper
-                        elevation={1}
+                  <Box sx={{ mt: 2 }}>
+                    <Paper
+                      elevation={1}
+                      sx={{
+                        p: 3,
+                        bgcolor: `${permission.color}.light`,
+                        borderRadius: 2,
+                        border: `1px solid ${permission.color}.main`,
+                      }}
+                    >
+                      <Typography
+                        variant='body1'
+                        fontWeight='bold'
+                        gutterBottom
+                        sx={{ mb: 2 }}
+                      >
+                        {permission.key === 'kullaniciAcabilir'
+                          ? 'Açabileceği Roller:'
+                          : 'Silebildiği Roller:'}
+                      </Typography>
+
+                      <Box
                         sx={{
-                          p: 3,
-                          bgcolor: `${permission.color}.light`,
-                          borderRadius: 2,
-                          border: `1px solid ${permission.color}.main`,
+                          maxHeight: 250,
+                          overflowY: 'auto',
+                          pr: 1,
+                          '&::-webkit-scrollbar': {
+                            width: '8px',
+                          },
+                          '&::-webkit-scrollbar-track': {
+                            background: '#f1f1f1',
+                            borderRadius: '10px',
+                          },
+                          '&::-webkit-scrollbar-thumb': {
+                            background: permission.color + '.main',
+                            borderRadius: '10px',
+                          },
                         }}
                       >
-                        <Typography
-                          variant='body1'
-                          fontWeight='bold'
-                          gutterBottom
-                          sx={{ mb: 2 }}
-                        >
-                          {permission.key === 'kullaniciAcabilir'
-                            ? 'Açabileceği Roller:'
-                            : 'Silebildiği Roller:'}
-                        </Typography>
-
-                        <Box
-                          sx={{
-                            maxHeight: 250,
-                            overflowY: 'auto',
-                            pr: 1,
-                            '&::-webkit-scrollbar': {
-                              width: '8px',
-                            },
-                            '&::-webkit-scrollbar-track': {
-                              background: '#f1f1f1',
-                              borderRadius: '10px',
-                            },
-                            '&::-webkit-scrollbar-thumb': {
-                              background: permission.color + '.main',
-                              borderRadius: '10px',
-                            },
-                          }}
-                        >
-                          <Grid container spacing={1}>
-                            {roles.map(roleOption => (
-                              <Grid
-                                item
-                                xs={12}
-                                sm={6}
-                                lg={4}
-                                xl={3}
-                                key={roleOption._id}
-                              >
-                                <Paper
-                                  elevation={0}
-                                  sx={{
-                                    p: 1.5,
-                                    border: '1px solid',
-                                    borderColor: selectedPermissions[
-                                      permission.roleField
-                                    ]?.includes(roleOption._id)
-                                      ? `${permission.color}.main`
-                                      : 'grey.300',
-                                    borderRadius: 2,
-                                    bgcolor: selectedPermissions[
-                                      permission.roleField
-                                    ]?.includes(roleOption._id)
-                                      ? `${permission.color}.50`
-                                      : 'white',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s ease',
-                                    minHeight: '70px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    '&:hover': {
-                                      borderColor: `${permission.color}.main`,
-                                      transform: 'translateY(-1px)',
-                                      boxShadow: 1,
-                                    },
-                                  }}
-                                  onClick={() => {
-                                    const isChecked =
+                        <Grid container spacing={1}>
+                          {roles.map(roleOption => (
+                            <Grid
+                              item
+                              xs={12}
+                              sm={6}
+                              lg={4}
+                              xl={3}
+                              key={roleOption._id}
+                            >
+                              <Paper
+                                elevation={0}
+                                sx={{
+                                  p: 1.5,
+                                  border: '1px solid',
+                                  borderColor: selectedPermissions[
+                                    permission.roleField
+                                  ]?.includes(roleOption._id)
+                                    ? `${permission.color}.main`
+                                    : 'grey.300',
+                                  borderRadius: 2,
+                                  bgcolor: selectedPermissions[
+                                    permission.roleField
+                                  ]?.includes(roleOption._id)
+                                    ? `${permission.color}.50`
+                                    : 'white',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease',
+                                  minHeight: '70px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  '&:hover': {
+                                    borderColor: `${permission.color}.main`,
+                                    transform: 'translateY(-1px)',
+                                    boxShadow: 1,
+                                  },
+                                }}
+                                onClick={() => {
+                                  const isChecked =
                                       selectedPermissions[
                                         permission.roleField
                                       ]?.includes(roleOption._id) || false;
-                                    onRolePermissionChange(
-                                      permission.roleField,
-                                      roleOption._id,
-                                      !isChecked,
-                                    );
-                                  }}
-                                >
-                                  <FormControlLabel
-                                    control={
-                                      <Checkbox
-                                        checked={
+                                  onRolePermissionChange(
+                                    permission.roleField,
+                                    roleOption._id,
+                                    !isChecked,
+                                  );
+                                }}
+                              >
+                                <FormControlLabel
+                                  control={
+                                    <Checkbox
+                                      checked={
                                           selectedPermissions[
                                             permission.roleField
                                           ]?.includes(roleOption._id) || false
-                                        }
-                                        onChange={e => {
-                                          onRolePermissionChange(
-                                            permission.roleField,
-                                            roleOption._id,
-                                            e.target.checked,
-                                          );
+                                      }
+                                      onChange={e => {
+                                        onRolePermissionChange(
+                                          permission.roleField,
+                                          roleOption._id,
+                                          e.target.checked,
+                                        );
+                                      }}
+                                      color={permission.color}
+                                      size='small'
+                                    />
+                                  }
+                                  label={
+                                    <Box>
+                                      <Typography
+                                        variant='body2'
+                                        fontWeight='medium'
+                                        sx={{
+                                          wordBreak: 'break-word',
+                                          lineHeight: 1.2,
+                                          fontSize: '0.9rem',
                                         }}
-                                        color={permission.color}
-                                        size='small'
-                                      />
-                                    }
-                                    label={
-                                      <Box>
-                                        <Typography
-                                          variant='body2'
-                                          fontWeight='medium'
-                                          sx={{
-                                            wordBreak: 'break-word',
-                                            lineHeight: 1.2,
-                                            fontSize: '0.9rem',
-                                          }}
-                                        >
-                                          {roleOption.ad}
-                                        </Typography>
-                                      </Box>
-                                    }
-                                    sx={{
-                                      margin: 0,
+                                      >
+                                        {roleOption.ad}
+                                      </Typography>
+                                    </Box>
+                                  }
+                                  sx={{
+                                    margin: 0,
+                                    width: '100%',
+                                    '& .MuiFormControlLabel-label': {
+                                      fontSize: '0.875rem',
                                       width: '100%',
-                                      '& .MuiFormControlLabel-label': {
-                                        fontSize: '0.875rem',
-                                        width: '100%',
-                                      },
-                                    }}
-                                  />
-                                </Paper>
-                              </Grid>
-                            ))}
-                          </Grid>
-                        </Box>
-                      </Paper>
-                    </Box>
-                  )}
+                                    },
+                                  }}
+                                />
+                              </Paper>
+                            </Grid>
+                          ))}
+                        </Grid>
+                      </Box>
+                    </Paper>
+                  </Box>
+                )}
               </Paper>
             </Grid>
           ))}

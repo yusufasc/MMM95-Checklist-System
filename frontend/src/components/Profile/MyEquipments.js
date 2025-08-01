@@ -246,18 +246,18 @@ const MyEquipments = ({ assignments, onRefresh }) => {
 
                     {assignment.status !== 'returned' &&
                       assignment.expiresAt && (
-                        <Box sx={{ mt: 1 }}>
-                          <LinearProgress
-                            variant='determinate'
-                            value={usageProgress}
-                            color={statusInfo.color}
-                            sx={{ height: 6, borderRadius: 3 }}
-                          />
-                          <Typography variant='caption' color='text.secondary'>
+                      <Box sx={{ mt: 1 }}>
+                        <LinearProgress
+                          variant='determinate'
+                          value={usageProgress}
+                          color={statusInfo.color}
+                          sx={{ height: 6, borderRadius: 3 }}
+                        />
+                        <Typography variant='caption' color='text.secondary'>
                             %{Math.round(usageProgress)} kullanıldı
-                          </Typography>
-                        </Box>
-                      )}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
 
                   {/* Tarih Bilgileri */}
@@ -304,16 +304,16 @@ const MyEquipments = ({ assignments, onRefresh }) => {
 
                     {assignment.status === 'active' &&
                       statusInfo.color === 'warning' && (
-                        <Button
-                          size='small'
-                          variant='contained'
-                          color='warning'
-                          onClick={() => handleRequestExtension(assignment._id)}
-                          disabled={loading}
-                        >
+                      <Button
+                        size='small'
+                        variant='contained'
+                        color='warning'
+                        onClick={() => handleRequestExtension(assignment._id)}
+                        disabled={loading}
+                      >
                           Süre Uzat
-                        </Button>
-                      )}
+                      </Button>
+                    )}
                   </Box>
                 </CardContent>
               </Card>

@@ -137,10 +137,10 @@ export const statsWidgetConfigs = [
       stats.pendingApproval > 0
         ? { icon: 'WarningIcon', text: 'Hemen kontrol et!', urgent: true }
         : {
-            icon: 'CheckCircleIcon',
-            text: 'Tümü kontrol edildi',
-            success: true,
-          },
+          icon: 'CheckCircleIcon',
+          text: 'Tümü kontrol edildi',
+          success: true,
+        },
   },
 ];
 

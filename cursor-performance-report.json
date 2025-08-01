@@ -1,0 +1,265 @@
+{
+  "timestamp": "2025-08-01T12:47:40.624Z",
+  "analysis": {
+    "fileStructure": {
+      "totalFiles": 611,
+      "watchedFiles": 598,
+      "excludedFiles": 13,
+      "largeFiles": [
+        {
+          "path": "frontend\\package-lock.json",
+          "size": "1.01 MB"
+        }
+      ],
+      "directories": {
+        "nodeModules": 3,
+        "gitFiles": 1,
+        "buildFiles": 1,
+        "logFiles": 0
+      }
+    },
+    "processes": {
+      "cursorProcesses": [
+        {
+          "ProcessName": "Cursor",
+          "CPU": 2.21875,
+          "WorkingSet": 183283712,
+          "Id": 2856
+        },
+        {
+          "ProcessName": "Cursor",
+          "CPU": 0.125,
+          "WorkingSet": 99930112,
+          "Id": 3552
+        },
+        {
+          "ProcessName": "Cursor",
+          "CPU": 2.546875,
+          "WorkingSet": 348635136,
+          "Id": 5264
+        },
+        {
+          "ProcessName": "Cursor",
+          "CPU": 0.34375,
+          "WorkingSet": 116523008,
+          "Id": 5788
+        },
+        {
+          "ProcessName": "Cursor",
+          "CPU": 2.4375,
+          "WorkingSet": 143220736,
+          "Id": 6612
+        },
+        {
+          "ProcessName": "Cursor",
+          "CPU": 25.109375,
+          "WorkingSet": 848330752,
+          "Id": 7672
+        },
+        {
+          "ProcessName": "Cursor",
+          "CPU": 1.015625,
+          "WorkingSet": 135217152,
+          "Id": 12176
+        },
+        {
+          "ProcessName": "Cursor",
+          "CPU": 0.015625,
+          "WorkingSet": 39178240,
+          "Id": 14640
+        },
+        {
+          "ProcessName": "Cursor",
+          "CPU": 6.375,
+          "WorkingSet": 539967488,
+          "Id": 18412
+        },
+        {
+          "ProcessName": "Cursor",
+          "CPU": 2.65625,
+          "WorkingSet": 189939712,
+          "Id": 21000
+        },
+        {
+          "ProcessName": "Cursor",
+          "CPU": 0.515625,
+          "WorkingSet": 132227072,
+          "Id": 22472
+        },
+        {
+          "ProcessName": "Cursor",
+          "CPU": 0.234375,
+          "WorkingSet": 127016960,
+          "Id": 23148
+        },
+        {
+          "ProcessName": "Cursor",
+          "CPU": 0.125,
+          "WorkingSet": 102727680,
+          "Id": 25568
+        },
+        {
+          "ProcessName": "Cursor",
+          "CPU": 0.109375,
+          "WorkingSet": 56741888,
+          "Id": 25572
+        }
+      ],
+      "nodeProcesses": [
+        {
+          "ProcessName": "node",
+          "CPU": 0.078125,
+          "WorkingSet": 52310016,
+          "Id": 5932
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.09375,
+          "WorkingSet": 59936768,
+          "Id": 8664
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.046875,
+          "WorkingSet": 61308928,
+          "Id": 10068
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.109375,
+          "WorkingSet": 53440512,
+          "Id": 10840
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.265625,
+          "WorkingSet": 74698752,
+          "Id": 11852
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.5625,
+          "WorkingSet": 73314304,
+          "Id": 17888
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.65625,
+          "WorkingSet": 78176256,
+          "Id": 17896
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.515625,
+          "WorkingSet": 76853248,
+          "Id": 17904
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.515625,
+          "WorkingSet": 76767232,
+          "Id": 19552
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.5625,
+          "WorkingSet": 78479360,
+          "Id": 19768
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.109375,
+          "WorkingSet": 57593856,
+          "Id": 20308
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.0625,
+          "WorkingSet": 52928512,
+          "Id": 22828
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.34375,
+          "WorkingSet": 92577792,
+          "Id": 23316
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.375,
+          "WorkingSet": 93904896,
+          "Id": 23680
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.046875,
+          "WorkingSet": 59469824,
+          "Id": 24000
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.546875,
+          "WorkingSet": 93384704,
+          "Id": 25204
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.453125,
+          "WorkingSet": 95150080,
+          "Id": 25540
+        },
+        {
+          "ProcessName": "node",
+          "CPU": 0.078125,
+          "WorkingSet": 51634176,
+          "Id": 26568
+        }
+      ],
+      "totalMemoryUsage": 4344868864
+    },
+    "extensions": {
+      "recommendations": [
+        "dbaeumer.vscode-eslint"
+      ],
+      "unwanted": [
+        "ms-vscode.vscode-typescript-next",
+        "eamodio.gitlens",
+        "gruntfuggly.todo-tree",
+        "pkief.material-icon-theme",
+        "christian-kohler.npm-intellisense"
+      ]
+    }
+  },
+  "recommendations": [
+    {
+      "category": "File Watching",
+      "issue": "Çok fazla dosya izleniyor",
+      "solution": "Workspace ayarlarında files.watcherExclude genislet",
+      "priority": "HIGH"
+    },
+    {
+      "category": "Extensions",
+      "issue": "Gereksiz extensionlar aktif",
+      "solution": "Sadece gerekli extensionlari birak",
+      "priority": "MEDIUM"
+    },
+    {
+      "category": "Git Operations",
+      "issue": "Git auto-fetch ve decorations aktif",
+      "solution": "Git ayarlarını manuel yap",
+      "priority": "MEDIUM"
+    },
+    {
+      "category": "Language Services",
+      "issue": "TypeScript ve ESLint çok agressif",
+      "solution": "onSave moduna geç, real-time kapat",
+      "priority": "HIGH"
+    },
+    {
+      "category": "Editor Features",
+      "issue": "Suggestions ve hover çok aktif",
+      "solution": "Hover, suggestions, lightbulb kapat",
+      "priority": "MEDIUM"
+    }
+  ]
+}

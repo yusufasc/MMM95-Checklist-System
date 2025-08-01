@@ -45,7 +45,7 @@
   "cursor.chat.maxContextLength": 50000,
   "cursor.chat.alwaysSearchWeb": false,
   "cursor.general.enableTooltips": false,
-  "cursor.composer.enableAutoSave": true,
+  "cursor.composer.enableAutoSave": false,
   "cursor.composer.showRelatedFiles": false,
   "cursor.chat.enableCodeBlocks": true,
   "cursor.chat.enableFileTree": false,
@@ -64,8 +64,8 @@
 
   // ===== GELİŞTİRME ARAÇLARI =====
   "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit",
-    "source.fixAll.eslint": "explicit"
+    "source.organizeImports": "never",
+    "source.fixAll.eslint": "never"
   },
   "editor.formatOnSave": true,
   "editor.formatOnPaste": true,
@@ -98,16 +98,16 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit",
-      "source.fixAll.eslint": "explicit"
+      "source.organizeImports": "never",
+      "source.fixAll.eslint": "never"
     }
   },
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit",
-      "source.fixAll.eslint": "explicit"
+      "source.organizeImports": "never",
+      "source.fixAll.eslint": "never"
     }
   },
   "[json]": {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { inventoryAPI } from '../services/api';
 
 export const useInventoryData = () => {
@@ -61,8 +61,13 @@ export const useInventoryData = () => {
   // Items API
   const loadItems = useCallback(async () => {
     try {
+      // Frontend-Backend parameter mapping fix
       const params = {
-        ...filters,
+        kategoriId: filters.kategori, // kategori -> kategoriId
+        search: filters.arama, // arama -> search
+        durum: filters.durum,
+        lokasyon: filters.lokasyon,
+        sorumluKisi: filters.sorumluKisi,
         sayfa: page + 1,
         limit: rowsPerPage,
         sirala: sortConfig.field,
@@ -392,8 +397,8 @@ export const useInventoryData = () => {
       const category = categories.find(c => c._id === categoryId);
       const fileName = `envanter_template_${category?.ad.replace(/[^a-zA-Z0-9]/g, '_') || 'kategori'}.xlsx`;
 
-      // Yeni pencerede aç
-      const downloadUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/inventory/categories/${categoryId}/excel-template`;
+      // Yeni pencerede aç - /api kısmı REACT_APP_API_URL'de zaten var
+      const downloadUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/inventory/categories/${categoryId}/excel-template`;
 
       // Token'ı localStorage'dan al
       const token = localStorage.getItem('token');

@@ -28,10 +28,11 @@ const ItemDynamicFields = ({
   onDynamicFieldChange,
 }) => {
   const renderDynamicField = template => {
-    // Map field names from backend to frontend
-    const fieldName = template.alanAdi || template.alan || template.ad;
-    const fieldType = template.alanTipi || template.tip;
-    const isRequired = template.zorunlu || template.gerekli;
+    // Map field names from backend to frontend - backend uses 'ad' field
+    const fieldName = template.ad || template.alanAdi || template.alan;
+    const fieldType = template.tip || template.alanTipi;
+    const isRequired =
+      template.gerekli !== undefined ? template.gerekli : template.zorunlu;
     const description = template.aciklama;
     const options = template.secenekler;
     const validation = template.validasyon;
@@ -325,9 +326,13 @@ ItemDynamicFields.propTypes = {
   categoryFieldTemplates: PropTypes.arrayOf(
     PropTypes.shape({
       _id: PropTypes.string.isRequired,
-      alanAdi: PropTypes.string.isRequired,
-      alanTipi: PropTypes.string.isRequired,
-      zorunlu: PropTypes.bool,
+      alan: PropTypes.string, // Backend gönderdiği field name
+      ad: PropTypes.string, // Alternative field name
+      alanAdi: PropTypes.string, // Frontend expected field name
+      tip: PropTypes.string, // Backend gönderdiği field type
+      alanTipi: PropTypes.string, // Frontend expected field type
+      gerekli: PropTypes.bool, // Backend gönderdiği required flag
+      zorunlu: PropTypes.bool, // Frontend expected required flag
       grup: PropTypes.string,
       aciklama: PropTypes.string,
       placeholder: PropTypes.string,

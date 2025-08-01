@@ -1,45 +1,45 @@
-import React from 'react';
+﻿import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import {
+  Build as BuildIcon,
+  Cancel as CancelIcon,
+  CheckCircle as CheckCircleIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Inventory as InventoryIcon,
+  Schedule as ScheduleIcon,
+  Visibility as ViewIcon,
+  Warning as WarningIcon,
+} from '@mui/icons-material';
+import {
+  Box,
+  Button,
   Card,
   CardContent,
-  Box,
-  Typography,
-  Button,
+  Checkbox,
+  Chip,
   Divider,
+  IconButton,
   Skeleton,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
-  TableRow,
   TablePagination,
+  TableRow,
   TableSortLabel,
-  Checkbox,
-  Chip,
-  IconButton,
   Tooltip,
+  Typography,
 } from '@mui/material';
 import {
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Visibility as ViewIcon,
-  CheckCircle as CheckCircleIcon,
-  Build as BuildIcon,
-  Warning as WarningIcon,
-  Cancel as CancelIcon,
-  Inventory as InventoryIcon,
-  Schedule as ScheduleIcon,
-} from '@mui/icons-material';
-import {
+  ROWS_PER_PAGE_OPTIONS,
   formatCurrency,
   formatDate,
-  truncateText,
-  getStatusLabel,
   getStatusColor,
   getStatusIconName,
-  ROWS_PER_PAGE_OPTIONS,
+  getStatusLabel,
+  truncateText,
 } from '../../utils/inventoryConfig';
 
 // Icon mapping function
@@ -67,6 +67,7 @@ const getStatusIcon = status => {
 const InventoryTable = ({
   loading,
   items,
+  fieldTemplates,
   pagination,
   sortConfig,
   selectedItems,
@@ -82,6 +83,12 @@ const InventoryTable = ({
   onItemDelete,
   onBulkDelete,
 }) => {
+  // Göz butonuna basıldığında detayları gösteren/gizleyen state
+  const [expandedItem, setExpandedItem] = useState(null);
+
+  const handleToggleDetails = itemId => {
+    setExpandedItem(expandedItem === itemId ? null : itemId);
+  };
   if (loading) {
     return (
       <Card>
@@ -99,7 +106,7 @@ const InventoryTable = ({
   return (
     <Card>
       <CardContent sx={{ p: 0 }}>
-        {/* Tablo Başlığı ve Toplu İşlemler */}
+        {/* Tablo BaÅŸlÄ±ÄŸÄ± ve Toplu Ä°ÅŸlemler */}
         <Box
           sx={{
             p: 2,
@@ -114,7 +121,7 @@ const InventoryTable = ({
             </Typography>
             {selectedItems.length > 0 && (
               <Typography variant='body2' color='primary'>
-                {selectedItems.length} öğe seçildi
+                {selectedItems.length} Ã¶ÄŸe seÃ§ildi
               </Typography>
             )}
           </Box>
@@ -128,7 +135,7 @@ const InventoryTable = ({
                 onClick={onBulkDelete}
                 size='small'
               >
-                Seçilenleri Sil
+                SeÃ§ilenleri Sil
               </Button>
             )}
           </Box>
@@ -178,13 +185,46 @@ const InventoryTable = ({
                 <TableCell>Lokasyon</TableCell>
                 <TableCell>Sorumlu</TableCell>
 
+                {/* Dinamik alanlar - MMM95 Kesin Sütun Listesi */}
+                {fieldTemplates
+                  ?.filter(template => {
+                    const fieldName =
+                      template.alanAdi || template.ad || template.alan;
+                    return [
+                      'Makine Adı',
+                      'Seri No',
+                      'Üretici Firma',
+                      'Model Kodu / Tipi',
+                      'Üretim Yılı',
+                      'Motor Gücü (kW)',
+                    ].includes(fieldName);
+                  })
+                  ?.sort((a, b) => {
+                    const order = [
+                      'Makine Adı',
+                      'Seri No',
+                      'Üretici Firma',
+                      'Model Kodu / Tipi',
+                      'Üretim Yılı',
+                      'Motor Gücü (kW)',
+                    ];
+                    const aName = a.alanAdi || a.ad || a.alan;
+                    const bName = b.alanAdi || b.ad || b.alan;
+                    return order.indexOf(aName) - order.indexOf(bName);
+                  })
+                  ?.map(template => (
+                    <TableCell key={template._id}>
+                      {template.alanAdi || template.ad || template.alan}
+                    </TableCell>
+                  ))}
+
                 <TableCell>
                   <TableSortLabel
                     active={sortConfig.field === 'guncelDeger'}
                     direction={sortConfig.direction}
                     onClick={() => onSort('guncelDeger')}
                   >
-                    Değer
+                    DeÄŸer
                   </TableSortLabel>
                 </TableCell>
 
@@ -194,143 +234,259 @@ const InventoryTable = ({
                     direction={sortConfig.direction}
                     onClick={() => onSort('olusturmaTarihi')}
                   >
-                    Oluşturma
+                    OluÅŸturma
                   </TableSortLabel>
                 </TableCell>
 
-                <TableCell align='center'>İşlemler</TableCell>
+                <TableCell align='center'>Ä°ÅŸlemler</TableCell>
               </TableRow>
             </TableHead>
 
             <TableBody>
               {items.map(item => (
-                <TableRow
-                  key={item._id}
-                  hover
-                  selected={selectedItems.includes(item._id)}
-                >
-                  <TableCell padding='checkbox'>
-                    <Checkbox
-                      checked={selectedItems.includes(item._id)}
-                      onChange={() => onSelectItem(item._id)}
-                    />
-                  </TableCell>
+                <React.Fragment key={item._id}>
+                  <TableRow hover selected={selectedItems.includes(item._id)}>
+                    <TableCell padding='checkbox'>
+                      <Checkbox
+                        checked={selectedItems.includes(item._id)}
+                        onChange={() => onSelectItem(item._id)}
+                      />
+                    </TableCell>
 
-                  <TableCell>
-                    <Typography variant='body2' fontWeight='medium'>
-                      {item.envanterKodu}
-                    </Typography>
-                  </TableCell>
-
-                  <TableCell>
-                    <Box>
+                    <TableCell>
                       <Typography variant='body2' fontWeight='medium'>
-                        {item.ad}
+                        {item.envanterKodu}
                       </Typography>
-                      {item.aciklama && (
-                        <Typography variant='caption' color='text.secondary'>
-                          {truncateText(item.aciklama, 50)}
+                    </TableCell>
+
+                    <TableCell>
+                      <Box>
+                        <Typography variant='body2' fontWeight='medium'>
+                          {item.ad}
+                        </Typography>
+                        {item.aciklama && (
+                          <Typography variant='caption' color='text.secondary'>
+                            {truncateText(item.aciklama, 50)}
+                          </Typography>
+                        )}
+                      </Box>
+                    </TableCell>
+
+                    <TableCell>
+                      {item.kategoriId && (
+                        <Chip
+                          label={item.kategoriId.ad}
+                          size='small'
+                          sx={{
+                            backgroundColor: item.kategoriId.renk + '20',
+                            color: item.kategoriId.renk,
+                            border: `1px solid ${item.kategoriId.renk}40`,
+                          }}
+                        />
+                      )}
+                    </TableCell>
+
+                    <TableCell>
+                      <Chip
+                        icon={getStatusIcon(item.durum)}
+                        label={getStatusLabel(item.durum)}
+                        color={getStatusColor(item.durum)}
+                        size='small'
+                      />
+                    </TableCell>
+
+                    <TableCell>
+                      <Typography variant='body2'>
+                        {item.lokasyon || '-'}
+                      </Typography>
+                    </TableCell>
+
+                    <TableCell>
+                      {item.sorumluKisi ? (
+                        <Typography variant='body2'>
+                          {item.sorumluKisi.ad} {item.sorumluKisi.soyad}
+                        </Typography>
+                      ) : (
+                        <Typography variant='body2' color='text.secondary'>
+                          -
                         </Typography>
                       )}
-                    </Box>
-                  </TableCell>
+                    </TableCell>
 
-                  <TableCell>
-                    {item.kategoriId && (
-                      <Chip
-                        label={item.kategoriId.ad}
-                        size='small'
-                        sx={{
-                          backgroundColor: item.kategoriId.renk + '20',
-                          color: item.kategoriId.renk,
-                          border: `1px solid ${item.kategoriId.renk}40`,
-                        }}
-                      />
-                    )}
-                  </TableCell>
+                    {/* Dinamik alanlar - MMM95 Kesin Sütun Listesi */}
+                    {fieldTemplates
+                      ?.filter(template => {
+                        const fieldName =
+                          template.alanAdi || template.ad || template.alan;
+                        return [
+                          'Makine Adı',
+                          'Seri No',
+                          'Üretici Firma',
+                          'Model Kodu / Tipi',
+                          'Üretim Yılı',
+                          'Motor Gücü (kW)',
+                        ].includes(fieldName);
+                      })
+                      ?.sort((a, b) => {
+                        const order = [
+                          'Makine Adı',
+                          'Seri No',
+                          'Üretici Firma',
+                          'Model Kodu / Tipi',
+                          'Üretim Yılı',
+                          'Motor Gücü (kW)',
+                        ];
+                        const aName = a.alanAdi || a.ad || a.alan;
+                        const bName = b.alanAdi || b.ad || b.alan;
+                        return order.indexOf(aName) - order.indexOf(bName);
+                      })
+                      ?.map(template => {
+                        const fieldName =
+                          template.alanAdi || template.ad || template.alan;
+                        const fieldValue = item.dinamikAlanlar?.[fieldName];
 
-                  <TableCell>
-                    <Chip
-                      icon={getStatusIcon(item.durum)}
-                      label={getStatusLabel(item.durum)}
-                      color={getStatusColor(item.durum)}
-                      size='small'
-                    />
-                  </TableCell>
+                        return (
+                          <TableCell key={template._id}>
+                            <Typography
+                              variant='body2'
+                              sx={{
+                                fontWeight:
+                                  fieldName === 'Makine Adı'
+                                    ? 'medium'
+                                    : 'normal',
+                                fontSize: '0.875rem',
+                              }}
+                            >
+                              {fieldValue || '-'}
+                            </Typography>
+                          </TableCell>
+                        );
+                      })}
 
-                  <TableCell>
-                    <Typography variant='body2'>
-                      {item.lokasyon || '-'}
-                    </Typography>
-                  </TableCell>
+                    <TableCell>
+                      <Typography variant='body2' fontWeight='medium'>
+                        {formatCurrency(item.guncelDeger)}
+                      </Typography>
+                    </TableCell>
 
-                  <TableCell>
-                    {item.sorumluKisi ? (
+                    <TableCell>
                       <Typography variant='body2'>
-                        {item.sorumluKisi.ad} {item.sorumluKisi.soyad}
+                        {formatDate(item.olusturmaTarihi)}
                       </Typography>
-                    ) : (
-                      <Typography variant='body2' color='text.secondary'>
-                        -
-                      </Typography>
-                    )}
-                  </TableCell>
+                    </TableCell>
 
-                  <TableCell>
-                    <Typography variant='body2' fontWeight='medium'>
-                      {formatCurrency(item.guncelDeger)}
-                    </Typography>
-                  </TableCell>
-
-                  <TableCell>
-                    <Typography variant='body2'>
-                      {formatDate(item.olusturmaTarihi)}
-                    </Typography>
-                  </TableCell>
-
-                  <TableCell align='center'>
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <Tooltip title='Görüntüle'>
-                        <IconButton
-                          size='small'
-                          onClick={() => onItemEdit(item)}
+                    <TableCell align='center'>
+                      <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        <Tooltip
+                          title={
+                            expandedItem === item._id
+                              ? 'Detayları Gizle'
+                              : 'Detayları Göster'
+                          }
                         >
-                          <ViewIcon fontSize='small' />
-                        </IconButton>
-                      </Tooltip>
+                          <IconButton
+                            size='small'
+                            onClick={() => handleToggleDetails(item._id)}
+                          >
+                            <ViewIcon fontSize='small' />
+                          </IconButton>
+                        </Tooltip>
 
-                      {canEdit && (
-                        <>
-                          <Tooltip title='Düzenle'>
-                            <IconButton
-                              size='small'
-                              onClick={() => onItemEdit(item)}
-                            >
-                              <EditIcon fontSize='small' />
-                            </IconButton>
-                          </Tooltip>
+                        {canEdit && (
+                          <>
+                            <Tooltip title='DÃ¼zenle'>
+                              <IconButton
+                                size='small'
+                                onClick={() => onItemEdit(item)}
+                              >
+                                <EditIcon fontSize='small' />
+                              </IconButton>
+                            </Tooltip>
 
-                          <Tooltip title='Sil'>
-                            <IconButton
-                              size='small'
-                              color='error'
-                              onClick={() => onItemDelete(item._id)}
-                            >
-                              <DeleteIcon fontSize='small' />
-                            </IconButton>
-                          </Tooltip>
-                        </>
-                      )}
-                    </Box>
-                  </TableCell>
-                </TableRow>
+                            <Tooltip title='Sil'>
+                              <IconButton
+                                size='small'
+                                color='error'
+                                onClick={() => onItemDelete(item._id)}
+                              >
+                                <DeleteIcon fontSize='small' />
+                              </IconButton>
+                            </Tooltip>
+                          </>
+                        )}
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+
+                  {/* Detay satırı - Göz butonuna basıldığında açılır */}
+                  {expandedItem === item._id && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={10}
+                        sx={{ p: 0, backgroundColor: '#f5f5f5' }}
+                      >
+                        <Box sx={{ p: 2 }}>
+                          <Typography variant='h6' gutterBottom>
+                            {item.ad} - Detaylı Bilgiler
+                          </Typography>
+                          <Box
+                            sx={{
+                              display: 'grid',
+                              gridTemplateColumns:
+                                'repeat(auto-fit, minmax(250px, 1fr))',
+                              gap: 2,
+                            }}
+                          >
+                            {/* Tüm dinamik alanları göster */}
+                            {fieldTemplates?.map(template => {
+                              const fieldName =
+                                template.alanAdi ||
+                                template.ad ||
+                                template.alan;
+                              const fieldValue =
+                                item.dinamikAlanlar?.[fieldName];
+
+                              if (!fieldValue) {
+                                return null;
+                              }
+
+                              return (
+                                <Box
+                                  key={template._id}
+                                  sx={{
+                                    p: 1,
+                                    backgroundColor: 'white',
+                                    borderRadius: 1,
+                                  }}
+                                >
+                                  <Typography
+                                    variant='caption'
+                                    color='text.secondary'
+                                  >
+                                    {fieldName}
+                                  </Typography>
+                                  <Typography
+                                    variant='body2'
+                                    fontWeight='medium'
+                                  >
+                                    {fieldValue}
+                                  </Typography>
+                                </Box>
+                              );
+                            })}
+                          </Box>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
               ))}
 
               {items.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={10} align='center' sx={{ py: 6 }}>
                     <Typography variant='h6' color='text.secondary'>
-                      Envanter öğesi bulunamadı
+                      Envanter Ã¶ÄŸesi bulunamadÄ±
                     </Typography>
                     <Typography
                       variant='body2'
@@ -356,7 +512,7 @@ const InventoryTable = ({
           page={page}
           onPageChange={onPageChange}
           onRowsPerPageChange={onRowsPerPageChange}
-          labelRowsPerPage='Sayfa başına:'
+          labelRowsPerPage='Sayfa baÅŸÄ±na:'
           labelDisplayedRows={({ from, to, count }) =>
             `${from}-${to} / ${count !== -1 ? count : `${to}'den fazla`}`
           }
@@ -388,6 +544,7 @@ InventoryTable.propTypes = {
       }),
     }),
   ).isRequired,
+  fieldTemplates: PropTypes.array,
   pagination: PropTypes.shape({
     totalItems: PropTypes.number.isRequired,
   }).isRequired,

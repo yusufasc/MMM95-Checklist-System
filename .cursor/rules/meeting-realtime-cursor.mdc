@@ -1,0 +1,733 @@
+---
+description: Toplantı Yönetimi ve Real-time Collaboration özellikleri. File paths: backend/services/socketService.js, frontend/src/pages/LiveMeeting.js, frontend/src/hooks/useLiveMeeting.js. Triggers: meeting, socket, live, real-time, collaboration, websocket, Socket.IO, participant, agenda, notes.
+globs: 
+alwaysApply: false
+---
+
+# 🔴 MMM95 - Toplantı Yönetimi & Real-time Collaboration Rules
+
+## 📅 Toplantı Modülü - Tamamlanan Özellikler (PHASE 8-10)
+
+### ✅ PHASE 8: REAL-TIME COLLABORATION (TAMAMLANDI)
+
+#### 1. Live Meeting Interface Components
+```javascript
+// ✅ DOĞRU: Live Meeting page structure
+// File: frontend/src/pages/LiveMeeting.js
+const LiveMeeting = () => {
+  const { id: meetingId } = useParams();
+  const { user } = useAuth();
+  const { socket, isConnected } = useSocket();
+  
+  const {
+    meeting,
+    participants,
+    meetingStatus,
+    joinMeeting,
+    leaveMeeting,
+    startMeeting,
+    endMeeting,
+  } = useLiveMeeting(meetingId);
+
+  // Tab-based interface (notes, agenda, participants)
+  const [activeTab, setActiveTab] = useState('notes');
+  
+  return (
+    <Box p={3}>
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h4" gutterBottom>
+            🔴 {meeting.baslik}
+          </Typography>
+          {/* Real-time status chips and controls */}
+        </CardContent>
+      </Card>
+      
+      {/* Tab Navigation */}
+      <Paper sx={{ mb: 3 }}>
+        <Box display="flex" borderBottom={1} borderColor="divider">
+          {tabs.map((tab) => (
+            <Button key={tab.id} onClick={() => setActiveTab(tab.id)}>
+              {tab.label}
+            </Button>
+          ))}
+        </Box>
+      </Paper>
+      
+      {/* Tab Content - Real-time components */}
+      {activeTab === 'notes' && <CollaborativeNotes />}
+      {activeTab === 'agenda' && <AgendaTracker />}
+      {activeTab === 'participants' && <LiveParticipants />}
+    </Box>
+  );
+};
+```
+
+#### 2. Real-time Hooks Pattern
+```javascript
+// ✅ DOĞRU: useLiveMeeting hook
+// File: frontend/src/hooks/useLiveMeeting.js
+export const useLiveMeeting = (meetingId) => {
+  const { socket, isConnected } = useSocket();
+  
+  // Meeting State
+  const [meeting, setMeeting] = useState(null);
+  const [participants, setParticipants] = useState([]);
+  const [meetingStatus, setMeetingStatus] = useState('planlanıyor');
+  
+  // Socket event listeners
+  useEffect(() => {
+    if (!socket || !meetingId) return;
+
+    // Participant events
+    const handleParticipantJoined = (data) => {
+      setParticipants(prev => {
+        const exists = prev.find(p => p.userId === data.userId);
+        if (exists) return prev;
+        return [...prev, {
+          userId: data.userId,
+          name: data.name,
+          joinedAt: data.joinedAt,
+          isTyping: false,
+        }];
+      });
+    };
+
+    socket.on('meeting:participant:joined', handleParticipantJoined);
+    socket.on('meeting:participant:left', handleParticipantLeft);
+    socket.on('meeting:status:change', handleStatusChange);
+    socket.on('meeting:typing', handleTyping);
+
+    return () => {
+      socket.off('meeting:participant:joined', handleParticipantJoined);
+      // ... cleanup other listeners
+    };
+  }, [socket, meetingId]);
+  
+  return {
+    meeting,
+    participants,
+    meetingStatus,
+    joinMeeting,
+    leaveMeeting,
+    startMeeting,
+    endMeeting,
+  };
+};
+```
+
+#### 3. Collaborative Notes Component
+```javascript
+// ✅ DOĞRU: Real-time collaborative notes
+// File: frontend/src/components/LiveMeeting/CollaborativeNotes.js
+const CollaborativeNotes = memo(({ meetingId, isJoined }) => {
+  const { socket } = useSocket();
+  const { user } = useAuth();
+  
+  const [notes, setNotes] = useState([]);
+  const [currentNote, setCurrentNote] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingUsers, setTypingUsers] = useState([]);
+  
+  // Real-time note updates
+  useEffect(() => {
+    if (!socket || !meetingId) return;
+
+    const handleNoteUpdate = (data) => {
+      if (data.updatedBy !== user?.isim) {
+        setNotes(prev => 
+          prev.map(note => 
+            note._id === data.noteId 
+              ? { ...note, icerik: data.content, guncellemeTarihi: data.timestamp }
+              : note
+          )
+        );
+      }
+    };
+
+    socket.on('meeting:note:update', handleNoteUpdate);
+    socket.on('meeting:typing', handleTyping);
+
+    return () => {
+      socket.off('meeting:note:update', handleNoteUpdate);
+      socket.off('meeting:typing', handleTyping);
+    };
+  }, [socket, meetingId, user]);
+  
+  // Typing indicators
+  const handleNoteChange = (event) => {
+    const value = event.target.value;
+    setCurrentNote(value);
+
+    if (socket && isJoined && !isTyping) {
+      setIsTyping(true);
+      socket.emit('meeting:typing', {
+        meetingId,
+        userData: { id: user.id, isim: user.isim },
+        isTyping: true,
+      });
+    }
+  };
+});
+```
+
+#### 4. Live Participants Component
+```javascript
+// ✅ DOĞRU: Real-time participant list
+// File: frontend/src/components/LiveMeeting/LiveParticipants.js
+const LiveParticipants = memo(({ participants, meeting, currentUser }) => {
+  
+  const getParticipantRole = (userId) => {
+    if (meeting?.organizator === userId || meeting?.organizator?._id === userId) {
+      return 'organizator';
+    }
+    const participant = meeting?.katilimcilar?.find(k => 
+      k.kullanici === userId || k.kullanici?._id === userId
+    );
+    return participant?.rol || 'katılımcı';
+  };
+
+  return (
+    <Card>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          👥 Canlı Katılımcılar ({participants.length})
+        </Typography>
+        
+        <List>
+          {participants.map((participant) => {
+            const role = getParticipantRole(participant.userId);
+            const isCurrentUser = currentUser?.id === participant.userId;
+
+            return (
+              <ListItem key={participant.userId}>
+                <ListItemAvatar>
+                  <Box position="relative">
+                    <Avatar>{participant.name?.charAt(0)?.toUpperCase()}</Avatar>
+                    {/* Online indicator */}
+                    <OnlineIcon sx={{ position: 'absolute', bottom: -2, right: -2 }} />
+                  </Box>
+                </ListItemAvatar>
+                
+                <ListItemText
+                  primary={
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography variant="subtitle1">
+                        {participant.name}
+                        {isCurrentUser && <span>(Siz)</span>}
+                      </Typography>
+                      {/* Typing indicator */}
+                      {participant.isTyping && <TypingIcon />}
+                    </Box>
+                  }
+                  secondary={
+                    <Chip label={role} size="small" />
+                  }
+                />
+              </ListItem>
+            );
+          })}
+        </List>
+      </CardContent>
+    </Card>
+  );
+});
+```
+
+### ✅ PHASE 8: BACKEND SOCKET.IO INTEGRATION
+
+#### 1. Socket Service Extensions
+```javascript
+// ✅ DOĞRU: Meeting-specific socket events
+// File: backend/services/socketService.js
+class SocketService {
+  
+  // Meeting room management
+  joinMeetingRoom(socket, meetingId, userData) {
+    try {
+      const roomName = `meeting:${meetingId}`;
+      socket.join(roomName);
+
+      // Track meeting participants
+      if (!this.meetingParticipants) {
+        this.meetingParticipants = new Map();
+      }
+      
+      if (!this.meetingParticipants.has(meetingId)) {
+        this.meetingParticipants.set(meetingId, new Map());
+      }
+
+      const participants = this.meetingParticipants.get(meetingId);
+      participants.set(socket.id, {
+        userId: userData.id,
+        name: userData.isim,
+        joinedAt: new Date(),
+        isTyping: false,
+      });
+
+      // Notify other participants
+      socket.to(roomName).emit('meeting:participant:joined', {
+        userId: userData.id,
+        name: userData.isim,
+        joinedAt: new Date(),
+        totalParticipants: participants.size,
+      });
+
+      return { success: true, participantCount: participants.size };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Real-time note collaboration
+  broadcastNoteUpdate(meetingId, noteData, senderSocket) {
+    try {
+      const roomName = `meeting:${meetingId}`;
+      
+      senderSocket.to(roomName).emit('meeting:note:update', {
+        noteId: noteData.noteId,
+        content: noteData.content,
+        updatedBy: noteData.updatedBy,
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      console.error('Error broadcasting note update:', error);
+    }
+  }
+
+  // Typing indicators
+  broadcastTypingStatus(meetingId, userData, isTyping, senderSocket) {
+    try {
+      const roomName = `meeting:${meetingId}`;
+      
+      senderSocket.to(roomName).emit('meeting:typing', {
+        userId: userData.id,
+        name: userData.isim,
+        isTyping: isTyping,
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      console.error('Error broadcasting typing status:', error);
+    }
+  }
+}
+```
+
+#### 2. Socket Event Handlers
+```javascript
+// ✅ DOĞRU: Meeting event handlers
+// File: backend/services/socketService.js (setupEventHandlers method)
+setupEventHandlers() {
+  this.io.on('connection', socket => {
+    
+    // Meeting events - PHASE 8: Real-time Collaboration
+    socket.on('meeting:join', (data, callback) =>
+      this.handleMeetingJoin(socket, data, callback)
+    );
+    socket.on('meeting:leave', data => this.handleMeetingLeave(socket, data));
+    socket.on('meeting:note:update', data =>
+      this.handleMeetingNoteUpdate(socket, data)
+    );
+    socket.on('meeting:typing', data =>
+      this.handleMeetingTyping(socket, data)
+    );
+    socket.on('meeting:agenda:progress', data =>
+      this.handleAgendaProgress(socket, data)
+    );
+    socket.on('meeting:status:change', data =>
+      this.handleMeetingStatusChange(socket, data)
+    );
+  });
+}
+
+// Meeting join handler
+handleMeetingJoin(socket, data, callback) {
+  try {
+    const { meetingId, userData } = data;
+    
+    if (!meetingId || !userData) {
+      const error = { success: false, error: 'Missing meetingId or userData' };
+      if (callback) callback(error);
+      return;
+    }
+
+    const result = this.joinMeetingRoom(socket, meetingId, userData);
+    if (callback) callback(result);
+    
+  } catch (error) {
+    if (callback) callback({ success: false, error: error.message });
+  }
+}
+```
+
+### ✅ PHASE 9: ANALYTICS DASHBOARD
+
+#### 1. Analytics Hook Pattern
+```javascript
+// ✅ DOĞRU: Analytics data management
+// File: frontend/src/hooks/useAnalytics.js
+export const useAnalytics = () => {
+  const { user } = useAuth();
+  
+  const [dashboardSummary, setDashboardSummary] = useState(null);
+  const [meetingAnalytics, setMeetingAnalytics] = useState(null);
+  const [loading, setLoading] = useState(false);
+  
+  const [filters, setFilters] = useState({
+    period: '30d', // 7d, 30d, 90d, 1y
+    dateFrom: null,
+    dateTo: null,
+    departmentId: null,
+  });
+
+  const fetchDashboardSummary = useCallback(async (personal = false) => {
+    try {
+      setLoading(true);
+      const response = await api.analytics.getDashboardSummary(personal);
+      setDashboardSummary(response.data);
+    } catch (error) {
+      console.error('Error fetching dashboard summary:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return {
+    dashboardSummary,
+    meetingAnalytics,
+    loading,
+    filters,
+    fetchDashboardSummary,
+    setFilters,
+  };
+};
+```
+
+#### 2. Analytics Dashboard Component
+```javascript
+// ✅ DOĞRU: Recharts integration
+// File: frontend/src/components/Analytics/AnalyticsDashboard.js
+const AnalyticsDashboard = memo(() => {
+  const { dashboardSummary, loading, fetchDashboardSummary } = useAnalytics();
+
+  return (
+    <Box>
+      {/* KPI Cards */}
+      <Grid container spacing={3} mb={3}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Typography variant="h4">
+                  {dashboardSummary?.totalMeetings || 0}
+                </Typography>
+                <EventIcon color="primary" sx={{ fontSize: 40 }} />
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Toplam Toplantı
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Charts */}
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Toplantı Frekansı
+              </Typography>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={dashboardSummary?.meetingFrequency || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <RechartsTooltip />
+                  <Bar dataKey="count" fill="#1976d2" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+});
+```
+
+### ✅ PHASE 10: EMAIL NOTIFICATIONS
+
+#### 1. Email Service Integration
+```javascript
+// ✅ DOĞRU: Nodemailer + EJS templates
+// File: backend/services/emailService.js
+class EmailService {
+  
+  async sendMeetingInvitation(meeting, participants) {
+    try {
+      const template = await this.renderTemplate('meeting_invitation', {
+        meeting,
+        participants,
+        appUrl: process.env.APP_URL,
+      });
+
+      const mailOptions = {
+        from: process.env.EMAIL_FROM,
+        to: participants.map(p => p.email),
+        subject: `Toplantı Daveti: ${meeting.baslik}`,
+        html: template,
+      };
+
+      await this.transporter.sendMail(mailOptions);
+      console.log('✅ Meeting invitation emails sent');
+      
+    } catch (error) {
+      console.error('❌ Error sending meeting invitation:', error);
+      throw error;
+    }
+  }
+
+  async renderTemplate(templateName, data) {
+    const templatePath = path.join(__dirname, '../views/emails', `${templateName}.ejs`);
+    return ejs.renderFile(templatePath, data);
+  }
+}
+```
+
+#### 2. Email Templates
+```html
+<!-- ✅ DOĞRU: Professional email template -->
+<!-- File: backend/views/emails/meeting_invitation.ejs -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Toplantı Daveti</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 20px;">
+  <div style="max-width: 600px; margin: 0 auto;">
+    <h2 style="color: #1976d2;">📅 Toplantı Daveti</h2>
+    
+    <div style="background: #f5f5f5; padding: 20px; border-radius: 8px;">
+      <h3><%= meeting.baslik %></h3>
+      <p><strong>Tarih:</strong> <%= meeting.tarih %></p>
+      <p><strong>Saat:</strong> <%= meeting.baslangicSaati %> - <%= meeting.bitisSaati %></p>
+      <p><strong>Lokasyon:</strong> <%= meeting.lokasyon || 'Online' %></p>
+    </div>
+    
+    <% if (meeting.gundem && meeting.gundem.length > 0) { %>
+    <h4>Gündem:</h4>
+    <ul>
+      <% meeting.gundem.forEach(item => { %>
+        <li><%= item.baslik %></li>
+      <% }); %>
+    </ul>
+    <% } %>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="<%= appUrl %>/meetings/<%= meeting._id %>/live" 
+         style="background: #1976d2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">
+        Toplantıya Katıl
+      </a>
+    </div>
+  </div>
+</body>
+</html>
+```
+
+## 🔄 Live Meeting Button Integration
+
+### ✅ DOĞRU: MeetingTable Live Button
+```javascript
+// File: frontend/src/components/Meetings/MeetingTable.js
+{meeting.durum === 'devam-ediyor' && (
+  <Tooltip title='Canlı Toplantıya Katıl'>
+    <IconButton
+      size='small'
+      onClick={() => onLiveMeeting?.(meeting._id)}
+      color='success'
+      sx={{ 
+        animation: 'pulse 2s infinite',
+        '@keyframes pulse': {
+          '0%': { opacity: 1 },
+          '50%': { opacity: 0.7 },
+          '100%': { opacity: 1 },
+        }
+      }}
+    >
+      <LiveIcon />
+    </IconButton>
+  </Tooltip>
+)}
+```
+
+### ✅ DOĞRU: Navigation Integration
+```javascript
+// File: frontend/src/pages/Meetings.js
+const handleLiveMeeting = (meetingId) => {
+  console.log('🔴 Joining live meeting:', meetingId);
+  navigate(`/meetings/${meetingId}/live`);
+};
+
+// MeetingTable props
+<MeetingTable
+  meetings={meetings}
+  onLiveMeeting={handleLiveMeeting}
+  // ... other props
+/>
+```
+
+## 🎯 Real-time State Management Patterns
+
+### ✅ Socket Connection Management
+```javascript
+// ✅ DOĞRU: Socket context with connection state
+// File: frontend/src/contexts/SocketContext.js
+const SocketProvider = ({ children }) => {
+  const [socket, setSocket] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user?.token) {
+      const newSocket = io(process.env.REACT_APP_API_URL, {
+        auth: { token: user.token },
+        transports: ['websocket'],
+      });
+
+      newSocket.on('connect', () => {
+        setIsConnected(true);
+      });
+
+      newSocket.on('disconnect', () => {
+        setIsConnected(false);
+      });
+
+      setSocket(newSocket);
+
+      return () => {
+        newSocket.close();
+      };
+    }
+  }, [user]);
+
+  return (
+    <SocketContext.Provider value={{ socket, isConnected }}>
+      {children}
+    </SocketContext.Provider>
+  );
+};
+```
+
+### ✅ Real-time Data Synchronization
+```javascript
+// ✅ DOĞRU: Participant state management
+const [participants, setParticipants] = useState([]);
+
+// Add participant
+const handleParticipantJoined = (data) => {
+  setParticipants(prev => {
+    const exists = prev.find(p => p.userId === data.userId);
+    if (exists) return prev;
+    
+    return [...prev, {
+      userId: data.userId,
+      name: data.name,
+      joinedAt: data.joinedAt,
+      isTyping: false,
+    }];
+  });
+};
+
+// Update typing status
+const handleTyping = (data) => {
+  setParticipants(prev =>
+    prev.map(p =>
+      p.userId === data.userId 
+        ? { ...p, isTyping: data.isTyping }
+        : p
+    )
+  );
+};
+```
+
+## 🚨 Real-time Error Handling
+
+### ✅ Connection Recovery
+```javascript
+// ✅ DOĞRU: Socket reconnection handling
+useEffect(() => {
+  if (!socket) return;
+
+  const handleReconnect = () => {
+    console.log('🔄 Socket reconnected, rejoining meeting...');
+    if (meetingId && user) {
+      joinMeeting(user);
+    }
+  };
+
+  socket.on('connect', handleReconnect);
+  
+  return () => {
+    socket.off('connect', handleReconnect);
+  };
+}, [socket, meetingId, user, joinMeeting]);
+```
+
+### ✅ Typing Timeout Management
+```javascript
+// ✅ DOĞRU: Typing indicator cleanup
+const typingTimeoutRef = useRef(null);
+
+const handleNoteChange = (event) => {
+  // Clear previous timeout
+  if (typingTimeoutRef.current) {
+    clearTimeout(typingTimeoutRef.current);
+  }
+
+  // Set timeout to stop typing indicator
+  typingTimeoutRef.current = setTimeout(() => {
+    setIsTyping(false);
+    if (socket && isJoined) {
+      socket.emit('meeting:typing', {
+        meetingId,
+        userData: { id: user.id, isim: user.isim },
+        isTyping: false,
+      });
+    }
+  }, 2000);
+};
+
+// Cleanup on unmount
+useEffect(() => {
+  return () => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+  };
+}, []);
+```
+
+---
+
+## 🎯 Toplantı Modülü Naming Conventions
+
+- **Live Meeting Components**: `LiveMeeting/ComponentName.js`
+- **Socket Events**: `meeting:action:subaction` format
+- **Hooks**: `useLiveMeeting`, `useAnalytics` 
+- **Real-time State**: Immediate UI updates, optimistic UI
+- **Error Boundaries**: Connection state aware components
+
+## 📊 Performance Optimizations
+
+- **React.memo** for real-time components
+- **useCallback** for socket event handlers  
+- **Lazy loading** for Live Meeting page
+- **Socket room management** for scalability
+- **Typing debounce** to prevent spam
+
+---
+
+**Enterprise Real-time Meeting System**: Socket.IO + React + Material-UI ile profesyonel canlı toplantı deneyimi.

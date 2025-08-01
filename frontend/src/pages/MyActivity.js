@@ -143,42 +143,42 @@ const MyActivity = () => {
     const ikToplamPuan =
       hrScores && hrScores.length > 0
         ? hrScores.reduce((sum, score) => {
-            const puan =
+          const puan =
               score.puan || score.toplamPuan || score.puanlar?.toplam || 0;
-            return sum + puan;
-          }, 0)
+          return sum + puan;
+        }, 0)
         : ik.toplam;
 
     // WorkTask toplam puanını workTaskScores'dan hesapla
     const workTaskToplamPuan =
       workTaskScores && workTaskScores.length > 0
         ? workTaskScores.reduce((sum, score) => {
-            const puan =
+          const puan =
               score.puan ||
               score.toplamPuan ||
               score.puanlar?.toplam ||
               score.puanlar?.alinan ||
               0;
-            return sum + puan;
-          }, 0)
+          return sum + puan;
+        }, 0)
         : workTask.toplamPuan || checklistSablonlari.iseBagliGorevler;
 
     // Kalite Kontrol toplam puanını hesapla
     const kaliteKontrolToplamPuan =
       qualityScores && qualityScores.length > 0
         ? qualityScores.reduce((sum, score) => {
-            const puan =
+          const puan =
               score.puan || score.toplamPuan || score.puanlar?.toplam || 0;
-            return sum + puan;
-          }, 0)
+          return sum + puan;
+        }, 0)
         : kaliteKontrol.toplamPuan;
 
     // Bonus evaluations toplam puanını hesapla
     const bonusToplamPuan =
       bonusEvaluations && bonusEvaluations.length > 0
         ? bonusEvaluations.reduce((sum, bonus) => {
-            return sum + (bonus.toplamPuan || 0);
-          }, 0)
+          return sum + (bonus.toplamPuan || 0);
+        }, 0)
         : 0;
 
     // ✅ DÜZELTME: Checklist Şablonları puanını monthlyTotals'dan al

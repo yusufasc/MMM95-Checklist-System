@@ -14,6 +14,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SnackbarProvider } from './contexts/SnackbarContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+import { SocketProvider } from './contexts/SocketContext';
 import './utils/hrExcelTest';
 
 // ===== CODE SPLITTING - LAZY LOADED PAGES =====
@@ -50,6 +52,9 @@ const BonusEvaluationManagement = React.lazy(
 const EquipmentManagement = React.lazy(
   () => import('./pages/EquipmentManagement'),
 );
+const Meetings = React.lazy(() => import('./pages/Meetings'));
+const LiveMeeting = React.lazy(() => import('./pages/LiveMeeting'));
+const Analytics = React.lazy(() => import('./pages/Analytics'));
 
 // Initialize crash reporter
 console.log('🛡️ Crash detection system active');
@@ -154,6 +159,22 @@ function AppRoutes() {
               element={
                 <ProtectedRoute module='Görev Yönetimi'>
                   <Tasks />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='meetings'
+              element={
+                <ProtectedRoute module='Toplantı Yönetimi'>
+                  <Meetings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='meetings/:id/live'
+              element={
+                <ProtectedRoute module='Toplantı Yönetimi'>
+                  <LiveMeeting />
                 </ProtectedRoute>
               }
             />
@@ -278,6 +299,14 @@ function AppRoutes() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path='analytics'
+              element={
+                <ProtectedRoute module='Dashboard'>
+                  <Analytics />
+                </ProtectedRoute>
+              }
+            />
             <Route path='profile' element={<Profile />} />
           </Route>
           <Route path='*' element={<Navigate to='/login' replace />} />
@@ -293,9 +322,13 @@ function App() {
       <CssBaseline />
       <AuthProvider>
         <SnackbarProvider>
-          <ErrorBoundary>
-            <AppRoutes />
-          </ErrorBoundary>
+          <NotificationProvider>
+            <SocketProvider>
+              <ErrorBoundary>
+                <AppRoutes />
+              </ErrorBoundary>
+            </SocketProvider>
+          </NotificationProvider>
         </SnackbarProvider>
       </AuthProvider>
     </ThemeProvider>

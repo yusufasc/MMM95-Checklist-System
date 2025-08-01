@@ -108,10 +108,25 @@ export const useChecklistDialog = () => {
   }, []);
 
   const handleChange = useCallback(e => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    const { name, value } = e.target;
+
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [name]: value,
+      };
+
+      // Makina ayarları türleri için ad'ı otomatik set et
+      if (name === 'tur') {
+        if (value === 'makina_ayarlari_1') {
+          newData.ad = 'MAKİNA AYARLARI 1';
+        } else if (value === 'makina_ayarlari_2') {
+          newData.ad = 'MAKİNA AYARLARI 2';
+        }
+      }
+
+      return newData;
+    });
   }, []);
 
   const handleMaddelerChange = useCallback((index, field, value) => {
@@ -156,33 +171,42 @@ export const useChecklistDialog = () => {
   }, []);
 
   const validateForm = useCallback(() => {
+    console.log('🔍 Form validation başlıyor...', formData);
+
     if (!formData.ad.trim()) {
+      console.log('❌ Validation: Checklist adı eksik');
       return 'Checklist adı gereklidir';
     }
 
     if (!formData.hedefRol) {
+      console.log('❌ Validation: Hedef rol eksik');
       return 'Hedef rol seçin';
     }
 
     if (!formData.hedefDepartman) {
+      console.log('❌ Validation: Hedef departman eksik');
       return 'Hedef departman seçin';
     }
 
     if (formData.tur === 'iseBagli' && !formData.isTuru.trim()) {
+      console.log('❌ Validation: İş türü eksik');
       return 'İş türü gereklidir';
     }
 
     // Kontrol puanı validasyonu
     const kontrolPuani = Number(formData.kontrolPuani);
     if (kontrolPuani < 0 || kontrolPuani > 100) {
+      console.log('❌ Validation: Kontrol puanı geçersiz');
       return 'Kontrol puanı 0-100 arasında olmalıdır';
     }
 
     const emptyMaddeler = formData.maddeler.filter(m => !m.soru.trim());
     if (emptyMaddeler.length > 0) {
+      console.log('❌ Validation: Boş maddeler var:', emptyMaddeler);
       return 'Tüm maddelerin soruları doldurulmalıdır';
     }
 
+    console.log('✅ Validation başarılı!');
     return null;
   }, [formData]);
 
@@ -239,10 +263,23 @@ export const useChecklistDialog = () => {
       }
     }
 
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [field]: value,
+      };
+
+      // Makina ayarları türleri için ad'ı otomatik set et
+      if (field === 'tur') {
+        if (value === 'makina_ayarlari_1') {
+          newData.ad = 'MAKİNA AYARLARI 1';
+        } else if (value === 'makina_ayarlari_2') {
+          newData.ad = 'MAKİNA AYARLARI 2';
+        }
+      }
+
+      return newData;
+    });
   }, []);
 
   return {

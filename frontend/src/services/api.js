@@ -2,7 +2,7 @@ import axios from 'axios';
 import frontendCache from './cacheService';
 
 // Base URL
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:3001/api';
 
 // Axios instance oluştur
 const api = axios.create({
@@ -935,7 +935,159 @@ export const apiService = {
   },
 };
 
+/**
+ * 📅 Meeting Management API
+ * Toplantı Yönetimi modülü için API fonksiyonları
+ */
+const meetingAPI = {
+  // Meeting CRUD operations
+  getMeetings: (params = {}) => {
+    const queryString = Object.entries(params)
+      .filter(
+        ([, value]) => value !== '' && value !== null && value !== undefined,
+      )
+      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .join('&');
+    return api.get(`/meetings${queryString ? `?${queryString}` : ''}`);
+  },
+
+  getMeetingById: id => api.get(`/meetings/${id}`),
+
+  createMeeting: meetingData => api.post('/meetings', meetingData),
+
+  updateMeeting: (id, meetingData) => api.put(`/meetings/${id}`, meetingData),
+
+  deleteMeeting: id => api.delete(`/meetings/${id}`),
+
+  // Meeting control operations
+  startMeeting: id => api.post(`/meetings/${id}/start`),
+
+  finishMeeting: id => api.post(`/meetings/${id}/finish`),
+
+  createTaskFromMeeting: (id, taskData) =>
+    api.post(`/meetings/${id}/create-task`, taskData),
+
+  // Dashboard integration
+  getMyMeetings: (params = {}) => {
+    const queryString = Object.entries(params)
+      .filter(([, value]) => value !== '' && value !== null)
+      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .join('&');
+    return api.get(
+      `/meetings/my-meetings${queryString ? `?${queryString}` : ''}`,
+    );
+  },
+
+  // Cached versions for performance
+  getCachedMeetings: (params = {}) =>
+    withCache(
+      () => meetingAPI.getMeetings(params),
+      `meetings_${JSON.stringify(params)}`,
+      frontendCache.TTL.SHORT,
+    ),
+
+  getCachedMyMeetings: (params = {}) =>
+    withCache(
+      () => meetingAPI.getMyMeetings(params),
+      `my_meetings_${JSON.stringify(params)}`,
+      frontendCache.TTL.DASHBOARD,
+    ),
+};
+
+/**
+ * 📝 Meeting Notes API
+ * Real-time collaboration için not yönetimi
+ */
+const meetingNoteAPI = {
+  // Note CRUD operations
+  getMeetingNotes: (meetingId, params = {}) => {
+    const queryString = Object.entries(params)
+      .filter(([, value]) => value !== '' && value !== null)
+      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .join('&');
+    return api.get(
+      `/meeting-notes/meeting/${meetingId}${queryString ? `?${queryString}` : ''}`,
+    );
+  },
+
+  createNote: noteData => api.post('/meeting-notes', noteData),
+
+  updateNote: (id, noteData) => api.put(`/meeting-notes/${id}`, noteData),
+
+  deleteNote: id => api.delete(`/meeting-notes/${id}`),
+
+  // Real-time collaboration
+  toggleReaction: (id, reactionType) =>
+    api.post(`/meeting-notes/${id}/reaction`, { tip: reactionType }),
+
+  getNoteSummary: meetingId => api.get(`/meeting-notes/summary/${meetingId}`),
+
+  // Real-time polling for live meetings
+  getNewNotes: (meetingId, lastNoteId) =>
+    api.get(`/meeting-notes/meeting/${meetingId}?lastNoteId=${lastNoteId}`),
+};
+
+/**
+ * 📊 Meeting Excel API
+ * Excel import/export işlemleri (MMM95 pattern)
+ */
+const meetingExcelAPI = {
+  // Excel şablonu indir
+  downloadTemplate: () =>
+    api.get('/meetings/excel-template', { responseType: 'blob' }),
+
+  // Toplantıları Excel'e export et
+  exportMeetings: () =>
+    api.get('/meetings/excel-export', { responseType: 'blob' }),
+
+  // Excel'den toplantı import et
+  importFromExcel: (file, onProgress) => {
+    const formData = new FormData();
+    formData.append('excelFile', file);
+
+    return api.post('/meetings/excel-import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: onProgress,
+    });
+  },
+};
+
+/**
+ * 📊 Analytics API
+ * Dashboard analytics ve reporting endpoints
+ */
+const analyticsAPI = {
+  // Dashboard summary
+  getDashboardSummary: (personal = false) =>
+    api.get('/analytics/dashboard', { params: { personal } }),
+
+  // Meeting analytics
+  getMeetingAnalytics: (params = {}) =>
+    api.get('/analytics/meetings', { params }),
+
+  // Task analytics
+  getTaskAnalytics: (params = {}) => api.get('/analytics/tasks', { params }),
+
+  // User analytics (Admin/Manager only)
+  getUserAnalytics: (params = {}) => api.get('/analytics/users', { params }),
+
+  // Notification analytics (Admin only)
+  getNotificationAnalytics: (params = {}) =>
+    api.get('/analytics/notifications', { params }),
+
+  // Export analytics
+  exportAnalytics: (params = {}) => api.get('/analytics/export', { params }),
+};
+
 export default {
   ...api,
+  users: usersAPI,
+  departments: departmentsAPI,
+  machines: machinesAPI,
+  checklists: checklistsAPI,
   myActivity: myActivityAPI,
+  meetings: meetingAPI,
+  meetingNotes: meetingNoteAPI,
+  meetingExcel: meetingExcelAPI,
+  analytics: analyticsAPI,
 };

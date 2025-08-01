@@ -239,6 +239,8 @@ app.use('/api/departments', require('./routes/departments'));
 app.use('/api/modules', require('./routes/modules'));
 app.use('/api/checklists', require('./routes/checklists'));
 app.use('/api/tasks', require('./routes/tasks'));
+app.use('/api/meetings', require('./routes/meetings'));
+app.use('/api/meeting-notes', require('./routes/meeting-notes'));
 app.use('/api/machines', require('./routes/machines'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/inventory', require('./routes/inventory'));
@@ -268,6 +270,18 @@ app.use('/api/cache', require('./routes/cache'));
 // Services test routes
 app.use('/api/services', require('./routes/services-test'));
 
+// Email test routes
+app.use('/api/email-test', require('./routes/email-test'));
+
+// Notification routes
+app.use('/api/notifications', require('./routes/notifications'));
+
+// Analytics routes
+app.use('/api/analytics', require('./routes/analytics'));
+
+// PDF Export routes
+app.use('/api/pdf', require('./routes/pdf'));
+
 const PORT = process.env.PORT || 3001;
 
 // HTTP header size limitini artır (431 hatası için)
@@ -279,11 +293,22 @@ server.requestTimeout = 120000; // 2 dakika timeout
 // Error handling middleware (en sonda olmalı)
 app.use(errorLogger);
 
+// ===== SOCKET.IO SETUP =====
+const socketService = require('./services/socketService');
+
 server.listen(PORT, () => {
   logger.success(`🚀 Sunucu ${PORT} portunda çalışıyor!`);
   logger.info('Header size limitleri artırıldı');
   logger.info(`Environment: ${process.env.NODE_ENV}`);
   logger.info(`Debug mode: ${process.env.DEBUG ? 'Enabled' : 'Disabled'}`);
+
+  // Initialize Socket.IO
+  try {
+    socketService.init(server);
+    logger.success('🔌 Socket.IO initialized for real-time notifications');
+  } catch (error) {
+    logger.error('❌ Socket.IO initialization failed:', error);
+  }
 });
 
 // 🛑 Graceful Shutdown - Tüm servisler
@@ -302,6 +327,9 @@ const gracefulShutdown = async signal => {
 
     // Cache'i temizle
     await cacheService.clear();
+
+    // Socket.IO connections'ları temizle
+    socketService.cleanup();
 
     logger.success('✅ Tüm servisler başarıyla kapatıldı');
     process.exit(0);

@@ -316,6 +316,12 @@ export const AuthProvider = ({ children }) => {
         module: null,
       },
       {
+        text: 'Analytics',
+        icon: 'AnalyticsIcon',
+        path: '/analytics',
+        module: 'Dashboard',
+      },
+      {
         text: 'Kullanıcılar',
         icon: 'PeopleIcon',
         path: '/users',
@@ -388,6 +394,12 @@ export const AuthProvider = ({ children }) => {
         icon: 'TaskIcon',
         path: '/tasks',
         module: 'Görev Yönetimi',
+      },
+      {
+        text: 'Toplantılar',
+        icon: 'GroupsIcon',
+        path: '/meetings',
+        module: 'Toplantı Yönetimi',
       },
       {
         text: 'Kontrol Bekleyenler',

@@ -143,8 +143,8 @@ const EquipmentRequestManagement = ({ onSuccess }) => {
         responseNote: actionData.responseNote,
         ...(action === 'approve' &&
           actionData.newExpiryDate && {
-            newExpiryDate: new Date(actionData.newExpiryDate),
-          }),
+          newExpiryDate: new Date(actionData.newExpiryDate),
+        }),
       };
 
       await endpoint(request._id, data);
@@ -435,33 +435,33 @@ const EquipmentRequestManagement = ({ onSuccess }) => {
                                 'Ekipman Yönetimi',
                                 'duzenleyebilir',
                               ) && (
-                                <>
-                                  <Tooltip title='Onayla'>
-                                    <IconButton
-                                      size='small'
-                                      onClick={e => {
-                                        e.stopPropagation();
-                                        handleAction(request, 'approve');
-                                      }}
-                                      color='success'
-                                    >
-                                      <ApproveIcon />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title='Reddet'>
-                                    <IconButton
-                                      size='small'
-                                      onClick={e => {
-                                        e.stopPropagation();
-                                        handleAction(request, 'reject');
-                                      }}
-                                      color='error'
-                                    >
-                                      <RejectIcon />
-                                    </IconButton>
-                                  </Tooltip>
-                                </>
-                              )}
+                              <>
+                                <Tooltip title='Onayla'>
+                                  <IconButton
+                                    size='small'
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      handleAction(request, 'approve');
+                                    }}
+                                    color='success'
+                                  >
+                                    <ApproveIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title='Reddet'>
+                                  <IconButton
+                                    size='small'
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      handleAction(request, 'reject');
+                                    }}
+                                    color='error'
+                                  >
+                                    <RejectIcon />
+                                  </IconButton>
+                                </Tooltip>
+                              </>
+                            )}
                           </Box>
                         </TableCell>
                       </TableRow>

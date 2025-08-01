@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toplantı Özeti</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #673ab7, #9575cd);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px 20px;
+        }
+        
+        .summary-header {
+            background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+            border: 2px solid #673ab7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .summary-header h2 {
+            color: #4527a0;
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+        
+        .meeting-info {
+            background: #f8f9fa;
+            border-left: 4px solid #673ab7;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .meeting-info h3 {
+            color: #673ab7;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .info-item {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            min-width: 120px;
+            display: inline-block;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+        
+        .section {
+            margin: 25px 0;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        
+        .notes-section {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+        }
+        
+        .tasks-section {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+        }
+        
+        .section h4 {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .notes-section h4 {
+            color: #1976d2;
+        }
+        
+        .tasks-section h4 {
+            color: #2e7d32;
+        }
+        
+        .note-item, .task-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 3px solid;
+        }
+        
+        .note-item {
+            border-left-color: #2196f3;
+        }
+        
+        .task-item {
+            border-left-color: #4caf50;
+        }
+        
+        .note-meta, .task-meta {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+        
+        .task-assignee {
+            display: inline-block;
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .task-priority {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .priority-low { background: #e8f5e8; color: #2e7d32; }
+        .priority-normal { background: #fff3e0; color: #f57c00; }
+        .priority-high { background: #ffebee; color: #d32f2f; }
+        .priority-critical { background: #f3e5f5; color: #7b1fa2; }
+        
+        .statistics {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+            flex: 1;
+            margin: 0 5px 10px 5px;
+            min-width: 120px;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #673ab7;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .footer p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .info-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .info-label {
+                min-width: auto;
+                margin-bottom: 5px;
+            }
+            
+            .statistics {
+                flex-direction: column;
+            }
+            
+            .stat-card {
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📊 Toplantı Özeti</h1>
+            <p><%= companyName %></p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Summary Header -->
+            <div class="summary-header">
+                <h2>📋 Toplantı Tamamlandı</h2>
+                <p>Toplantı özeti ve alınan kararlar aşağıda yer almaktadır</p>
+            </div>
+
+            <!-- Meeting Information -->
+            <div class="meeting-info">
+                <h3><%= meeting.baslik %></h3>
+                
+                <div class="info-item">
+                    <span class="info-label">🗓️ Tarih:</span>
+                    <span class="info-value"><%= meetingDate %></span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">⏱️ Süre:</span>
+                    <span class="info-value">
+                        <%= duration !== 'Belirsiz' ? duration + ' dakika' : 'Belirsiz' %>
+                    </span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">👥 Katılımcı:</span>
+                    <span class="info-value"><%= participantCount %> kişi</span>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="statistics">
+                <div class="stat-card">
+                    <div class="stat-number"><%= notes.length %></div>
+                    <div class="stat-label">Not</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number"><%= tasks.length %></div>
+                    <div class="stat-label">Görev</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number"><%= participantCount %></div>
+                    <div class="stat-label">Katılımcı</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">
+                        <%= duration !== 'Belirsiz' ? duration : '?' %>
+                    </div>
+                    <div class="stat-label">Dakika</div>
+                </div>
+            </div>
+
+            <!-- Meeting Notes -->
+            <% if (notes && notes.length > 0) { %>
+            <div class="section notes-section">
+                <h4>📝 Toplantı Notları</h4>
+                <% notes.forEach(function(note) { %>
+                <div class="note-item">
+                    <div><%= note.icerik %></div>
+                    <div class="note-meta">
+                        <% if (note.olusturan) { %>
+                        👤 <%= note.olusturan.ad %> <%= note.olusturan.soyad %>
+                        <% } %>
+                        • 🕒 <%= new Date(note.tarih).toLocaleString('tr-TR') %>
+                    </div>
+                </div>
+                <% }); %>
+            </div>
+            <% } %>
+
+            <!-- Tasks Created -->
+            <% if (tasks && tasks.length > 0) { %>
+            <div class="section tasks-section">
+                <h4>📋 Oluşturulan Görevler</h4>
+                <% tasks.forEach(function(task) { %>
+                <div class="task-item">
+                    <div style="font-weight: bold; margin-bottom: 5px;">
+                        <%= task.baslik %>
+                    </div>
+                    <% if (task.aciklama) { %>
+                    <div style="margin-bottom: 8px; color: #666;">
+                        <%= task.aciklama %>
+                    </div>
+                    <% } %>
+                    <div class="task-meta">
+                        <% if (task.atananKullanici) { %>
+                        <span class="task-assignee">
+                            👤 <%= task.atananKullanici.ad %> <%= task.atananKullanici.soyad %>
+                        </span>
+                        <% } %>
+                        <% if (task.oncelik) { %>
+                        <span class="task-priority priority-<%= task.oncelik %>">
+                            <%= task.oncelik.toUpperCase() %>
+                        </span>
+                        <% } %>
+                        <% if (task.teslimTarihi) { %>
+                        <br>📅 Teslim: <%= new Date(task.teslimTarihi).toLocaleDateString('tr-TR') %>
+                        <% } %>
+                    </div>
+                </div>
+                <% }); %>
+            </div>
+            <% } %>
+
+            <!-- No Content Messages -->
+            <% if ((!notes || notes.length === 0) && (!tasks || tasks.length === 0)) { %>
+            <div style="background: #f5f5f5; border-radius: 5px; padding: 20px; text-align: center; margin: 20px 0;">
+                <p style="color: #666; margin: 0;">
+                    📝 Bu toplantıda not veya görev oluşturulmamıştır.
+                </p>
+            </div>
+            <% } %>
+
+            <!-- Important Note -->
+            <div style="background: #e3f2fd; border: 1px solid #2196f3; border-radius: 5px; padding: 15px; margin: 20px 0;">
+                <p style="margin: 0; color: #1976d2;">
+                    <strong>💡 Bilgi:</strong> 
+                    Bu özet toplantı tamamlandıktan sonra otomatik olarak oluşturulmuştur. 
+                    Görevlerin durumu sistem üzerinden takip edilebilir.
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong><%= companyName %></strong></p>
+            <p>Bu özet otomatik olarak oluşturulmuştur.</p>
+            <p style="font-size: 12px; color: #999;">
+                Toplantı tamamlanma tarihi: <%= new Date().toLocaleString('tr-TR') %>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

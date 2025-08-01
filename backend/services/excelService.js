@@ -461,6 +461,342 @@ class ExcelService {
       throw new Error(`Excel okuma hatası: ${error.message}`);
     }
   }
+
+  // ===== TOPLANTI MODÜLÜ EXCEL ENTEGRASYONU =====
+
+  /**
+   * Toplantı Excel şablonu oluştur
+   */
+  static async generateMeetingTemplate() {
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Toplantı Şablonu');
+
+      // Başlık satırını oluştur
+      const headers = [
+        'Başlık',
+        'Açıklama',
+        'Kategori',
+        'Tarih (YYYY-MM-DD)',
+        'Başlangıç Saati (HH:MM)',
+        'Bitiş Saati (HH:MM)',
+        'Lokasyon',
+        'Durum',
+        'Öncelik',
+        'Organizatör Email',
+        'Departman Adı',
+        'Makina Kodu',
+        'Katılımcı Email\'leri (virgülle ayırın)',
+        'Gündem Maddeleri (| ile ayırın)',
+        'Tekrarlama Tipi',
+        'Tekrarlama Aralığı',
+        'Bitiş Tarihi (YYYY-MM-DD)',
+      ];
+
+      // Başlıkları worksheet'e ekle
+      worksheet.addRow(headers);
+
+      // Örnek veri satırı ekle (kullanıcıya rehberlik için)
+      worksheet.addRow([
+        'Haftalık Üretim Toplantısı',
+        'Haftalık üretim hedefleri ve performans değerlendirmesi',
+        'rutin',
+        '2025-01-22',
+        '09:00',
+        '10:00',
+        'Toplantı Salonu A',
+        'planlanıyor',
+        'normal',
+        'manager@sirket.com',
+        'Üretim',
+        'HAI-001',
+        'user1@sirket.com,user2@sirket.com',
+        'Geçen hafta sonuçları|Bu hafta hedefler|Sorun ve çözümler',
+        'haftalık',
+        '1',
+        '2025-12-31',
+      ]);
+
+      // Başlık stilini ayarla
+      const headerRow = worksheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      headerRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF1976D2' }, // MMM95 primary color
+      };
+
+      // Örnek satır stilini ayarla
+      const exampleRow = worksheet.getRow(2);
+      exampleRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFF3F4F6' }, // Light gray
+      };
+      exampleRow.font = { italic: true };
+
+      // Kolonları otomatik genişlik ayarla
+      worksheet.columns.forEach((column, index) => {
+        const lengths = [headers[index]?.length || 10];
+        worksheet.eachRow({ includeEmpty: true }, row => {
+          const cell = row.getCell(index + 1);
+          if (cell.value) {
+            lengths.push(cell.value.toString().length);
+          }
+        });
+        column.width = Math.min(Math.max(...lengths) + 2, 50); // Max 50 karakter
+      });
+
+      // Validasyon notu ekle
+      const noteRow = worksheet.addRow([]);
+      noteRow.getCell(1).value = 'NOTLAR:';
+      noteRow.getCell(1).font = { bold: true, color: { argb: 'FFFF6B35' } };
+
+      const validationNotes = [
+        '• Kategori: rutin, proje, acil, kalite, güvenlik, performans, vardiya, kalip-degisim',
+        '• Durum: planlanıyor, bekliyor, devam-ediyor, tamamlandı, iptal',
+        '• Öncelik: düşük, normal, yüksek, kritik',
+        '• Tekrarlama: yok, günlük, haftalık, aylık, özel',
+        '• Tarih formatı: YYYY-MM-DD (örn: 2025-01-22)',
+        '• Saat formatı: HH:MM (örn: 09:30)',
+        '• Email\'ler virgül (,) ile ayrılmalı',
+        '• Gündem maddeleri pipe (|) ile ayrılmalı',
+      ];
+
+      validationNotes.forEach((note, index) => {
+        const noteRow = worksheet.addRow([]);
+        noteRow.getCell(1).value = note;
+        noteRow.getCell(1).font = { size: 10, italic: true };
+      });
+
+      // AutoFilter ekle (sadece header'a)
+      worksheet.autoFilter = 'A1:Q1';
+
+      // Buffer oluştur
+      const buffer = await workbook.xlsx.writeBuffer();
+
+      return {
+        buffer,
+        fileName: `toplanti_template_${new Date().toISOString().split('T')[0]}.xlsx`,
+        contentType:
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      };
+    } catch (error) {
+      console.error('Meeting Excel template oluşturma hatası:', error);
+      throw new Error('Meeting Excel template oluşturulamadı');
+    }
+  }
+
+  /**
+   * Toplantıları Excel'e export et
+   */
+  static async generateMeetingExport(meetings = []) {
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Toplantılar');
+
+      // Başlık satırını oluştur
+      const headers = [
+        'Başlık',
+        'Açıklama',
+        'Kategori',
+        'Tarih',
+        'Başlangıç Saati',
+        'Bitiş Saati',
+        'Gerçek Başlangıç',
+        'Gerçek Bitiş',
+        'Lokasyon',
+        'Durum',
+        'Öncelik',
+        'Organizatör',
+        'Departman',
+        'Makina',
+        'Katılımcı Sayısı',
+        'Gündem Sayısı',
+        'Karar Sayısı',
+        'Not Sayısı',
+        'Toplam Süre (dk)',
+        'Oluşturma Tarihi',
+        'Güncelleme Tarihi',
+      ];
+
+      // Başlıkları ekle
+      worksheet.addRow(headers);
+
+      // Meeting verilerini ekle
+      meetings.forEach(meeting => {
+        const katilimciSayisi = meeting.katilimcilar?.length || 0;
+        const gundemSayisi = meeting.gundem?.length || 0;
+        const kararSayisi = meeting.kararlar?.length || 0;
+        const notSayisi = meeting.notlar?.length || 0;
+
+        const organizator =
+          meeting.organizator?.ad && meeting.organizator?.soyad
+            ? `${meeting.organizator.ad} ${meeting.organizator.soyad}`
+            : 'Bilinmiyor';
+
+        const departman = meeting.departman?.ad || '';
+        const makina = meeting.makina
+          ? `${meeting.makina.kod} - ${meeting.makina.ad}`
+          : '';
+
+        worksheet.addRow([
+          meeting.baslik || '',
+          meeting.aciklama || '',
+          meeting.kategori || '',
+          meeting.tarih
+            ? new Date(meeting.tarih).toLocaleDateString('tr-TR')
+            : '',
+          meeting.baslangicSaati || '',
+          meeting.bitisSaati || '',
+          meeting.gercekBaslangicSaati
+            ? new Date(meeting.gercekBaslangicSaati).toLocaleString('tr-TR')
+            : '',
+          meeting.gercekBitisSaati
+            ? new Date(meeting.gercekBitisSaati).toLocaleString('tr-TR')
+            : '',
+          meeting.lokasyon || '',
+          meeting.durum || '',
+          meeting.oncelik || '',
+          organizator,
+          departman,
+          makina,
+          katilimciSayisi,
+          gundemSayisi,
+          kararSayisi,
+          notSayisi,
+          meeting.toplamSure || '',
+          meeting.olusturmaTarihi
+            ? new Date(meeting.olusturmaTarihi).toLocaleString('tr-TR')
+            : '',
+          meeting.guncellemeTarihi
+            ? new Date(meeting.guncellemeTarihi).toLocaleString('tr-TR')
+            : '',
+        ]);
+      });
+
+      // Başlık stilini ayarla
+      const headerRow = worksheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      headerRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF1976D2' },
+      };
+
+      // Kolonları otomatik genişlik ayarla
+      worksheet.columns.forEach((column, index) => {
+        const lengths = [headers[index]?.length || 10];
+        worksheet.eachRow({ includeEmpty: true }, row => {
+          const cell = row.getCell(index + 1);
+          if (cell.value) {
+            lengths.push(cell.value.toString().length);
+          }
+        });
+        column.width = Math.min(Math.max(...lengths) + 2, 40);
+      });
+
+      // AutoFilter ekle
+      worksheet.autoFilter = `A1:${String.fromCharCode(65 + headers.length - 1)}1`;
+
+      // Buffer oluştur
+      const buffer = await workbook.xlsx.writeBuffer();
+
+      return {
+        buffer,
+        fileName: `toplanti_listesi_${new Date().toISOString().split('T')[0]}.xlsx`,
+        contentType:
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      };
+    } catch (error) {
+      console.error('Meeting Excel export hatası:', error);
+      throw new Error('Meeting Excel export oluşturulamadı');
+    }
+  }
+
+  /**
+   * Excel'den toplantı verilerini parse et
+   */
+  static async parseMeetingExcel(buffer) {
+    try {
+      console.log('📊 Meeting Excel parsing started');
+
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(buffer);
+
+      const worksheet = workbook.getWorksheet(1);
+      if (!worksheet) {
+        throw new Error('Excel dosyasında sayfa bulunamadı');
+      }
+
+      const rows = [];
+      const headers = [];
+
+      // İlk satırdan başlıkları al
+      const headerRow = worksheet.getRow(1);
+      headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        const headerValue = cell.value ? String(cell.value).trim() : '';
+        headers[colNumber] = headerValue;
+      });
+
+      console.log(
+        '📋 Meeting Excel headers found:',
+        headers.filter(h => h),
+      );
+
+      // Veri satırlarını oku (2. satırdan başla, örnek satırı da dahil)
+      for (let rowNumber = 2; rowNumber <= worksheet.rowCount; rowNumber++) {
+        const row = worksheet.getRow(rowNumber);
+        const rowData = {};
+        let hasData = false;
+
+        // Her hücreyi kontrol et
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          const header = headers[colNumber];
+          if (header) {
+            let cellValue = cell.value;
+
+            // Değer tipi kontrolü ve dönüştürme
+            if (cellValue !== null && cellValue !== undefined) {
+              if (
+                typeof cellValue === 'object' &&
+                cellValue.result !== undefined
+              ) {
+                cellValue = cellValue.result; // Formula sonucu
+              }
+
+              // Date değerleri için özel işlem
+              if (cellValue instanceof Date) {
+                cellValue = cellValue.toISOString();
+              }
+
+              rowData[header] = String(cellValue).trim();
+              hasData = true;
+            } else {
+              rowData[header] = '';
+            }
+          }
+        });
+
+        // Eğer satırda veri varsa ve NOTLAR: ile başlamıyorsa ekle
+        if (
+          hasData &&
+          !rowData[headers[1]]?.startsWith('NOTLAR:') &&
+          !rowData[headers[1]]?.startsWith('•')
+        ) {
+          rows.push(rowData);
+        }
+      }
+
+      console.log(
+        `✅ Meeting Excel read completed: ${rows.length} data rows found`,
+      );
+      return rows;
+    } catch (error) {
+      console.error('❌ Meeting Excel read error:', error);
+      throw new Error(`Meeting Excel okuma hatası: ${error.message}`);
+    }
+  }
 }
 
 module.exports = ExcelService;

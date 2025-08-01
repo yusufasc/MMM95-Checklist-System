@@ -167,12 +167,12 @@ const BaseQualityComponent = ({
               {renderCustomRow
                 ? renderCustomRow(row)
                 : columns.map(column => (
-                    <TableCell key={column.key} align={column.align || 'left'}>
-                      {column.render
-                        ? column.render(row[column.key], row)
-                        : row[column.key]}
-                    </TableCell>
-                  ))}
+                  <TableCell key={column.key} align={column.align || 'left'}>
+                    {column.render
+                      ? column.render(row[column.key], row)
+                      : row[column.key]}
+                  </TableCell>
+                ))}
             </TableRow>
           ))}
         </TableBody>

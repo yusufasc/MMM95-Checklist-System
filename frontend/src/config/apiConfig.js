@@ -4,7 +4,7 @@
  * Environment variables ile override edilebilir
  */
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = 'http://localhost:3001';
 
 export const API_ENDPOINTS = {
   // Authentication & Authorization

@@ -22,9 +22,6 @@ npm-debug.log*
 
 # Documentation (Cursor should not analyze these)
 docs/
-**/*.md
-README.md
-CHANGELOG.md
 LICENSE
 SECURITY.md
 
@@ -37,10 +34,10 @@ tools/
 scripts/
 backend/scripts/
 
-# Configuration Files
-*.config.js
-jest.config.js
+# Configuration Files (allow package.json, .eslintrc.js, jest.config.js for analytics updates)
 webpack.config.js
+vite.config.js
+rollup.config.js
 
 # Package Files
 package-lock.json
