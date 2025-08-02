@@ -148,6 +148,8 @@ const MeetingNoteSchema = new mongoose.Schema({
   silinmeTarihi: {
     type: Date,
   },
+}, {
+  timestamps: { createdAt: 'olusturmaTarihi', updatedAt: 'guncellemeTarihi' }
 });
 
 // Indexes for real-time performance
@@ -156,10 +158,8 @@ MeetingNoteSchema.index({ toplanti: 1, olusturmaTarihi: 1 });
 MeetingNoteSchema.index({ olusturan: 1, olusturmaTarihi: -1 });
 MeetingNoteSchema.index({ tip: 1, durum: 1 });
 
-// Pre-save hook
+// Pre-save hook for auto-increment siraNo
 MeetingNoteSchema.pre('save', function (next) {
-  this.guncellemeTarihi = Date.now();
-
   // Auto-increment siraNo for new notes
   if (this.isNew && !this.siraNo) {
     this.constructor

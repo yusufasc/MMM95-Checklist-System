@@ -59,14 +59,14 @@ class SocketService {
 
         // Verify JWT token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        logger.info(`🔍 JWT decoded for user ID: ${decoded.id}`);
+        logger.info(`🔍 JWT decoded for user ID: ${decoded.user?.id}`);
         
-        const user = await User.findById(decoded.id).select(
+        const user = await User.findById(decoded.user.id).select(
           'ad soyad email rol durum',
         );
 
         if (!user) {
-          logger.error(`❌ User not found in database: ${decoded.id}`);
+          logger.error(`❌ User not found in database: ${decoded.user.id}`);
           return next(new Error('User not found or inactive'));
         }
 
@@ -263,9 +263,9 @@ class SocketService {
   }
 
   /**
-   * Handle meeting join (for future features)
+   * Handle simple meeting join (legacy - for future features)
    */
-  handleMeetingJoin(socket, data) {
+  handleSimpleMeetingJoin(socket, data) {
     const { meetingId } = data;
     if (meetingId) {
       socket.join(`meeting:${meetingId}`);
@@ -279,9 +279,9 @@ class SocketService {
   }
 
   /**
-   * Handle meeting leave (for future features)
+   * Handle simple meeting leave (legacy - for future features)
    */
-  handleMeetingLeave(socket, data) {
+  handleSimpleMeetingLeave(socket, data) {
     const { meetingId } = data;
     if (meetingId) {
       socket.leave(`meeting:${meetingId}`);
@@ -297,7 +297,7 @@ class SocketService {
   /**
    * Send welcome message
    */
-  async sendWelcomeMessage(socket) {
+  sendWelcomeMessage(socket) {
     socket.emit('notification:welcome', {
       message: `Hoş geldin ${socket.userData.ad}!`,
       timestamp: new Date(),

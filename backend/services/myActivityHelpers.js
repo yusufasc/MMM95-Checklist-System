@@ -11,7 +11,6 @@ const BonusEvaluationHelpers = require('./bonusEvaluationHelpers');
 const WorkTaskHelpers = require('./workTaskHelpers');
 const HRScoreHelpers = require('./hrScoreHelpers');
 const ActivityDataHelpers = require('./activityDataHelpers');
-const DailyPerformanceHelpers = require('./dailyPerformanceHelpers');
 const ActivityQueryHelpers = require('./activityQueryHelpers');
 
 /**

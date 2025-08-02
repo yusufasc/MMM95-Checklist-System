@@ -12,8 +12,31 @@ const ProtectedRoute = ({ children, module, permission = 'erisebilir' }) => {
   }
 
   if (!hasModulePermission(module, permission)) {
+    // Detaylı debug bilgisi
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    console.error('🚨 YETKİ REDDİ DEBUG:', {
+      module,
+      permission,
+      userName: user.kullaniciAdi,
+      userRoles: user.roller?.map(r => r.ad),
+      userRoleDetails: user.roller,
+    });
+
+    // Debug için menu permission kontrolü
+    console.log('🔍 MENU DEBUG: hasModulePermission test sonuçları:');
+    const testModules = ['Toplanti Yonetimi', 'Kalite Kontrol', 'Analytics Dashboard', 'Dashboard'];
+    testModules.forEach(mod => {
+      const result = hasModulePermission(mod);
+      console.log(`  - ${mod}: ${result ? '✅ Allowed' : '❌ Denied'}`);
+    });
+
     alert(
-      `🚨 EMERGENCY: YETKİ REDDİ! Modül: ${module}, Permission: ${permission}`,
+      '🚨 YETKİ REDDİ!\n' +
+      `Modül: ${module}\n` +
+      `Permission: ${permission}\n` +
+      `Kullanıcı: ${user.kullaniciAdi}\n` +
+      `Roller: ${user.roller?.map(r => r.ad).join(', ')}\n\n` +
+      'Console\'da detayları kontrol edin (F12)',
     );
     return (
       <Box

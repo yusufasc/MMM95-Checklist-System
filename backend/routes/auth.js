@@ -19,10 +19,6 @@ router.post('/login', async (req, res) => {
         path: 'roller',
         populate: [
           {
-            path: 'moduller.modul',
-            model: 'Module',
-          },
-          {
             path: 'checklistYetkileri.hedefRol',
             model: 'Role',
             select: 'ad',
@@ -109,10 +105,6 @@ router.get('/me', auth, async (req, res) => {
         path: 'roller',
         populate: [
           {
-            path: 'moduller.modul',
-            model: 'Module',
-          },
-          {
             path: 'checklistYetkileri.hedefRol',
             model: 'Role',
             select: 'ad',
@@ -131,8 +123,20 @@ router.get('/me', auth, async (req, res) => {
     if (user.roller) {
       user.roller.forEach((rol, i) => {
         console.log(
-          `  Rol ${i + 1}: ${rol.ad} (checklistYetkileri: ${rol.checklistYetkileri?.length || 0})`,
+          `  Rol ${i + 1}: ${rol.ad} (checklistYetkileri: ${rol.checklistYetkileri?.length || 0}, moduller: ${rol.moduller?.length || 0})`,
         );
+        
+        // Modül detaylarını logla
+        if (rol.moduller && rol.moduller.length > 0) {
+          rol.moduller.forEach((modulePermission, j) => {
+            const moduleName = modulePermission.modul?.ad || 'Bilinmeyen Modül';
+            const erisebilir = modulePermission.erisebilir ? 'E' : 'x';
+            const duzenleyebilir = modulePermission.duzenleyebilir ? 'D' : 'x';
+            console.log(`    Modül ${j + 1}: ${moduleName} (${erisebilir}${duzenleyebilir})`);
+          });
+        } else {
+          console.log('    ⚠️ Hiç modül yetkisi yok!');
+        }
       });
     }
 

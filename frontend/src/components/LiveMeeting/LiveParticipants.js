@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -30,6 +30,17 @@ import EmojiWrapper from '../EmojiWrapper';
  */
 const LiveParticipants = memo(
   ({ _meetingId, participants = [], meeting, currentUser }) => {
+    // Ensure unique participants - remove duplicates based on userId
+    const uniqueParticipants = useMemo(() => {
+      const seen = new Set();
+      return participants.filter(participant => {
+        if (seen.has(participant.userId)) {
+          return false;
+        }
+        seen.add(participant.userId);
+        return true;
+      });
+    }, [participants]);
     /**
      * Get participant role in meeting
      */
@@ -93,10 +104,10 @@ const LiveParticipants = memo(
         <CardContent>
           <Typography variant='h6' gutterBottom>
             <EmojiWrapper emoji='👥' label='grup' /> Canlı Katılımcılar (
-            {participants.length})
+            {uniqueParticipants.length})
           </Typography>
 
-          {participants.length === 0 ? (
+          {uniqueParticipants.length === 0 ? (
             <Box textAlign='center' py={4}>
               <Typography variant='body2' color='text.secondary'>
                 Henüz katılımcı yok
@@ -104,13 +115,13 @@ const LiveParticipants = memo(
             </Box>
           ) : (
             <List>
-              {participants.map((participant, index) => {
+              {uniqueParticipants.map((participant, index) => {
                 const role = getParticipantRole(participant.userId);
                 const roleInfo = getRoleInfo(role);
                 const isCurrentUser = currentUser?.id === participant.userId;
 
                 return (
-                  <React.Fragment key={participant.userId}>
+                  <React.Fragment key={`full-${index}-${participant.userId}`}>
                     <ListItem alignItems='flex-start'>
                       <ListItemAvatar>
                         <Box position='relative'>
@@ -142,6 +153,7 @@ const LiveParticipants = memo(
                       </ListItemAvatar>
 
                       <ListItemText
+                        disableTypography
                         primary={
                           <Box display='flex' alignItems='center' gap={1}>
                             <Typography variant='subtitle1'>

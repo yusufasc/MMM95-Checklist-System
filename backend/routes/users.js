@@ -15,7 +15,7 @@ router.get(
   // usersListCache(), // 🚀 CACHE: 30 dakika
   async (req, res) => {
     try {
-      const users = await User.find()
+      const users = await User.find({ durum: 'aktif' })
         .populate('roller', 'ad')
         .populate('departmanlar', 'ad')
         .select('-sifreHash');

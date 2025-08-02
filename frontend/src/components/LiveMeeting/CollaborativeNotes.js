@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, memo, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -49,6 +49,18 @@ const CollaborativeNotes = memo(
     const typingTimeoutRef = useRef(null);
     const noteFieldRef = useRef(null);
 
+    // DEFENSIVE: Always ensure notes is an array
+    const safeNotes = useMemo(() => {
+      if (Array.isArray(notes)) {
+        return notes;
+      }
+      if (notes === null || notes === undefined) {
+        return [];
+      }
+      console.warn('Notes is not an array, defaulting to empty array:', typeof notes, notes);
+      return [];
+    }, [notes]);
+
     /**
      * Load meeting notes
      */
@@ -59,16 +71,20 @@ const CollaborativeNotes = memo(
 
       try {
         const response = await api.get(`/meeting-notes/meeting/${meetingId}`);
-        setNotes(response.data || []);
+        const notesData = response.data;
+        console.log('📝 DEBUG: Notes loaded from backend:', notesData);
+        // Ensure notes is always an array
+        setNotes(Array.isArray(notesData) ? notesData : []);
 
         // Auto-select first note if available
-        if (response.data?.length > 0 && !selectedNoteId) {
-          setSelectedNoteId(response.data[0]._id);
-          setCurrentNote(response.data[0].icerik);
+        if (Array.isArray(notesData) && notesData.length > 0 && !selectedNoteId) {
+          setSelectedNoteId(notesData[0]._id);
+          setCurrentNote(notesData[0].icerik);
         }
       } catch (error) {
         console.error('Error loading notes:', error);
         setError('Notlar yüklenirken hata oluştu');
+        setNotes([]); // Ensure notes is always an array
       }
     }, [meetingId, selectedNoteId]);
 
@@ -93,24 +109,27 @@ const CollaborativeNotes = memo(
           });
         } else {
           // Create new note
+          const safeNotes = notes || [];
           response = await api.post('/meeting-notes', {
             toplanti: meetingId,
             icerik: currentNote,
-            notTuru: 'genel',
+            tip: 'not', // Use 'tip' field with valid enum value
+            siraNo: safeNotes.length + 1, // Auto-increment sequence number
           });
           setSelectedNoteId(response.data._id);
         }
 
         // Update notes list
         setNotes(prev => {
+          const safeNotes = prev || [];
           if (selectedNoteId) {
-            return prev.map(note =>
+            return safeNotes.map(note =>
               note._id === selectedNoteId
                 ? { ...note, icerik: currentNote, guncellemeTarihi: new Date() }
                 : note,
             );
           } else {
-            return [...prev, response.data];
+            return [...safeNotes, response.data];
           }
         });
 
@@ -136,7 +155,7 @@ const CollaborativeNotes = memo(
       } finally {
         setSaving(false);
       }
-    }, [meetingId, user, currentNote, selectedNoteId, socket, isJoined]);
+    }, [meetingId, user, currentNote, selectedNoteId, socket, isJoined, notes]);
 
     /**
      * Create new note
@@ -172,10 +191,10 @@ const CollaborativeNotes = memo(
       try {
         await api.delete(`/meeting-notes/${noteId}`);
 
-        setNotes(prev => prev.filter(note => note._id !== noteId));
+        setNotes(prev => (prev || []).filter(note => note._id !== noteId));
 
         if (selectedNoteId === noteId) {
-          const remainingNotes = notes.filter(note => note._id !== noteId);
+          const remainingNotes = safeNotes.filter(note => note._id !== noteId);
           if (remainingNotes.length > 0) {
             selectNote(remainingNotes[0]);
           } else {
@@ -236,13 +255,13 @@ const CollaborativeNotes = memo(
         // Update note in real-time (from other users)
         if (data.updatedBy !== user?.isim) {
           setNotes(prev =>
-            prev.map(note =>
+            (prev || []).map(note =>
               note._id === data.noteId
                 ? {
-                    ...note,
-                    icerik: data.content,
-                    guncellemeTarihi: data.timestamp,
-                  }
+                  ...note,
+                  icerik: data.content,
+                  guncellemeTarihi: data.timestamp,
+                }
                 : note,
             ),
           );
@@ -345,10 +364,10 @@ const CollaborativeNotes = memo(
           <Card sx={{ minWidth: 300, maxWidth: 300 }}>
             <CardContent>
               <Typography variant='subtitle1' gutterBottom>
-                Notlar ({notes.length})
+                Notlar ({safeNotes.length})
               </Typography>
 
-              {notes.length === 0 ? (
+              {safeNotes.length === 0 ? (
                 <Box textAlign='center' py={3}>
                   <Typography variant='body2' color='text.secondary'>
                     Henüz not eklenmemiş
@@ -356,7 +375,7 @@ const CollaborativeNotes = memo(
                 </Box>
               ) : (
                 <List dense>
-                  {notes.map(note => (
+                  {safeNotes.map(note => (
                     <ListItem
                       key={note._id}
                       button
@@ -386,9 +405,13 @@ const CollaborativeNotes = memo(
                         }
                         secondary={
                           <Typography variant='caption'>
-                            {format(new Date(note.olusturmaTarihi), 'HH:mm', {
-                              locale: tr,
-                            })}
+                            {note.olusturmaTarihi &&
+                              !isNaN(new Date(note.olusturmaTarihi))
+                              ? format(new Date(note.olusturmaTarihi), 'HH:mm', { locale: tr })
+                              : note.createdAt && !isNaN(new Date(note.createdAt))
+                                ? format(new Date(note.createdAt), 'HH:mm', { locale: tr })
+                                : 'Zaman bilinmiyor'
+                            }
                             {' - '}
                             {note.olusturan?.isim || 'Bilinmiyor'}
                           </Typography>

@@ -108,6 +108,12 @@ const seedData = async () => {
         route: '/my-activity',
         aktif: true,
       },
+      {
+        ad: 'Analytics Dashboard',
+        ikon: 'Analytics',
+        route: '/analytics',
+        aktif: true,
+      },
     ];
 
     const modulePromises = modules.map(moduleData => {
@@ -168,6 +174,11 @@ const seedData = async () => {
           gorebilir: true,
           duzenleyebilir: false,
         },
+        {
+          moduleName: 'Analytics Dashboard',
+          gorebilir: true,
+          duzenleyebilir: false,
+        },
       ],
       checklistYetkileri: [],
     });
@@ -203,6 +214,11 @@ const seedData = async () => {
           gorebilir: true,
           duzenleyebilir: false,
         },
+        {
+          moduleName: 'Analytics Dashboard',
+          gorebilir: true,
+          duzenleyebilir: true,
+        },
       ],
       checklistYetkileri: [],
     });
@@ -230,6 +246,11 @@ const seedData = async () => {
         { moduleName: 'Performans', gorebilir: true, duzenleyebilir: false },
         {
           moduleName: 'Kişisel Aktivite',
+          gorebilir: true,
+          duzenleyebilir: false,
+        },
+        {
+          moduleName: 'Analytics Dashboard',
           gorebilir: true,
           duzenleyebilir: false,
         },
@@ -262,6 +283,11 @@ const seedData = async () => {
           moduleName: 'Kişisel Aktivite',
           gorebilir: true,
           duzenleyebilir: false,
+        },
+        {
+          moduleName: 'Analytics Dashboard',
+          gorebilir: true,
+          duzenleyebilir: true,
         },
       ],
       checklistYetkileri: [],

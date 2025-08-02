@@ -1,63 +1,37 @@
 {
-  // ===== GEREKSİZ DOSYA HATALARINI ENGELLE =====
-  "files.associations": {
-    "*.md": "markdown",
-    "*.mdc": "markdown"
-  },
-  
-  // ===== PROBLEM TRACKING EXCLUDE =====
+  "workbench.startupEditor": "none",
+  "workbench.enableExperiments": false,
+  "telemetry.enableTelemetry": false,
+  "editor.semanticHighlighting.enabled": false,
+  "editor.hover.enabled": false,
+  "editor.lightbulb.enabled": "off",
+  "editor.quickSuggestions": false,
+  "editor.parameterHints.enabled": false,
+  "editor.minimap.enabled": false,
+  "editor.glyphMargin": false,
+  "editor.folding": false,
+  "editor.renderWhitespace": "none",
+  "editor.renderControlCharacters": false,
+  "editor.renderIndentGuides": false,
+  "editor.occurrencesHighlight": false,
+  "editor.selectionHighlight": false,
+  "editor.wordHighlight": false,
+  "editor.bracketPairColorization.enabled": false,
+  "cursor.chat.maxModelContextLength": 200000,
+  "cursor.chat.enableFileTree": false,
+  "cursor.chat.enableWorkspaceSearch": true,
+  "cursor.autocomplete.enable": true,
+  "cursor.autocomplete.maxSuggestions": 3,
+  "cursor.autocomplete.multilineCompletions": "enabled",
+  "search.maxResults": 1000,
+  "search.smartCase": true,
+  "search.followSymlinks": false,
+  "explorer.decorations.badges": false,
+  "explorer.decorations.colors": false,
+  "git.decorations.enabled": false,
   "problems.decorations.enabled": false,
-  "typescript.suggest.includeCompletionsForModuleExports": false,
-  
-  // ===== MARKDOWNLINT DISABLE =====
-  "markdownlint.ignore": [
-    "**/.github/**",
-    "**/docs/**", 
-    "**/README.md",
-    "**/CHANGELOG.md",
-    "**/LICENSE",
-    "**/SECURITY.md",
-    "**/*TEMPLATE.md",
-    "**/*QUICK-START.md",
-    "**/*RULE-*.md"
-  ],
-  
-  // ===== ESLINT IGNORE PATTERNS =====
-  "eslint.workingDirectories": ["backend", "frontend"],
-  "eslint.options": {
-    "ignorePattern": [
-      "**/*.md",
-      "**/.github/**",
-      "**/docs/**",
-      "**/tools/**",
-      "**/scripts/**",
-      "**/*.config.js",
-      "**/CHANGELOG.md",
-      "**/README.md",
-      "**/LICENSE"
-    ]
-  },
-  
-  // ===== TYPESCRIPT IGNORE =====
-  "typescript.preferences.includePackageJsonAutoImports": "off",
-  "typescript.validate.enable": false,
-  
-  // ===== JSON SCHEMA DISABLE =====
-  "json.validate.enable": false,
-  "yaml.validate": false,
-  
-  // ===== FILE WATCHING EXCLUDE =====
-  "files.watcherExclude": {
-    "**/.github/**": true,
-    "**/docs/**": true,
-    "**/tools/**": true,
-    "**/*.md": true,
-    "**/CHANGELOG.md": true,
-    "**/README.md": true,
-    "**/LICENSE": true
-  },
-  
-  // ===== PROBLEM EXCLUDE =====
-  "problems.sortOrder": "severity",
-  "problems.showCurrentInStatus": false
+  "eslint.run": "onSave",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  }
 }

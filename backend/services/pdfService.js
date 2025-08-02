@@ -1,6 +1,5 @@
 const puppeteer = require('puppeteer');
 const path = require('path');
-const fs = require('fs').promises;
 const ejs = require('ejs');
 const { format } = require('date-fns');
 const { tr } = require('date-fns/locale');

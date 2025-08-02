@@ -1,5 +1,6 @@
 const Meeting = require('../models/Meeting');
 const MeetingNote = require('../models/MeetingNote');
+const MeetingTask = require('../models/MeetingTask');
 const Task = require('../models/Task');
 const User = require('../models/User');
 const Department = require('../models/Department');
@@ -184,7 +185,10 @@ const createMeeting = async (req, res) => {
       departman: departman || null,
       makina: makina || null,
       katilimcilar: katilimcilar || [],
-      gundem: gundem || [],
+      gundem: (gundem || []).map(item => ({
+        ...item,
+        sorumlu: item.sorumlu && item.sorumlu.trim() !== '' ? item.sorumlu : null,
+      })),
       tekrarlamaAyarlari: tekrarlamaAyarlari || { tip: 'yok' },
       ilgiliChecklist: ilgiliChecklist || null,
     };
@@ -424,67 +428,7 @@ const startMeeting = async (req, res) => {
   }
 };
 
-/**
- * @desc    Toplantı bitir
- * @route   POST /api/meetings/:id/finish
- * @access  Private (Organizatör veya Sunucu)
- */
-const finishMeeting = async (req, res) => {
-  try {
-    const meeting = await Meeting.findById(req.params.id);
 
-    if (!meeting || meeting.silindiMi) {
-      return res.status(404).json({ message: 'Toplantı bulunamadı' });
-    }
-
-    // Check permissions
-    const userId = req.user.id;
-    const isOrganizator = meeting.organizator.toString() === userId;
-    const isSunucu = meeting.katilimcilar.some(
-      k => k.kullanici.toString() === userId && k.rol === 'sunucu',
-    );
-
-    if (!isOrganizator && !isSunucu) {
-      return res
-        .status(403)
-        .json({ message: 'Bu toplantıyı bitirme yetkiniz yok' });
-    }
-
-    if (meeting.durum !== 'devam-ediyor') {
-      return res.status(400).json({ message: 'Toplantı devam etmiyor' });
-    }
-
-    // Calculate duration
-    const now = new Date();
-    const startTime =
-      meeting.gercekBaslangicSaati ||
-      new Date(meeting.tarih + ' ' + meeting.baslangicSaati);
-    const durationMs = now - startTime;
-    const durationMinutes = Math.floor(durationMs / (1000 * 60));
-
-    // Update meeting status
-    meeting.durum = 'tamamlandı';
-    meeting.gercekBitisSaati = now;
-    meeting.toplamSure = durationMinutes;
-    await meeting.save();
-
-    res.json({
-      message: 'Toplantı tamamlandı',
-      meeting: {
-        _id: meeting._id,
-        durum: meeting.durum,
-        gercekBitisSaati: meeting.gercekBitisSaati,
-        toplamSure: meeting.toplamSure,
-      },
-    });
-  } catch (error) {
-    console.error('finishMeeting error:', error.message);
-    if (error.kind === 'ObjectId') {
-      return res.status(404).json({ message: 'Toplantı bulunamadı' });
-    }
-    res.status(500).json({ message: 'Sunucu hatası', error: error.message });
-  }
-};
 
 /**
  * @desc    Toplantıdan görev oluştur
@@ -604,6 +548,188 @@ const getMyMeetings = async (req, res) => {
   } catch (error) {
     console.error('getMyMeetings error:', error.message);
     res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+  }
+};
+
+/**
+ * @desc    Toplantıyı bitir ve görevleri oluştur
+ * @route   PUT /api/meetings/:id/finish
+ * @access  Private (Organizatör)
+ */
+const finishMeeting = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Meeting'i bul
+    const meeting = await Meeting.findById(id)
+      .populate('gundem.sorumlu', 'ad soyad email')
+      .populate('kararlar.sorumlu', 'ad soyad email');
+
+    if (!meeting) {
+      return res.status(404).json({ message: 'Toplantı bulunamadı' });
+    }
+
+    // Admin kullanıcı veya organizatör bitirebilir
+    const isAdmin = req.user.roller.some(rol => rol.ad === 'Admin');
+    if (meeting.organizator.toString() !== userId && !isAdmin) {
+      return res.status(403).json({ 
+        message: 'Sadece toplantı organizatörü veya admin toplantıyı bitirebilir' 
+      });
+    }
+
+    // Meeting zaten bitmiş mi kontrol et
+    if (meeting.durum === 'tamamlandı') {
+      return res.status(400).json({ 
+        message: 'Bu toplantı zaten tamamlandı' 
+      });
+    }
+
+    console.log('📅 Meeting bitirilme işlemi başlatıldı:', meeting.baslik);
+
+    // Meeting durumunu güncelle
+    meeting.durum = 'tamamlandı';
+    meeting.gercekBitisSaati = new Date();
+    await meeting.save();
+
+    // Görevleri oluştur
+    const createdTasks = await createTasksFromMeetingHelper(meeting);
+
+    console.log(`✅ ${createdTasks.length} görev oluşturuldu`);
+
+    // Katılımcılara email bildirim gönder
+    try {
+      for (const katilimci of meeting.katilimcilar) {
+        if (katilimci.kullanici && katilimci.durum === 'katildi') {
+          const user = await User.findById(katilimci.kullanici);
+          if (user && user.email) {
+            await emailService.sendMeetingSummary(user.email, {
+              meetingTitle: meeting.baslik,
+              meetingDate: meeting.tarih,
+              tasksCount: createdTasks.filter(t => 
+                t.sorumlu.toString() === user._id.toString()
+              ).length
+            });
+          }
+        }
+      }
+    } catch (emailError) {
+      console.error('Email gönderme hatası:', emailError);
+      // Email hatası toplantı bitirme işlemini durdurmaz
+    }
+
+    res.json({
+      message: 'Toplantı başarıyla tamamlandı',
+      meeting: {
+        _id: meeting._id,
+        baslik: meeting.baslik,
+        durum: meeting.durum,
+        gercekBitisSaati: meeting.gercekBitisSaati
+      },
+      createdTasks: createdTasks.length,
+      tasks: createdTasks
+    });
+
+  } catch (error) {
+    console.error('finishMeeting error:', error);
+    res.status(500).json({ 
+      message: 'Toplantı bitirme sırasında hata oluştu',
+      error: error.message 
+    });
+  }
+};
+
+/**
+ * @desc    Meeting'den görev oluştur (internal function)
+ * @param   {Object} meeting - Meeting objesi
+ * @returns {Array} - Oluşturulan görevler
+ */
+const createTasksFromMeetingHelper = async (meeting) => {
+  const createdTasks = [];
+
+  try {
+    console.log('🎯 Görev oluşturma işlemi başladı...');
+
+    // 1. Gündem maddelerinden görev oluştur
+    for (const gundemMaddesi of meeting.gundem) {
+      if (gundemMaddesi.sorumlu && 
+          ['karar-verildi', 'tamamlandı'].includes(gundemMaddesi.durum)) {
+        
+        console.log(`📋 Gündem maddesi: ${gundemMaddesi.baslik} - Sorumlu: ${gundemMaddesi.sorumlu.ad}`);
+
+        const newTask = new MeetingTask({
+          meeting: meeting._id,
+          gundemMaddesiId: gundemMaddesi._id,
+          baslik: gundemMaddesi.baslik,
+          aciklama: gundemMaddesi.aciklama || 'Toplantı gündem maddesinden oluşturulan görev',
+          sorumlu: gundemMaddesi.sorumlu._id,
+          durum: 'atandi',
+          oncelik: 'normal',
+          gorunurluk: 'katilimcilara'
+        });
+
+        await newTask.save();
+        createdTasks.push(newTask);
+
+        // Notification gönder
+        try {
+          await notificationService.createNotification({
+            kullanici: gundemMaddesi.sorumlu._id,
+            baslik: 'Yeni Toplantı Görevi',
+            mesaj: `"${meeting.baslik}" toplantısından size görev atandı: ${gundemMaddesi.baslik}`,
+            tip: 'task-assigned',
+            referansId: newTask._id,
+            oncelik: 'normal'
+          });
+        } catch (notifError) {
+          console.error('Notification gönderme hatası:', notifError);
+        }
+      }
+    }
+
+    // 2. Kararlardan görev oluştur
+    for (const karar of meeting.kararlar) {
+      if (karar.sorumlu && karar.durum !== 'iptal') {
+        
+        console.log(`📝 Karar: ${karar.baslik} - Sorumlu: ${karar.sorumlu.ad || 'Bilinmiyor'}`);
+
+        const newTask = new MeetingTask({
+          meeting: meeting._id,
+          gundemMaddesiId: karar._id,
+          baslik: karar.baslik,
+          aciklama: karar.aciklama || 'Toplantı kararından oluşturulan görev',
+          sorumlu: karar.sorumlu,
+          durum: 'atandi',
+          oncelik: karar.oncelik || 'normal',
+          teslimTarihi: karar.teslimTarihi,
+          gorunurluk: 'katilimcilara'
+        });
+
+        await newTask.save();
+        createdTasks.push(newTask);
+
+        // Notification gönder
+        try {
+          await notificationService.createNotification({
+            kullanici: karar.sorumlu,
+            baslik: 'Yeni Toplantı Görevi',
+            mesaj: `"${meeting.baslik}" toplantısından size görev atandı: ${karar.baslik}`,
+            tip: 'task-assigned',
+            referansId: newTask._id,
+            oncelik: karar.oncelik || 'normal'
+          });
+        } catch (notifError) {
+          console.error('Notification gönderme hatası:', notifError);
+        }
+      }
+    }
+
+    console.log(`✅ Toplam ${createdTasks.length} görev oluşturuldu`);
+    return createdTasks;
+
+  } catch (error) {
+    console.error('createTaskFromMeeting error:', error);
+    throw error;
   }
 };
 

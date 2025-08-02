@@ -57,7 +57,7 @@ const corsOptions = {
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
     'Content-Type',
     'Authorization',
@@ -241,6 +241,7 @@ app.use('/api/checklists', require('./routes/checklists'));
 app.use('/api/tasks', require('./routes/tasks'));
 app.use('/api/meetings', require('./routes/meetings'));
 app.use('/api/meeting-notes', require('./routes/meeting-notes'));
+app.use('/api/meeting-tasks', require('./routes/meeting-tasks'));
 app.use('/api/machines', require('./routes/machines'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/inventory', require('./routes/inventory'));

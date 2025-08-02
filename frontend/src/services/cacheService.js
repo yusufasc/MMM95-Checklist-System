@@ -244,28 +244,73 @@ class FrontendCacheService {
    * Cache invalidation helpers
    */
   invalidateUser(userId) {
+    // Memory cache temizle
     this.clearPattern(`user_${userId}`);
     this.clearPattern('users_list');
+
+    // SessionStorage cache temizle
+    this.clearPattern(`user_${userId}`, 'sessionStorage');
+    this.clearPattern('users_list', 'sessionStorage');
+
+    // LocalStorage cache temizle
+    this.clearPattern(`user_${userId}`, 'localStorage');
+    this.clearPattern('users_list', 'localStorage');
   }
 
   invalidateRoles() {
+    // Memory cache temizle
     this.clearPattern('roles_');
     this.clearPattern('permissions_');
+
+    // SessionStorage cache temizle
+    this.clearPattern('roles_', 'sessionStorage');
+    this.clearPattern('permissions_', 'sessionStorage');
+
+    // LocalStorage cache temizle
+    this.clearPattern('roles_', 'localStorage');
+    this.clearPattern('permissions_', 'localStorage');
   }
 
   invalidateDepartments() {
+    // Memory cache temizle
     this.del(this.KEYS.DEPARTMENTS_LIST);
+
+    // SessionStorage cache temizle
+    this.del(this.KEYS.DEPARTMENTS_LIST, 'sessionStorage');
+
+    // LocalStorage cache temizle
+    this.del(this.KEYS.DEPARTMENTS_LIST, 'localStorage');
   }
 
   invalidateInventory() {
+    // Memory cache temizle
     this.clearPattern('inventory_');
     this.clearPattern('machines_');
+
+    // SessionStorage cache temizle
+    this.clearPattern('inventory_', 'sessionStorage');
+    this.clearPattern('machines_', 'sessionStorage');
+
+    // LocalStorage cache temizle
+    this.clearPattern('inventory_', 'localStorage');
+    this.clearPattern('machines_', 'localStorage');
   }
 
   invalidateTasks(userId) {
+    // Memory cache temizle
     this.clearPattern(`tasks_${userId}`);
     this.clearPattern(`control_pending_${userId}`);
     this.clearPattern(`my_activity_${userId}`);
+
+    // SessionStorage cache temizle
+    this.clearPattern(`tasks_${userId}`, 'sessionStorage');
+    this.clearPattern(`control_pending_${userId}`, 'sessionStorage');
+    this.clearPattern(`my_activity_${userId}`, 'sessionStorage');
+
+    // LocalStorage cache temizle
+    this.clearPattern(`tasks_${userId}`, 'localStorage');
+    this.clearPattern(`control_pending_${userId}`, 'localStorage');
+    this.clearPattern(`my_activity_${userId}`, 'localStorage');
   }
 
   /**

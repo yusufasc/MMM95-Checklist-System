@@ -51,11 +51,16 @@ const getMeetingNotes = async (req, res) => {
       .sort({ siraNo: 1 })
       .limit(limit * 1);
 
-    res.json({
-      notes,
-      hasMore: notes.length === limit,
-      lastNoteId: notes.length > 0 ? notes[notes.length - 1]._id : null,
-    });
+    console.log('📝 DEBUG: Meeting notes found:', notes.length, notes.map(n => ({
+      _id: n._id,
+      createdAt: n.createdAt,
+      updatedAt: n.updatedAt,
+      olusturmaTarihi: n.olusturmaTarihi,
+      guncellemeTarihi: n.guncellemeTarihi,
+      toplantıZamaniSaati: n.toplantıZamaniSaati
+    })));
+
+    res.json(notes);
   } catch (error) {
     console.error('getMeetingNotes error:', error.message);
     if (error.kind === 'ObjectId') {
@@ -72,11 +77,14 @@ const getMeetingNotes = async (req, res) => {
  */
 const createNote = async (req, res) => {
   try {
+    console.log('📝 createNote request body:', req.body); // DEBUG: See what frontend sends
+    
     const {
       toplanti,
       icerik,
       tip,
       etiketler,
+      siraNo,
       gundemMaddesi,
       alintiliMetin,
       yanit,
@@ -116,6 +124,7 @@ const createNote = async (req, res) => {
       icerik: icerik.trim(),
       tip: tip || 'not',
       etiketler: etiketler || [],
+      siraNo: siraNo || 1, // Auto-increment sequence number from frontend
       gundemMaddesi: gundemMaddesi || null,
       alintiliMetin: alintiliMetin || null,
       yanit: yanit || null,
@@ -132,6 +141,8 @@ const createNote = async (req, res) => {
       .populate('olusturan', 'ad soyad kullaniciAdi')
       .populate('konusanKisi', 'ad soyad')
       .populate('yanit.hedefNot');
+
+    console.log('📝 DEBUG: Created note object:', populatedNote.toObject());
 
     res.status(201).json({
       message: 'Not başarıyla eklendi',

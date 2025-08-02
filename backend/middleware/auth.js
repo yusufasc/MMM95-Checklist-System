@@ -24,12 +24,33 @@ const auth = async (req, res, next) => {
     const user = await User.findById(decoded.user.id)
       .populate({
         path: 'roller',
-        populate: {
-          path: 'moduller.modul',
-          model: 'Module',
-        },
+        populate: [
+          {
+            path: 'moduller.modul',
+            model: 'Module',
+            select: 'ad aciklama',
+          },
+          {
+            path: 'checklistYetkileri.hedefRol',
+            model: 'Role', 
+            select: 'ad',
+          },
+        ],
       })
       .populate('departmanlar');
+
+    // Debug: Populate kontrolü
+    if (user && user.roller) {
+      console.log('=== AUTH MIDDLEWARE DEBUG ===');
+      console.log('User:', user.kullaniciAdi);
+      user.roller.forEach((rol, i) => {
+        console.log(`Rol ${i+1}: ${rol.ad}`);
+        if (rol.moduller && rol.moduller.length > 0) {
+          console.log(`  Moduller count: ${rol.moduller.length}`);
+          console.log(`  First modul: ${JSON.stringify(rol.moduller[0].modul)}`);
+        }
+      });
+    }
 
     if (!user) {
       return res.status(401).json({ message: 'Geçersiz token' });

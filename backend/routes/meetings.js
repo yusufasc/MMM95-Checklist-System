@@ -79,6 +79,16 @@ router.put(
   updateMeeting,
 );
 
+// @route   PATCH /api/meetings/:id
+// @desc    Toplantı güncelle (partial update)
+// @access  Private (Organizatör veya Admin)
+router.patch(
+  '/:id',
+  auth,
+  checkModulePermission('Toplantı Yönetimi', 'duzenleyebilir'),
+  updateMeeting,
+);
+
 // @route   DELETE /api/meetings/:id
 // @desc    Toplantı sil (soft delete)
 // @access  Private (Organizatör veya Admin)

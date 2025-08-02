@@ -256,7 +256,7 @@ const MeetingTable = memo(
           </Tooltip>
 
           {/* Start/Finish buttons */}
-          {canControl && meeting.durum === 'bekliyor' && (
+          {canControl && (meeting.durum === 'bekliyor' || meeting.durum === 'planlanıyor') && (
             <Tooltip title='Toplantıyı Başlat'>
               <IconButton
                 size='small'
@@ -269,19 +269,21 @@ const MeetingTable = memo(
           )}
 
           {/* Live Meeting button */}
-          {meeting.durum === 'devam-ediyor' && (
-            <Tooltip title='Canlı Toplantıya Katıl'>
+          {(meeting.durum === 'devam-ediyor' || meeting.durum === 'planlanıyor') && (
+            <Tooltip title={meeting.durum === 'devam-ediyor' ? 'Canlı Toplantıya Katıl' : 'Toplantı Odasına Gir'}>
               <IconButton
                 size='small'
                 onClick={() => onLiveMeeting?.(meeting._id)}
                 color='success'
                 sx={{
-                  animation: 'pulse 2s infinite',
-                  '@keyframes pulse': {
-                    '0%': { opacity: 1 },
-                    '50%': { opacity: 0.7 },
-                    '100%': { opacity: 1 },
-                  },
+                  ...(meeting.durum === 'devam-ediyor' && {
+                    animation: 'pulse 2s infinite',
+                    '@keyframes pulse': {
+                      '0%': { opacity: 1 },
+                      '50%': { opacity: 0.7 },
+                      '100%': { opacity: 1 },
+                    },
+                  }),
                 }}
               >
                 <LiveIcon />

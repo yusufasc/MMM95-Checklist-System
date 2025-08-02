@@ -135,6 +135,13 @@ export const rolesAPI = {
     frontendCache.invalidateRoles();
     return api.delete(`/roles/${id}`);
   },
+  transferUsers: (oldRoleId, targetRoleName) => {
+    frontendCache.invalidateRoles();
+    frontendCache.invalidateUser(); // Kullanıcı cache'ini de temizle
+    return api.post(`/roles/${oldRoleId}/transfer-users`, {
+      targetRoleName,
+    });
+  },
   // Cache temizleme için yardımcı fonksiyon
   clearCache: () => {
     // Axios cache'ini temizle (eğer varsa)
@@ -807,6 +814,64 @@ export const equipmentRequestAPI = {
   reject: (id, data) => api.put(`/equipment-requests/${id}/reject`, data),
   cancel: id => api.delete(`/equipment-requests/${id}`),
   getStats: () => api.get('/equipment-requests/dashboard/stats'),
+};
+
+// Meetings API
+export const meetingsAPI = {
+  // CRUD Operations
+  getAll: (filters = {}) => {
+    const queryString = Object.entries(filters)
+      .filter(([, value]) => value !== '' && value !== null)
+      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .join('&');
+    return api.get(`/meetings${queryString ? `?${queryString}` : ''}`);
+  },
+  getById: id => api.get(`/meetings/${id}`),
+  create: meetingData => api.post('/meetings', meetingData),
+  update: (id, meetingData) => api.put(`/meetings/${id}`, meetingData),
+  delete: id => api.delete(`/meetings/${id}`),
+
+  // Meeting Actions
+  start: (id, userData) => api.patch(`/meetings/${id}`, {
+    durum: 'devam-ediyor',
+    gercekBaslangicSaati: new Date(),
+    ...userData,
+  }),
+  pause: (id, userData) => api.patch(`/meetings/${id}`, {
+    durum: 'bekliyor',
+    ...userData,
+  }),
+  finish: (id, userData) => api.post(`/meetings/${id}/finish`, userData),
+
+  // Agenda Management
+  addAgendaItem: (id, agendaItem) => api.post(`/meetings/${id}/agenda`, agendaItem),
+  updateAgendaItem: (id, itemIndex, agendaItem) => api.put(`/meetings/${id}/agenda/${itemIndex}`, agendaItem),
+  deleteAgendaItem: (id, itemIndex) => api.delete(`/meetings/${id}/agenda/${itemIndex}`),
+  updateAgendaStatus: (id, itemIndex, status) => api.patch(`/meetings/${id}/agenda/${itemIndex}`, { durum: status }),
+
+  // Participants Management
+  addParticipant: (id, participantData) => api.post(`/meetings/${id}/participants`, participantData),
+  updateParticipant: (id, participantId, participantData) => api.put(`/meetings/${id}/participants/${participantId}`, participantData),
+  removeParticipant: (id, participantId) => api.delete(`/meetings/${id}/participants/${participantId}`),
+
+  // Excel Operations
+  exportToExcel: (filters = {}) => {
+    const queryString = Object.entries(filters)
+      .filter(([, value]) => value !== '' && value !== null)
+      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .join('&');
+    return api.get(`/meetings/export/excel${queryString ? `?${queryString}` : ''}`, {
+      responseType: 'blob',
+    });
+  },
+  importFromExcel: (file, onProgress) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/meetings/import/excel', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: onProgress,
+    });
+  },
 };
 
 // API Service - Main export for components

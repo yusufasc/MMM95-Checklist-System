@@ -54,6 +54,7 @@ const EquipmentManagement = React.lazy(
 );
 const Meetings = React.lazy(() => import('./pages/Meetings'));
 const LiveMeeting = React.lazy(() => import('./pages/LiveMeeting'));
+const Responsibilities = React.lazy(() => import('./pages/Responsibilities'));
 const Analytics = React.lazy(() => import('./pages/Analytics'));
 
 // Initialize crash reporter
@@ -165,7 +166,7 @@ function AppRoutes() {
             <Route
               path='meetings'
               element={
-                <ProtectedRoute module='Toplantı Yönetimi'>
+                <ProtectedRoute module='Toplanti Yonetimi'>
                   <Meetings />
                 </ProtectedRoute>
               }
@@ -173,8 +174,16 @@ function AppRoutes() {
             <Route
               path='meetings/:id/live'
               element={
-                <ProtectedRoute module='Toplantı Yönetimi'>
+                <ProtectedRoute module='Toplanti Yonetimi'>
                   <LiveMeeting />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='responsibilities'
+              element={
+                <ProtectedRoute module='Toplanti Yonetimi'>
+                  <Responsibilities />
                 </ProtectedRoute>
               }
             />
@@ -237,7 +246,7 @@ function AppRoutes() {
             <Route
               path='quality-control-management'
               element={
-                <ProtectedRoute module='Kalite Kontrol Yönetimi'>
+                <ProtectedRoute module='Kalite Kontrol'>
                   <QualityControlManagement />
                 </ProtectedRoute>
               }
@@ -302,7 +311,7 @@ function AppRoutes() {
             <Route
               path='analytics'
               element={
-                <ProtectedRoute module='Dashboard'>
+                <ProtectedRoute module='Analytics Dashboard'>
                   <Analytics />
                 </ProtectedRoute>
               }

@@ -220,6 +220,71 @@ router.put(
   },
 );
 
+// @route   POST /api/roles/:id/transfer-users
+// @desc    Rol kullanıcılarını başka role taşı ve rolü sil
+// @access  Private (Rol Yönetimi modülü düzenleme yetkisi)
+router.post(
+  '/:id/transfer-users',
+  auth,
+  checkModulePermission('Rol Yönetimi', 'duzenleyebilir'),
+  async (req, res) => {
+    try {
+      const { targetRoleName } = req.body;
+      const oldRoleId = req.params.id;
+
+      // Hedef rolü bul
+      const targetRole = await Role.findOne({ ad: targetRoleName });
+      if (!targetRole) {
+        return res.status(400).json({ 
+          message: `"${targetRoleName}" rolü bulunamadı` 
+        });
+      }
+
+      // Silinecek rolü bul
+      const oldRole = await Role.findById(oldRoleId);
+      if (!oldRole) {
+        return res.status(404).json({ message: 'Silinecek rol bulunamadı' });
+      }
+
+      // Kullanıcıları bul ve taşı
+      const usersToTransfer = await User.find({ roller: oldRoleId });
+      let transferredCount = 0;
+
+      for (const user of usersToTransfer) {
+        // Eski rolü kaldır
+        user.roller = user.roller.filter(roleId => !roleId.equals(oldRoleId));
+        
+        // Hedef rol zaten yoksa ekle
+        if (!user.roller.some(roleId => roleId.equals(targetRole._id))) {
+          user.roller.push(targetRole._id);
+        }
+        
+        await user.save();
+        transferredCount++;
+      }
+
+      // Rolü sil
+      await Role.findByIdAndDelete(oldRoleId);
+
+      console.log(`✅ Rol Transfer: ${transferredCount} kullanıcı "${oldRole.ad}" → "${targetRoleName}"`);
+      
+      res.json({
+        success: true,
+        message: `${transferredCount} kullanıcı "${targetRoleName}" rolüne taşındı ve "${oldRole.ad}" rolü silindi`,
+        transferredCount,
+        oldRoleName: oldRole.ad,
+        targetRoleName
+      });
+    } catch (error) {
+      console.error('Role transfer error:', error.message);
+      if (error.kind === 'ObjectId') {
+        return res.status(400).json({ message: 'Geçersiz rol ID' });
+      }
+      res.status(500).json({ message: 'Sunucu hatası' });
+    }
+  },
+);
+
 // @route   DELETE /api/roles/:id
 // @desc    Rol sil
 // @access  Private (Rol Yönetimi modülü düzenleme yetkisi)
@@ -237,6 +302,8 @@ router.delete(
       if (usersWithRole > 0) {
         return res.status(400).json({
           message: `Bu rol ${usersWithRole} kullanıcı tarafından kullanılıyor. Önce kullanıcıların rollerini değiştirin.`,
+          canTransfer: true,
+          userCount: usersWithRole
         });
       }
 

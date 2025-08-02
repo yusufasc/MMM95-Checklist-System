@@ -121,6 +121,12 @@
     "workbench.startupEditor": "none",
     "workbench.tips.enabled": false,
     "workbench.welcomePage.hiddenCategories": ["Beginner", "Intermediate"],
+    "workbench.activityBar.visible": true,
+    "workbench.statusBar.visible": true,
+    "workbench.sideBar.location": "left",
+    "workbench.tree.indent": 8,
+    "workbench.tree.renderIndentGuides": "none",
+    "workbench.colorTheme": "Default Dark+",
     "telemetry.enableTelemetry": false,
     "telemetry.enableCrashReporter": false,
     
@@ -129,6 +135,23 @@
     "workbench.enabledExtensions": ["dbaeumer.vscode-eslint"],
     "performance.measureStartup": true,
     "window.experimental.useSandbox": false,
+    
+    // 🎯 CURSOR ÖZEL AYARLARI
+    "cursor.chat.maxModelContextLength": 200000,
+    "cursor.chat.enableFileTree": false,
+    "cursor.chat.enableWorkspaceSearch": true,
+    "cursor.composer.enableChatInComposer": true,
+    "cursor.autocomplete.enable": true,
+    "cursor.autocomplete.maxSuggestions": 3,
+    "cursor.autocomplete.multilineCompletions": "enabled",
+    "cursor.autocomplete.disableInString": false,
+    
+    // 🔍 SEARCH OPTIMIZATION
+    "search.maxResults": 1000,
+    "search.smartCase": true,
+    "search.followSymlinks": false,
+    "search.useRipgrep": true,
+    "search.maintainFileSearchCache": false,
 
 
     "cSpell.enabled": true,
@@ -214,6 +237,9 @@
     },
     "files.hotExit": "off",
     "files.autoSave": "off",
+    "files.enableTrash": false,
+    "files.trimTrailingWhitespace": false,
+    "files.insertFinalNewline": false,
 
 
     "git.enableSmartCommit": false,
@@ -222,37 +248,47 @@
     "git.autorefresh": false,
     "git.scanRepositories": [],
     "git.decorations.enabled": false,
+    "git.enabled": true,
+    "git.path": null,
+    "git.ignoreLegacyWarning": true,
 
 
     "editor.formatOnSave": false,
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": true
+      "source.fixAll.eslint": "explicit"
     },
     "editor.tabSize": 2,
     "editor.insertSpaces": true,
-    "editor.quickSuggestions": {
-      "other": false,
-      "comments": false,
-      "strings": false
-    },
+    "editor.quickSuggestions": false,
     "editor.parameterHints.enabled": false,
     "editor.suggestOnTriggerCharacters": false,
     "editor.wordBasedSuggestions": "off",
     "editor.semanticHighlighting.enabled": false,
     "editor.hover.enabled": false,
     "editor.lightbulb.enabled": "off",
+    "editor.minimap.enabled": false,
+    "editor.glyphMargin": false,
+    "editor.folding": false,
+    "editor.lineNumbers": "on",
+    "editor.renderWhitespace": "none",
+    "editor.renderControlCharacters": false,
+    "editor.renderIndentGuides": false,
+    "editor.occurrencesHighlight": false,
+    "editor.selectionHighlight": false,
+    "editor.wordHighlight": false,
+    "editor.bracketPairColorization.enabled": false,
 
 
     "[javascript]": {
       "editor.defaultFormatter": "dbaeumer.vscode-eslint",
       "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": true
+        "source.fixAll.eslint": "explicit"
       }
     },
     "[javascriptreact]": {
       "editor.defaultFormatter": "dbaeumer.vscode-eslint",
       "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": true
+        "source.fixAll.eslint": "explicit"
       }
     },
     "[typescript]": {

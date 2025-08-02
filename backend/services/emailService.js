@@ -45,7 +45,7 @@ class EmailService {
         try {
           await this.transporter.verify();
           logger.info('✅ Email service initialized successfully');
-        } catch (error) {
+        } catch {
           logger.warn(
             '⚠️ Email verification failed, continuing without email service',
           );

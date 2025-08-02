@@ -111,7 +111,7 @@ const MeetingSchema = new mongoose.Schema({
       },
       durum: {
         type: String,
-        enum: ['bekliyor', 'tartışıldı', 'karar-verildi', 'ertelendi'],
+        enum: ['bekliyor', 'devam-ediyor', 'tartışıldı', 'karar-verildi', 'tamamlandı', 'ertelendi'],
         default: 'bekliyor',
       },
     },

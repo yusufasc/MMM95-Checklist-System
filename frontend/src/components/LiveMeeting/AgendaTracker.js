@@ -29,7 +29,11 @@ import {
   Timer as TimerIcon,
   Person as PersonIcon,
   Assignment as AssignmentIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
+
+import AgendaDialog from '../Meetings/AgendaDialog';
+import { meetingsAPI } from '../../services/api';
 
 /**
  * 📋 Agenda Tracker Component
@@ -37,7 +41,7 @@ import {
  */
 const AgendaTracker = memo(
   ({
-    meetingId: _meetingId,
+    meetingId,
     meeting,
     currentItem = 0,
     progress = 0,
@@ -47,6 +51,8 @@ const AgendaTracker = memo(
     const [noteDialog, setNoteDialog] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
     const [itemNote, setItemNote] = useState('');
+    const [agendaDialogOpen, setAgendaDialogOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const agenda = meeting?.gundem || [];
 
@@ -123,6 +129,31 @@ const AgendaTracker = memo(
     };
 
     /**
+     * Handle agenda save from dialog
+     */
+    const handleAgendaSave = async (agendaItems) => {
+      if (!meetingId) {
+        return;
+      }
+
+      setLoading(true);
+      try {
+        await meetingsAPI.update(meetingId, { gundem: agendaItems });
+        // Note: The meeting data should be refreshed from parent component
+        // onProgressUpdate could be used to trigger a refresh
+        if (onProgressUpdate) {
+          onProgressUpdate(); // Trigger parent to refresh meeting data
+        }
+        console.log('✅ Agenda updated successfully');
+      } catch (error) {
+        console.error('❌ Failed to update agenda:', error);
+        alert('Gündem güncellenirken hata oluştu: ' + error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    /**
      * Calculate total estimated time
      */
     const totalEstimatedTime = agenda.reduce(
@@ -168,16 +199,31 @@ const AgendaTracker = memo(
                 Toplantı Gündemi ({agenda.length} madde)
               </Typography>
 
-              <Box textAlign='right'>
-                <Typography variant='body2' color='text.secondary'>
-                  <TimerIcon sx={{ fontSize: 14, mr: 0.5 }} />
-                  {completedTime} / {totalEstimatedTime} dk
-                </Typography>
-                <LinearProgress
-                  variant='determinate'
-                  value={progress}
-                  sx={{ width: 120, mt: 0.5 }}
-                />
+              <Box display='flex' alignItems='center' gap={2}>
+                {/* Edit Agenda Button */}
+                {isJoined && (
+                  <Tooltip title="Gündem Düzenle">
+                    <IconButton
+                      onClick={() => setAgendaDialogOpen(true)}
+                      color="primary"
+                      disabled={loading}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
+                )}
+
+                <Box textAlign='right'>
+                  <Typography variant='body2' color='text.secondary'>
+                    <TimerIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                    {completedTime} / {totalEstimatedTime} dk
+                  </Typography>
+                  <LinearProgress
+                    variant='determinate'
+                    value={progress}
+                    sx={{ width: 120, mt: 0.5 }}
+                  />
+                </Box>
               </Box>
             </Box>
 
@@ -239,6 +285,7 @@ const AgendaTracker = memo(
                     </ListItemIcon>
 
                     <ListItemText
+                      disableTypography
                       primary={
                         <Box display='flex' alignItems='center' gap={1} mb={1}>
                           <Typography variant='subtitle1' sx={{ flex: 1 }}>
@@ -282,7 +329,17 @@ const AgendaTracker = memo(
                               <Box display='flex' alignItems='center' gap={0.5}>
                                 <PersonIcon sx={{ fontSize: 14 }} />
                                 <Typography variant='caption'>
-                                  {item.sorumlu?.isim || item.sorumlu}
+                                  {Array.isArray(item.sorumlu)
+                                    ? item.sorumlu.map(s =>
+                                      typeof s === 'string' ? s :
+                                        s.isim || `${s.ad || ''} ${s.soyad || ''}`.trim() || 'İsimsiz',
+                                    ).join(', ')
+                                    : typeof item.sorumlu === 'string'
+                                      ? item.sorumlu
+                                      : item.sorumlu.isim ||
+                                        `${item.sorumlu.ad || ''} ${item.sorumlu.soyad || ''}`.trim() ||
+                                        'İsimsiz'
+                                  }
                                 </Typography>
                               </Box>
                             )}
@@ -391,6 +448,22 @@ const AgendaTracker = memo(
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Agenda Dialog */}
+        <AgendaDialog
+          open={agendaDialogOpen}
+          onClose={() => setAgendaDialogOpen(false)}
+          onSave={handleAgendaSave}
+          participants={meeting?.katilimcilar?.map(k => ({
+            _id: k.kullanici?._id || k._id,
+            isim: k.kullanici?.isim || k.isim ||
+              `${k.kullanici?.ad || k.ad || ''} ${k.kullanici?.soyad || k.soyad || ''}`.trim() || 'İsimsiz',
+            email: k.kullanici?.email || k.email || '',
+            rol: k.rol || 'katılımcı',
+          })) || []}
+          agenda={agenda}
+          title="Canlı Toplantı Gündem Düzenle"
+        />
       </>
     );
   },

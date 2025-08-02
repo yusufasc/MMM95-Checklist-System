@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -35,6 +35,9 @@ import { useLiveMeeting } from '../hooks/useLiveMeeting';
 import { useAuth } from '../contexts/AuthContext';
 import { useSocket } from '../contexts/SocketContext';
 
+// Import services
+import MeetingTaskAPI from '../services/meetingTaskAPI';
+
 /**
  * 🔴 Live Meeting Page
  * Real-time collaborative meeting interface
@@ -62,9 +65,22 @@ const LiveMeeting = () => {
     updateAgendaProgress,
   } = useLiveMeeting(meetingId);
 
+  // Ensure unique participants - remove duplicates based on userId
+  const uniqueParticipants = useMemo(() => {
+    const seen = new Set();
+    return participants.filter(participant => {
+      if (seen.has(participant.userId)) {
+        return false;
+      }
+      seen.add(participant.userId);
+      return true;
+    });
+  }, [participants]);
+
   // UI State
   const [activeTab, setActiveTab] = useState('notes'); // notes, agenda, participants
   const [isJoined, setIsJoined] = useState(false);
+  const [finishingMeeting, setFinishingMeeting] = useState(false);
 
   /**
    * Join meeting room
@@ -146,12 +162,52 @@ const LiveMeeting = () => {
     pauseMeeting(user);
   };
 
-  const handleEndMeeting = () => {
-    endMeeting(user);
-    // Auto-exit after ending
-    setTimeout(() => {
-      handleExitMeeting();
-    }, 2000);
+  const handleEndMeeting = async () => {
+    if (finishingMeeting) {
+      return;
+    }
+
+    setFinishingMeeting(true);
+
+    try {
+      // 1. End the meeting in real-time
+      endMeeting(user);
+
+      // 2. Finish meeting and create tasks
+      const result = await MeetingTaskAPI.finishMeeting(meetingId);
+
+      if (result.success) {
+        console.log(`✅ Meeting finished. ${result.data.createdTasks} tasks created.`);
+
+        // Show success message
+        if (window.confirm(
+          'Toplantı başarıyla tamamlandı!\n\n' +
+          `${result.data.createdTasks} görev oluşturuldu.\n\n` +
+          'Görevleri görüntülemek için "Sorumluluklarım" sayfasına gitmek ister misiniz?',
+        )) {
+          navigate('/responsibilities');
+          return;
+        }
+      } else {
+        console.error('Failed to finish meeting:', result.error);
+        alert('Toplantı bitirilirken hata oluştu: ' + result.error);
+      }
+
+      // Auto-exit after ending (if not navigated to responsibilities)
+      setTimeout(() => {
+        handleExitMeeting();
+      }, 2000);
+
+    } catch (error) {
+      console.error('End meeting error:', error);
+      alert('Toplantı bitirilirken beklenmeyen hata oluştu');
+    } finally {
+      setFinishingMeeting(false);
+    }
+  };
+
+  const handleResumeMeeting = () => {
+    startMeeting(user); // Resume is same as start - both set status to 'devam-ediyor'
   };
 
   /**
@@ -233,9 +289,11 @@ const LiveMeeting = () => {
                       ? 'success'
                       : meetingStatus === 'planlanıyor'
                         ? 'warning'
-                        : meetingStatus === 'tamamlandı'
-                          ? 'info'
-                          : 'default'
+                        : meetingStatus === 'bekliyor'
+                          ? 'warning'
+                          : meetingStatus === 'tamamlandı'
+                            ? 'info'
+                            : 'default'
                   }
                   variant='filled'
                 />
@@ -284,10 +342,34 @@ const LiveMeeting = () => {
                     <Button
                       variant='contained'
                       color='error'
-                      startIcon={<StopIcon />}
+                      startIcon={finishingMeeting ? <CircularProgress size={20} color="inherit" /> : <StopIcon />}
                       onClick={handleEndMeeting}
+                      disabled={finishingMeeting}
                     >
-                      Bitir
+                      {finishingMeeting ? 'Bitiriliyor...' : 'Bitir'}
+                    </Button>
+                  </>
+                )}
+
+                {meetingStatus === 'bekliyor' && (
+                  <>
+                    <Button
+                      variant='contained'
+                      color='success'
+                      startIcon={<StartIcon />}
+                      onClick={handleResumeMeeting}
+                      disabled={!isJoined}
+                    >
+                      Devam Et
+                    </Button>
+                    <Button
+                      variant='contained'
+                      color='error'
+                      startIcon={finishingMeeting ? <CircularProgress size={20} color="inherit" /> : <StopIcon />}
+                      onClick={handleEndMeeting}
+                      disabled={finishingMeeting}
+                    >
+                      {finishingMeeting ? 'Bitiriliyor...' : 'Bitir'}
                     </Button>
                   </>
                 )}
@@ -351,7 +433,7 @@ const LiveMeeting = () => {
               meetingId={meetingId}
               meeting={meeting}
               isJoined={isJoined}
-              participants={participants}
+              participants={uniqueParticipants}
             />
           )}
 
@@ -369,7 +451,7 @@ const LiveMeeting = () => {
           {activeTab === 'participants' && (
             <LiveParticipants
               meetingId={meetingId}
-              participants={participants}
+              participants={uniqueParticipants}
               meeting={meeting}
               currentUser={user}
             />
@@ -384,12 +466,12 @@ const LiveMeeting = () => {
               <CardContent>
                 <Typography variant='h6' gutterBottom>
                   <PeopleIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                  Katılımcılar ({participants.length})
+                  Katılımcılar ({uniqueParticipants.length})
                 </Typography>
                 <Box>
-                  {participants.slice(0, 5).map(participant => (
+                  {uniqueParticipants.slice(0, 5).map((participant, index) => (
                     <Box
-                      key={participant.userId}
+                      key={`quick-${index}-${participant.userId}`}
                       display='flex'
                       alignItems='center'
                       mb={1}
@@ -418,13 +500,13 @@ const LiveMeeting = () => {
                       </Typography>
                     </Box>
                   ))}
-                  {participants.length > 5 && (
+                  {uniqueParticipants.length > 5 && (
                     <Button
                       size='small'
                       onClick={() => setActiveTab('participants')}
                       sx={{ mt: 1 }}
                     >
-                      +{participants.length - 5} diğer katılımcı
+                      +{uniqueParticipants.length - 5} diğer katılımcı
                     </Button>
                   )}
                 </Box>

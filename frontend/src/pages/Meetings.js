@@ -195,8 +195,8 @@ const Meetings = memo(() => {
    * Handle view meeting details
    */
   const handleViewMeeting = meeting => {
-    // TODO: Implement meeting detail view
-    console.log('👁️ Viewing meeting:', meeting);
+    // Navigate to Live Meeting page
+    navigate(`/meetings/${meeting._id}/live`);
   };
 
   /**

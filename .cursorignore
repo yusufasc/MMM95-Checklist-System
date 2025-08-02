@@ -1,58 +1,76 @@
-# MMM95 - Cursor AI Ignore Patterns
-
-# Build Output
-build/
-dist/
-**/build/
-**/dist/
-
-# Node Modules
+# Node.js
 node_modules/
-**/node_modules/
-
-# Cache
-.cache/
-**/.cache/
-.parcel-cache/
-
-# Logs
-logs/
-*.log
-npm-debug.log*
-
-# Documentation (Cursor should not analyze these)
-docs/
-LICENSE
-SECURITY.md
-
-# GitHub Templates
-.github/
-.github/**/*
-
-# Tools and Scripts (AI should not modify these)
-tools/
-scripts/
-backend/scripts/
-
-# Configuration Files (allow package.json, .eslintrc.js, jest.config.js for analytics updates)
-webpack.config.js
-vite.config.js
-rollup.config.js
-
-# Package Files
+npm-debug.log
+yarn-error.log
 package-lock.json
+yarn.lock
 
-# Test Coverage
+# Build outputs
+dist/
+build/
 coverage/
 .nyc_output/
 
-# Temporary Files
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+*.swp
+*.swo
+
+# Temporary
 tmp/
 temp/
+.cache/
 
-# IDE Files
-.vscode/
-.idea/
+# Media files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.pdf
 
-# Git
-.git/
+# Documentation
+docs/
+*.md
+README.md
+CHANGELOG.md
+LICENSE
+SECURITY.md
+
+# Config files
+*.config.js
+*.config.json
+.env*
+.prettierrc*
+.eslintrc*
+babel.config.*
+webpack.config.*
+jest.config.*
+tsconfig*.json
+
+# GitHub
+.github/
+
+# Test files
+*.test.js
+*.spec.js
+test/
+tests/
+__tests__/
+
+# Tools & Scripts
+tools/
+scripts/
+monitoring/
+
+# Cursor specific
+cursor-performance-*

@@ -563,7 +563,7 @@ class ExcelService {
         '• Gündem maddeleri pipe (|) ile ayrılmalı',
       ];
 
-      validationNotes.forEach((note, index) => {
+      validationNotes.forEach((note, _index) => {
         const noteRow = worksheet.addRow([]);
         noteRow.getCell(1).value = note;
         noteRow.getCell(1).font = { size: 10, italic: true };

@@ -20,7 +20,6 @@ import {
 } from '@mui/material';
 import {
   Close as CloseIcon,
-  Add as AddIcon,
   Delete as DeleteIcon,
   Person as PersonIcon,
   Groups as GroupsIcon,
@@ -28,6 +27,7 @@ import {
 
 import { useMeetingForm } from '../../hooks/useMeetingForm';
 import EmojiWrapper from '../EmojiWrapper';
+import AgendaDialog from './AgendaDialog';
 
 /**
  * 📝 Meeting Dialog Component
@@ -46,6 +46,9 @@ const MeetingDialog = memo(
     _loading = false,
   }) => {
     const isEditing = Boolean(meeting);
+
+    // Local state for agenda dialog
+    const [agendaDialogOpen, setAgendaDialogOpen] = React.useState(false);
 
     // Use meeting form hook
     const {
@@ -183,68 +186,119 @@ const MeetingDialog = memo(
     };
 
     /**
-     * Render agenda items
+     * Handle agenda save from dialog
+     */
+    const handleAgendaSave = (agendaItems) => {
+      // Clear current agenda and add new items
+      const updatedFormData = { ...formData };
+      updatedFormData.gundem = agendaItems;
+
+      // Update via form hook (assuming it has a method to update entire agenda)
+      agendaItems.forEach((item, index) => {
+        if (index < formData.gundem.length) {
+          updateAgendaItem(index, item);
+        } else {
+          addAgendaItem(item);
+        }
+      });
+
+      // Remove extra items if new list is shorter
+      while (formData.gundem.length > agendaItems.length) {
+        removeAgendaItem(formData.gundem.length - 1);
+      }
+    };
+
+    /**
+     * Render agenda items summary
      */
     const renderAgenda = () => {
+      const agendaCount = formData.gundem.length;
+      const assignedCount = formData.gundem.filter(item => item.sorumlu).length;
+      const totalDuration = formData.gundem.reduce((sum, item) => sum + (item.sure || 0), 0);
+
       return (
         <Box sx={{ mt: 2 }}>
-          {formData.gundem.map((item, index) => (
-            <Box
-              key={index}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                p: 1,
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 1,
-                mb: 1,
-              }}
-            >
-              <Typography variant='body2' sx={{ minWidth: 30 }}>
-                {item.siraNo}.
-              </Typography>
-              <TextField
-                size='small'
-                placeholder='Gündem maddesi'
-                value={item.baslik}
-                onChange={e =>
-                  updateAgendaItem(index, { baslik: e.target.value })
-                }
-                sx={{ flex: 1 }}
-              />
-              <TextField
-                size='small'
-                type='number'
-                placeholder='Süre (dk)'
-                value={item.sure}
-                onChange={e =>
-                  updateAgendaItem(index, {
-                    sure: parseInt(e.target.value) || 10,
-                  })
-                }
-                sx={{ width: 80 }}
-                InputProps={{ inputProps: { min: 1, max: 180 } }}
-              />
-              <IconButton
-                size='small'
-                onClick={() => removeAgendaItem(index)}
-                color='error'
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          ))}
-
-          <Button
-            startIcon={<AddIcon />}
-            onClick={() => addAgendaItem({ baslik: '', sure: 10 })}
-            variant='outlined'
-            size='small'
-            sx={{ mt: 1 }}
+          {/* Agenda Summary */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              mb: 2,
+              p: 2,
+              bgcolor: 'background.paper',
+              borderRadius: 1,
+              border: 1,
+              borderColor: 'divider',
+            }}
           >
-            Gündem Maddesi Ekle
+            <Typography variant="body2" color="text.secondary">
+              <strong>{agendaCount}</strong> madde
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              <strong>{assignedCount}</strong> sorumlu atanmış
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              <strong>{totalDuration}</strong> dakika
+            </Typography>
+          </Box>
+
+          {/* Agenda Items Preview */}
+          {agendaCount > 0 ? (
+            <Box sx={{ mb: 2 }}>
+              {formData.gundem.slice(0, 3).map((item, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    p: 1,
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    mb: 0.5,
+                    bgcolor: 'grey.50',
+                  }}
+                >
+                  <Typography variant='caption' sx={{ minWidth: 20, fontWeight: 'bold' }}>
+                    {item.siraNo}.
+                  </Typography>
+                  <Typography variant='body2' sx={{ flex: 1 }}>
+                    {item.baslik}
+                  </Typography>
+                  <Typography variant='caption' color='text.secondary'>
+                    {item.sure}dk
+                  </Typography>
+                  {item.sorumlu && (
+                    <Typography variant='caption' color='primary.main'>
+                      <PersonIcon sx={{ fontSize: 12, mr: 0.5 }} />
+                      Sorumlu: {users.find(u => u._id === item.sorumlu)?.ad || 'Bilinmeyen'}
+                    </Typography>
+                  )}
+                </Box>
+              ))}
+              {agendaCount > 3 && (
+                <Typography variant='caption' color='text.secondary' sx={{ ml: 1 }}>
+                  ... ve {agendaCount - 3} madde daha
+                </Typography>
+              )}
+            </Box>
+          ) : (
+            <Alert severity='info' sx={{ mb: 2 }}>
+              Henüz gündem maddesi eklenmedi. Lütfen gündem düzenle butonunu kullanarak madde ekleyin.
+            </Alert>
+          )}
+
+          {/* Open Agenda Dialog Button */}
+          <Button
+            startIcon={<EmojiWrapper emoji="📝" label="Gündem" />}
+            onClick={() => setAgendaDialogOpen(true)}
+            variant='contained'
+            size='medium'
+            fullWidth
+          >
+            Gündem Düzenle ({agendaCount} madde)
           </Button>
         </Box>
       );
@@ -619,6 +673,24 @@ const MeetingDialog = memo(
                 : 'Oluştur'}
           </Button>
         </DialogActions>
+
+        {/* Agenda Dialog */}
+        <AgendaDialog
+          open={agendaDialogOpen}
+          onClose={() => setAgendaDialogOpen(false)}
+          onSave={handleAgendaSave}
+          participants={formData.katilimcilar.map(k => {
+            const user = users.find(u => u._id === k.kullanici);
+            return user ? {
+              _id: user._id,
+              isim: `${user.ad} ${user.soyad}`,
+              email: user.email,
+              rol: k.rol,
+            } : null;
+          }).filter(Boolean)}
+          agenda={formData.gundem || []}
+          title="Toplantı Gündem Düzenle"
+        />
       </Dialog>
     );
   },

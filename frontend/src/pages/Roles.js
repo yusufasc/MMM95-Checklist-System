@@ -360,8 +360,49 @@ const Roles = () => {
         ) {
           console.error('Rol silme hatası:', error);
         }
-        setError(error.response?.data?.message || 'Rol silinirken hata oluştu');
+
+        const errorMessage = error.response?.data?.message || 'Rol silinirken hata oluştu';
+
+        // Rol kullanımda hatası kontrolü
+        if (errorMessage.includes('kullanıcı tarafından kullanılıyor')) {
+          const roleToDelete = roles.find(r => r._id === roleId);
+          const userCount = errorMessage.match(/(\d+) kullanıcı/)?.[1] || 'birkaç';
+
+          if (window.confirm(
+            `⚠️ "${roleToDelete?.ad}" rolü ${userCount} kullanıcı tarafından kullanılıyor.\n\n` +
+            '🔄 Bu kullanıcıları otomatik olarak "Usta" rolüne taşımak ister misiniz?\n\n' +
+            '✅ Evet: Kullanıcılar Usta rolüne taşınacak ve rol silinecek\n' +
+            '❌ Hayır: Manuel olarak kullanıcıları değiştirmeniz gerekiyor',
+          )) {
+            await handleRoleTransfer(roleId, roleToDelete?.ad);
+            return;
+          }
+        }
+
+        setError(errorMessage);
       }
+    }
+  };
+
+  const handleRoleTransfer = async (oldRoleId, oldRoleName) => {
+    try {
+      setLoading(true);
+      setError('');
+
+      // Kullanıcıları transfer et
+      const response = await rolesAPI.transferUsers(oldRoleId, 'Usta');
+
+      if (response.data.success) {
+        setSuccess(`✅ ${response.data.transferredCount} kullanıcı "Usta" rolüne taşındı. "${oldRoleName}" rolü silindi.`);
+        loadData();
+      }
+    } catch (error) {
+      setError(
+        error.response?.data?.message ||
+        'Kullanıcı transfer işlemi sırasında hata oluştu',
+      );
+    } finally {
+      setLoading(false);
     }
   };
 

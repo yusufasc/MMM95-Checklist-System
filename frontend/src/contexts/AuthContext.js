@@ -220,6 +220,9 @@ export const AuthProvider = ({ children }) => {
 
   const refreshUserData = async () => {
     try {
+      // Cache'i temizle
+      localStorage.removeItem('user');
+
       const response = await authAPI.getMe();
       const userData = response.data;
 
@@ -245,17 +248,42 @@ export const AuthProvider = ({ children }) => {
       return true;
     }
 
+    // Önce yeni sistem (modulePermissions) kontrol et
     for (const rol of user.roller) {
-      if (rol.moduller) {
+      if (rol.modulePermissions && rol.modulePermissions.length > 0) {
+        for (const modulYetkisi of rol.modulePermissions) {
+          if (modulYetkisi.moduleName === moduleName) {
+            if (permission === 'erisebilir' && modulYetkisi.gorebilir) {
+              return true;
+            }
+            if (permission === 'duzenleyebilir' && modulYetkisi.duzenleyebilir) {
+              return true;
+            }
+          }
+        }
+      }
+
+      // Sonra eski sistem (moduller) kontrol et
+      if (rol.moduller && rol.moduller.length > 0) {
         for (const modulYetkisi of rol.moduller) {
-          if (modulYetkisi.modul && modulYetkisi.modul.ad === moduleName) {
+          // Debug log
+          console.log('Module Debug:', {
+            moduleName,
+            modulYetkisi,
+            modulField: modulYetkisi.modul,
+            erisebilir: modulYetkisi.erisebilir,
+          });
+
+          // Module reference'ı object olarak geliyorsa ad field'ını kontrol et
+          const moduleAd = modulYetkisi.modul?.ad || modulYetkisi.modul;
+          console.log('Module Ad:', moduleAd, 'vs', moduleName);
+
+          if (moduleAd === moduleName) {
+            console.log('Module Match! Permission check:', permission, modulYetkisi.erisebilir);
             if (permission === 'erisebilir' && modulYetkisi.erisebilir) {
               return true;
             }
-            if (
-              permission === 'duzenleyebilir' &&
-              modulYetkisi.duzenleyebilir
-            ) {
+            if (permission === 'duzenleyebilir' && modulYetkisi.duzenleyebilir) {
               return true;
             }
           }
@@ -319,7 +347,7 @@ export const AuthProvider = ({ children }) => {
         text: 'Analytics',
         icon: 'AnalyticsIcon',
         path: '/analytics',
-        module: 'Dashboard',
+        module: 'Analytics Dashboard',
       },
       {
         text: 'Kullanıcılar',
@@ -360,7 +388,7 @@ export const AuthProvider = ({ children }) => {
         text: 'Kalite Kontrol Yönetimi',
         icon: 'AdminPanelSettingsIcon',
         path: '/quality-control-management',
-        module: 'Kalite Kontrol Yönetimi',
+        module: 'Kalite Kontrol',
         adminOnly: true,
       },
       {
@@ -399,7 +427,13 @@ export const AuthProvider = ({ children }) => {
         text: 'Toplantılar',
         icon: 'GroupsIcon',
         path: '/meetings',
-        module: 'Toplantı Yönetimi',
+        module: 'Toplanti Yonetimi',
+      },
+      {
+        text: 'Sorumluluklarım',
+        icon: 'AssignmentIcon',
+        path: '/responsibilities',
+        module: 'Toplanti Yonetimi',
       },
       {
         text: 'Kontrol Bekleyenler',
