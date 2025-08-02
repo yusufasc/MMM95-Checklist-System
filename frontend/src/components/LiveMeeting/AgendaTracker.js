@@ -318,17 +318,17 @@ const AgendaTracker = memo(
 
                                 {item.durum !== 'ertelendi' &&
                                   item.durum !== 'tamamlandı' && (
-                                    <Button
-                                      size='small'
-                                      variant='outlined'
-                                      color='error'
-                                      onClick={() =>
-                                        updateItemStatus(index, 'ertelendi')
-                                      }
-                                    >
-                                      Ertele
-                                    </Button>
-                                  )}
+                                  <Button
+                                    size='small'
+                                    variant='outlined'
+                                    color='error'
+                                    onClick={() =>
+                                      updateItemStatus(index, 'ertelendi')
+                                    }
+                                  >
+                                    Ertele
+                                  </Button>
+                                )}
 
                                 <Tooltip title='Not Ekle'>
                                   <IconButton

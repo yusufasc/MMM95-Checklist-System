@@ -46,8 +46,8 @@ module.exports = {
     'react/jsx-closing-bracket-location': 'off', // Prettier handles bracket location
     'react/jsx-curly-spacing': ['error', 'never'],
     'react/jsx-equals-spacing': ['error', 'never'],
-    'react/jsx-indent': 'off', // Prettier handles JSX indentation
-    'react/jsx-indent-props': 'off', // Prettier handles JSX props indentation
+    'react/jsx-indent': ['warn', 2], // JSX indentation 2 spaces
+    'react/jsx-indent-props': ['warn', 2], // JSX props indentation 2 spaces
     'react/jsx-no-bind': ['error', { allowArrowFunctions: true }],
     'react/jsx-no-comment-textnodes': 'error',
     'react/jsx-no-target-blank': 'error',
